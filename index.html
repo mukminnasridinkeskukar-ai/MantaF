@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MantaF - Manajemen Tata Kelola Jabatan Fungsional Kesehatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="css/mantaf.css">
+</head>
+<body>
+
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splashScreen">
+  <div class="splash-logo-wrap">
+    <div class="splash-glow"></div>
+    <img class="splash-logo" src="https://placehold.co/120x120/0f766e/ffffff?text=M" alt="Logo">
+  </div>
+  <div class="splash-title" id="splashTitle"></div>
+  <div class="splash-subtitle">Manajemen Tata Kelola Jabatan Fungsional Kesehatan<br>Dinas Kesehatan Kabupaten Kutai Kartanegara</div>
+  <div class="splash-progress-wrap"><div class="splash-progress-bar"></div></div>
+</div>
+
+<!-- ==================== LANDING PAGE ==================== -->
+<div id="landingPage">
+  <nav class="lp-nav" id="lpNav">
+    <a href="#" class="lp-nav-brand" onclick="scrollToSection('lpHero');return false;">
+      <div class="lp-nav-title">Manta<span>F</span></div>
+    </a>
+    <ul class="lp-nav-links">
+      <li><a href="#" onclick="scrollToSection('lpHero');return false;">Home</a></li>
+      <li><a href="#" onclick="scrollToSection('lpFeatures');return false;">Fitur</a></li>
+      <li><a href="#" onclick="scrollToSection('lpStats');return false;">Data</a></li>
+      <li><a href="#" onclick="scrollToSection('lpContact');return false;">Kontak</a></li>
+      <li><a href="#" class="lp-nav-btn" onclick="enterPlatform();return false;">Masuk Platform</a></li>
+    </ul>
+    <button class="lp-nav-toggle" onclick="toggleMobileMenu()"><span></span><span></span><span></span></button>
+  </nav>
+
+  <div class="lp-mobile-menu" id="lpMobileMenu">
+    <a href="#" onclick="scrollToSection('lpHero');closeMobileMenu();return false;">Home</a>
+    <a href="#" onclick="scrollToSection('lpFeatures');closeMobileMenu();return false;">Fitur</a>
+    <a href="#" onclick="scrollToSection('lpStats');closeMobileMenu();return false;">Data</a>
+    <a href="#" onclick="scrollToSection('lpContact');closeMobileMenu();return false;">Kontak</a>
+    <a href="#" onclick="enterPlatform();closeMobileMenu();return false;" style="color:var(--accent);">Masuk Platform</a>
+  </div>
+
+  <section class="lp-hero" id="lpHero">
+    <div class="lp-hero-content">
+      <div class="lp-hero-badge"><i class="fas fa-shield-halved"></i> Platform Resmi Dinas Kesehatan</div>
+      <h1>Manta<span>F</span></h1>
+      <p class="lp-hero-sub">Manajemen Tata Kelola Jabatan Fungsional Kesehatan</p>
+      <p class="lp-hero-desc">Tata Kelola Jabatan Fungsional Kesehatan yang Profesional, Transparan, Terintegrasi, dan Berbasis Digital.</p>
+      <div class="lp-hero-buttons">
+        <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+        <a href="#" class="lp-btn-secondary" onclick="scrollToSection('lpFeatures');return false;">Pelajari Selengkapnya</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section" id="lpFeatures">
+    <div class="lp-section-header">
+      <div class="lp-section-label">Fitur Unggulan</div>
+      <h2 class="lp-section-title">Solusi Lengkap Jabatan Fungsional</h2>
+    </div>
+    <div class="lp-features-grid">
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-user-tie"></i></div><h3>Manajemen Jabfung</h3><p>Pengelolaan data jabatan fungsional terpusat.</p></div>
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-calculator"></i></div><h3>Angka Kredit</h3><p>Perhitungan dan pelacakan angka kredit otomatis.</p></div>
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-graduation-cap"></i></div><h3>Pengembangan Kompetensi</h3><p>Akses pelatihan dan informasi kompetensi.</p></div>
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-chart-line"></i></div><h3>Penilaian Kinerja</h3><p>Sistem penilaian objektif dan terukur.</p></div>
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-briefcase"></i></div><h3>Portofolio Digital</h3><p>Dokumentasi lengkap untuk kenaikan jabatan.</p></div>
+      <div class="lp-feature-card"><div class="lp-feature-icon"><i class="fas fa-eye"></i></div><h3>Monitoring Real-time</h3><p>Pantau progres pengajuan secara langsung.</p></div>
+    </div>
+  </section>
+
+  <section class="lp-section lp-section-alt" id="lpStats">
+    <div class="lp-section-header">
+      <div class="lp-section-label">Data & Statistik</div>
+      <h2 class="lp-section-title">Platform dalam Angka</h2>
+    </div>
+    <div class="lp-stats-grid">
+      <div class="lp-stat-item"><div class="lp-stat-number" data-target="1250">0</div><div class="lp-stat-label">Total SDMK</div></div>
+      <div class="lp-stat-item"><div class="lp-stat-number" data-target="42">0</div><div class="lp-stat-label">Jabatan Fungsional</div></div>
+      <div class="lp-stat-item"><div class="lp-stat-number" data-target="3850">0</div><div class="lp-stat-label">Total Pengajuan</div></div>
+      <div class="lp-stat-item"><div class="lp-stat-number" data-target="520">0</div><div class="lp-stat-label">Total Pengguna</div></div>
+    </div>
+  </section>
+
+  <section class="lp-section" id="lpContact">
+    <div class="lp-section-header"><div class="lp-section-label">Hubungi Kami</div><h2 class="lp-section-title">Kontak & Informasi</h2></div>
+    <div class="lp-contact-grid">
+      <div class="lp-contact-card"><i class="fas fa-location-dot"></i><h4>Alamat</h4><p>Dinas Kesehatan Kab. Kutai Kartanegara, Kaltim</p></div>
+      <div class="lp-contact-card"><i class="fas fa-envelope"></i><h4>Email</h4><p>dinkes@kutaikartanegarakab.go.id</p></div>
+      <div class="lp-contact-card"><i class="fas fa-phone"></i><h4>Telepon</h4><p>(0541) 661 000</p></div>
+    </div>
+  </section>
+
+  <section class="lp-cta" id="lpCta">
+    <div class="lp-cta-content">
+      <h2>Siap Memulai?</h2>
+      <p>Masuk ke Platform MantaF dan kelola jabatan fungsional Anda secara profesional.</p>
+      <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;" style="font-size:17px;padding:16px 44px;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <p>&copy; 2025 Dinas Kesehatan Kabupaten Kutai Kartanegara. MantaF &mdash; All Rights Reserved.</p>
+  </footer>
+</div>
+
+<!-- ==================== APP WRAPPER ==================== -->
+<div id="appWrapper" style="display:none;">
+
+  <!-- SIDEBAR 3 SECTIONS -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">M</div>
+      <div class="brand-text">Manta<span>F</span></div>
+    </div>
+
+    <!-- SECTION 1: BERANDA -->
+    <div class="sidebar-section">
+      <div class="sidebar-label"><i class="fas fa-house"></i> Beranda</div>
+      <nav class="sidebar-nav">
+        <button class="active" onclick="showSection('dashboard',this)"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button onclick="showSection('pengumuman',this)"><i class="fas fa-bullhorn"></i><span>Pengumuman</span></button>
+      </nav>
+    </div>
+
+    <!-- SECTION 2: MANAJEMEN UKOM -->
+    <div class="sidebar-section">
+      <div class="sidebar-label"><i class="fas fa-briefcase-medical"></i> Manajemen UKOM</div>
+      <nav class="sidebar-nav">
+        <button onclick="showSection('bezetting',this)"><i class="fas fa-table"></i><span>Bezetting</span></button>
+        <button onclick="showSection('ukom',this)"><i class="fas fa-file-signature"></i><span>Daftar UKOM</span></button>
+        <button onclick="showSection('pesertaUkom',this)"><i class="fas fa-users"></i><span>Data Peserta</span></button>
+        <button onclick="showSection('status',this)"><i class="fas fa-search"></i><span>Cek Status</span></button>
+      </nav>
+    </div>
+
+    <!-- SECTION 3: ADMIN PANEL -->
+    <div class="sidebar-section">
+      <div class="sidebar-label"><i class="fas fa-shield-halved"></i> Admin Panel</div>
+      <nav class="sidebar-nav">
+        <button onclick="showSection('admin',this)"><i class="fas fa-lock"></i><span>Administrator</span></button>
+      </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <small>v2.0 Supabase Edition</small>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="title">MantaF Dashboard</div>
+        <div class="subtitle">Dinas Kesehatan Kutai Kartanegara &bull; Terintegrasi &bull; Cepat &bull; Akurat</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline" onclick="openAboutModal()"><i class="fas fa-circle-info"></i> Tentang</button>
+        <button class="btn btn-danger" id="btnLogout" style="display:none;" onclick="logoutAdmin()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section active">
+      <div class="card-grid">
+        <div class="card card-glass dash-card-clickable" onclick="showDashPesertaModal()">
+          <div class="card-icon"><i class="fas fa-users"></i></div>
+          <div class="card-info"><h3>Total Peserta UKOM</h3><h1 id="pesertaCount">0</h1></div>
+        </div>
+        <div class="card card-glass">
+          <div class="card-icon" style="background:linear-gradient(135deg,#3b82f6,#06b6d4);"><i class="fas fa-building"></i></div>
+          <div class="card-info"><h3>Total Instansi</h3><h1 id="instansiCount">0</h1></div>
+        </div>
+        <div class="card card-glass">
+          <div class="card-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);"><i class="fas fa-briefcase"></i></div>
+          <div class="card-info"><h3>Total Lowongan</h3><h1 id="lowonganCount">0</h1></div>
+        </div>
+        <div class="card card-glass">
+          <div class="card-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);"><i class="fas fa-server"></i></div>
+          <div class="card-info"><h3>Status Sistem</h3><h1 style="font-size:18px;">Online</h1></div>
+        </div>
+      </div>
+
+      <div class="card-grid" style="margin-top:25px">
+        <div class="card" style="text-align:center">
+          <h3 style="margin-bottom:15px">Status Verifikasi</h3>
+          <div class="donut-wrap">
+            <svg id="statusChart" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+              <circle id="segDisetujui" cx="50" cy="50" r="45" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+              <circle id="segDitolak" cx="50" cy="50" r="45" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+              <circle id="segDilimpahkan" cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+              <circle id="segBatal" cx="50" cy="50" r="45" fill="none" stroke="#94a3b8" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+              <circle id="segProses" cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+              <circle id="segMenunggu" cx="50" cy="50" r="45" fill="none" stroke="#eab308" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center"><div class="donut-label">Total</div><div class="donut-value" id="statusTotal">0</div></div>
+          </div>
+          <div class="dash-status-list" id="dashStatusList">
+            <div class="dash-status-item" onclick="showDashStatusModal('Disetujui')"><span class="dot" style="background:#16a34a"></span><span>Disetujui</span><span class="count" id="cntDisetujui">0</span></div>
+            <div class="dash-status-item" onclick="showDashStatusModal('Ditolak')"><span class="dot" style="background:#dc2626"></span><span>Ditolak</span><span class="count" id="cntDitolak">0</span></div>
+            <div class="dash-status-item" onclick="showDashStatusModal('Dilimpahkan')"><span class="dot" style="background:#3b82f6"></span><span>Dilimpahkan</span><span class="count" id="cntDilimpahkan">0</span></div>
+            <div class="dash-status-item" onclick="showDashStatusModal('Batal')"><span class="dot" style="background:#94a3b8"></span><span>Batal</span><span class="count" id="cntBatal">0</span></div>
+            <div class="dash-status-item" onclick="showDashStatusModal('Proses')"><span class="dot" style="background:#f59e0b"></span><span>Proses</span><span class="count" id="cntProses">0</span></div>
+            <div class="dash-status-item" onclick="showDashStatusModal('Menunggu')"><span class="dot" style="background:#eab308"></span><span>Menunggu</span><span class="count" id="cntMenunggu">0</span></div>
+          </div>
+        </div>
+
+        <div class="card" style="text-align:center">
+          <h3 style="margin-bottom:15px">Jenis Jabatan Fungsional</h3>
+          <div class="donut-wrap">
+            <svg id="jabfungChart" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/><g id="jabfungSegments"></g></svg>
+            <div class="donut-center"><div class="donut-label">Jabfung</div><div class="donut-value" id="jabfungTotal">0</div></div>
+          </div>
+          <div id="jabfungLegend" style="margin-top:15px;font-size:11px;max-height:120px;overflow-y:auto;text-align:left"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:25px">
+        <h2><i class="fas fa-info-circle" style="color:var(--primary)"></i> Selamat Datang di MantaF</h2>
+        <p style="margin-top:10px;color:var(--gray);line-height:1.7">
+          MantaF merupakan platform digital Manajemen Tata Kelola Jabatan Fungsional Kesehatan yang dirancang untuk mendukung pengelolaan data, layanan, monitoring, dan pengembangan SDM kesehatan secara terintegrasi.
+        </p>
+      </div>
+    </div>
+
+    <!-- PENGUMUMAN -->
+    <div id="pengumuman" class="section">
+      <div class="panel"><h2><i class="fas fa-bullhorn"></i> Pengumuman</h2><br><div id="pengumumanList"><div class="announcement"><i>Memuat pengumuman...</i></div></div></div>
+    </div>
+
+    <!-- BEZETTING -->
+    <div id="bezetting" class="section">
+      <div class="panel">
+        <h2><i class="fas fa-table"></i> Data Bezetting Jabatan Fungsional Kesehatan</h2><br>
+        <div class="form-grid" style="margin-bottom:20px">
+          <div class="form-group"><label>Filter Instansi</label><select id="filterInstansi" onchange="applyBezettingFilter()"><option value="">Semua Instansi</option></select></div>
+          <div class="form-group"><label>Filter Jabatan</label><select id="filterJabatan" onchange="applyBezettingFilter()"><option value="">Semua Jabatan</option></select></div>
+          <div class="form-group"><label>Filter Jenjang</label><select id="filterJenjang" onchange="applyBezettingFilter()"><option value="">Semua Jenjang</option></select></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn" onclick="resetBezettingFilter()">Reset</button></div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Instansi</th><th>Jenis Jabatan</th><th>Jenjang</th><th>Kebutuhan</th><th>Pemangku</th><th>Lowongan</th><th>Pemangku Saat Ini</th><th>Disetujui</th><th>Sisa</th>
+          </tr></thead><tbody id="bezettingBody"></tbody></table>
+        </div>
+        <div id="pagination" style="margin-top:20px;text-align:center"></div>
+      </div>
+    </div>
+
+    <!-- UKOM FORM -->
+    <div id="ukom" class="section">
+      <div class="panel">
+        <h2><i class="fas fa-file-signature"></i> Formulir Pendaftaran UKOM</h2><br>
+        <div class="announcement"><b>Template Dokumen:</b><br>
+          <a href="#" target="_blank">Download Template Daftar Riwayat Hidup</a> | 
+          <a href="#" target="_blank">Download Template Surat Keterangan Bebas Hukuman</a>
+        </div><br>
+        <form id="ukomForm">
+          <div class="form-grid">
+            <div class="form-group"><label>NIK *</label><input type="text" name="nik" required></div>
+            <div class="form-group"><label>NIP *</label><input type="text" name="nip" required></div>
+            <div class="form-group"><label>Nama Tanpa Gelar *</label><input type="text" name="nama_tanpa_gelar" required></div>
+            <div class="form-group"><label>Unit Kerja *</label>
+              <select name="nama_unit_kerja" required>
+                <option value="">Pilih Instansi</option>
+                <option>Dinas Kesehatan</option>
+                <option>RSUD Aji Muhammad Parikesit</option>
+                <option>RSUD Aji Batara Agung Dewa Sakti</option>
+                <option>RSUD Dayaku Raja</option>
+                <option>UPTD Puskesmas Samboja</option>
+                <option>UPTD Puskesmas Sungai Merdeka</option>
+                <option>UPTD Puskesmas Handil Baru</option>
+                <option>UPTD Puskesmas Muara Jawa</option>
+                <option>UPTD Puskesmas Sangasanga</option>
+                <option>UPTD Puskesmas Loa Janan</option>
+                <option>UPTD Puskesmas Batuah</option>
+                <option>UPTD Puskesmas Loa Duri</option>
+                <option>UPTD Puskesmas Loa Kulu</option>
+                <option>UPTD Puskesmas Muara Muntai</option>
+                <option>UPTD Puskesmas Muara Wis</option>
+                <option>UPTD Puskesmas Kota Bangun</option>
+                <option>UPTD Puskesmas Rimba Ayu</option>
+                <option>UPTD Puskesmas Mangkurawang</option>
+                <option>UPTD Puskesmas Loa Ipuh</option>
+                <option>UPTD Puskesmas Sebulu I</option>
+                <option>UPTD Puskesmas Sebulu II</option>
+                <option>UPTD Puskesmas Separi III</option>
+                <option>UPTD Puskesmas Teluk Dalam</option>
+                <option>UPTD Puskesmas Sungai Mariam</option>
+                <option>UPTD Puskesmas Muara Badak</option>
+                <option>UPTD Puskesmas Badak Baru</option>
+                <option>UPTD Puskesmas Marang Kayu</option>
+                <option>UPTD Puskesmas Perangat</option>
+                <option>UPTD Puskesmas Muara Kaman</option>
+                <option>UPTD Puskesmas Kahala</option>
+                <option>UPTD Puskesmas Kembang Janggut</option>
+                <option>UPTD Puskesmas Tabang</option>
+                <option>UPTD Puskesmas Ritan Baru</option>
+                <option>UPTD Puskesmas Rapak Mahang</option>
+                <option>UPTD Puskesmas Bunga Jadi</option>
+                <option>UPTD Puskesmas Jonggon Jaya</option>
+                <option>Instalasi Farmasi Kabupaten</option>
+                <option>Labkesda</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Pangkat / Golongan</label>
+              <select name="pangkat_dan_golongan">
+                <option value="">Pilih</option>
+                <option>Pengatur Muda - II/a</option>
+                <option>Pengatur Muda Tk. I - II/b</option>
+                <option>Pengatur - II/c</option>
+                <option>Pengatur Tk. I - II/d</option>
+                <option>Penata Muda - III/a</option>
+                <option>Penata Muda Tk. I - III/b</option>
+                <option>Penata - III/c</option>
+                <option>Penata Tk. I - III/d</option>
+                <option>Pembina - IV/a</option>
+                <option>Pembina Tk. I - IV/b</option>
+                <option>Pembina Utama Muda - IV/c</option>
+                <option>Pembina Utama Madya - IV/d</option>
+                <option>Pembina Utama - IV/e</option>
+              </select>
+            </div>
+            <div class="form-group"><label>No. SK Jabfung Terakhir</label><input type="text" name="nomor_sk_jabfungs_terakhir"></div>
+            <div class="form-group"><label>Jenis Kelamin</label>
+              <select name="jenis_kelamin"><option value="">Pilih</option><option>Laki-Laki</option><option>Perempuan</option></select>
+            </div>
+            <div class="form-group"><label>Jabfung Saat Ini</label>
+              <select name="jabfung_saat_ini">
+                <option value="">Pilih Jabfung</option>
+                <option>Tenaga Sanitasi Lingkungan</option>
+                <option>Asisten Apoteker</option>
+                <option>Epidemiolog Kesehatan</option>
+                <option>Promosi Kesehatan dan Ilmu Perilaku</option>
+                <option>Pembimbing Kesehatan Kerja</option>
+                <option>Entomolog kesehatan</option>
+                <option>Nutrisionis</option>
+                <option>Teknisi Elektromedis</option>
+                <option>Administrator Kesehatan</option>
+                <option>DOKTER</option>
+                <option>DOKTER GIGI</option>
+                <option>PERAWAT</option>
+                <option>BIDAN</option>
+                <option>APOTEKER</option>
+                <option>PEREKAM MEDIS</option>
+                <option>FISIOTERAPIS</option>
+                <option>TERAPIS WICARA</option>
+                <option>OKUPASI TERAPIS</option>
+                <option>PSIKOLOGI KLINIS</option>
+                <option>PRANATA LABORATORIUM KESEHATAN</option>
+                <option>RADIOGRAFER</option>
+                <option>FISIKAWAN MEDIS</option>
+                <option>TEKNISI TRANSFUSI DARAH</option>
+                <option>PENATA ANESTESI</option>
+                <option>TERAPIS GIGI DAN MULUT</option>
+                <option>REFRAKSIONIS OPTISIEN/OPTOMETRIS</option>
+                <option>Dokter Spesialis Penyakit Dalam</option>
+                <option>Dokter Spesialis Bedah</option>
+                <option>Dokter Spesialis Anak</option>
+                <option>Dokter Spesialis Mata</option>
+                <option>Dokter Spesialis Radiologi</option>
+                <option>Dokter Spesialis Paru</option>
+                <option>Dokter Spesialis Anestesiologi</option>
+                <option>Dokter Spesialis Obstetri dan Ginekologi</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Jenjang Saat Ini</label>
+              <select name="jenjang_saat_ini">
+                <option value="">Pilih</option>
+                <option>Terampil</option>
+                <option>Mahir</option>
+                <option>Penyelia</option>
+                <option>Ahli Pertama</option>
+                <option>Ahli Muda</option>
+                <option>Ahli Madya</option>
+                <option>Ahli Utama</option>
+              </select>
+            </div>
+            <div class="form-group"><label>No. WhatsApp</label><input type="text" name="nomor_whatsapp"></div>
+            <div class="form-group"><label>Email Aktif</label><input type="email" name="email_aktif"></div>
+            <div class="form-group"><label>Nilai PAK Terakhir</label><input type="text" name="nilai_pak_terakhir"></div>
+            <div class="form-group"><label>Tipe</label>
+              <select name="tipe"><option value="">Pilih</option><option>Perpindahan</option><option>Kenaikan Jenjang</option><option>Alih Kategori</option></select>
+            </div>
+            <div class="form-group"><label>Jenis UKOM</label>
+              <select name="jenis_ukom"><option value="">Pilih</option><option>Naik Jabatan</option><option>Pindah Jabatan</option></select>
+            </div>
+            <div class="form-group"><label>Jabfung Tujuan</label>
+              <select name="jabfung_tujuan">
+                <option value="">Pilih Jabfung</option>
+                <option>Tenaga Sanitasi Lingkungan</option>
+                <option>Asisten Apoteker</option>
+                <option>Epidemiolog Kesehatan</option>
+                <option>Promosi Kesehatan dan Ilmu Perilaku</option>
+                <option>Pembimbing Kesehatan Kerja</option>
+                <option>Entomolog kesehatan</option>
+                <option>Nutrisionis</option>
+                <option>Teknisi Elektromedis</option>
+                <option>Administrator Kesehatan</option>
+                <option>DOKTER</option>
+                <option>DOKTER GIGI</option>
+                <option>PERAWAT</option>
+                <option>BIDAN</option>
+                <option>APOTEKER</option>
+                <option>PEREKAM MEDIS</option>
+                <option>FISIOTERAPIS</option>
+                <option>TERAPIS WICARA</option>
+                <option>OKUPASI TERAPIS</option>
+                <option>PSIKOLOGI KLINIS</option>
+                <option>PRANATA LABORATORIUM KESEHATAN</option>
+                <option>RADIOGRAFER</option>
+                <option>FISIKAWAN MEDIS</option>
+                <option>TEKNISI TRANSFUSI DARAH</option>
+                <option>PENATA ANESTESI</option>
+                <option>TERAPIS GIGI DAN MULUT</option>
+                <option>REFRAKSIONIS OPTISIEN/OPTOMETRIS</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Jenjang Tujuan</label>
+              <select name="jenjang_tujuan">
+                <option value="">Pilih</option>
+                <option>Terampil</option>
+                <option>Mahir</option>
+                <option>Penyelia</option>
+                <option>Ahli Pertama</option>
+                <option>Ahli Muda</option>
+                <option>Ahli Madya</option>
+                <option>Ahli Utama</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top:20px">
+            <div class="form-group"><label>Upload PAK (PDF) *</label><input type="file" name="file_pak" accept=".pdf" required><small>Max 2MB</small></div>
+            <div class="form-group"><label>Foto 4x6 Latar Merah</label><input type="file" name="file_foto" accept="image/*"><small>Max 2MB</small></div>
+            <div class="form-group"><label>Daftar Riwayat Hidup (PDF)</label><input type="file" name="file_drh" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>Ijazah Terakhir (PDF)</label><input type="file" name="file_ijazah" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>STR (PDF)</label><input type="file" name="file_str" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>SK Pangkat Terakhir (PDF)</label><input type="file" name="file_sk_pangkat" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>SK Jabfung Terakhir (PDF)</label><input type="file" name="file_sk_jabfung" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>SKP 2 Tahun Terakhir (PDF)</label><input type="file" name="file_skp" accept=".pdf"><small>Max 2MB</small></div>
+            <div class="form-group"><label>Surat Bebas Hukuman (PDF)</label><input type="file" name="file_bebas" accept=".pdf"><small>Max 2MB</small></div>
+          </div>
+
+          <br><button type="submit" class="btn btn-lg"><i class="fas fa-paper-plane"></i> Kirim Pendaftaran</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- DATA PESERTA UKOM -->
+    <div id="pesertaUkom" class="section">
+      <div class="panel">
+        <h2><i class="fas fa-users"></i> Data Peserta UKOM</h2><br>
+        <div class="peserta-search">
+          <div class="search-group"><label>Cari Nama / No Peserta</label><input type="text" id="puSearch" placeholder="Ketik..." oninput="filterPesertaUkom()"></div>
+          <div class="search-group"><label>Periode</label><select id="puPeriode" onchange="filterPesertaUkom()"><option value="">Semua</option></select></div>
+          <div class="search-group"><label>Status UKOM</label><select id="puStatus" onchange="filterPesertaUkom()"><option value="">Semua</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>No</th><th>Foto</th><th>Periode</th><th>No Peserta</th><th>Nama</th><th>Instansi</th>
+              <th>Jenis</th><th>PAK Inst</th><th>PAK SI ASN</th><th>Status Periode</th><th>Absen</th><th>Status UKOM</th><th>Sertifikat</th>
+            </tr></thead>
+            <tbody id="pesertaUkomBody"><tr><td colspan="13" style="text-align:center;padding:40px">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="pesertaUkomPagination" class="pagination-bar"></div>
+      </div>
+    </div>
+
+    <!-- CEK STATUS -->
+    <div id="status" class="section">
+      <div class="panel" style="max-width:600px">
+        <h2><i class="fas fa-search"></i> Cek Status Peserta</h2><br>
+        <div class="form-group"><label>Masukkan NIK atau NIP</label><input type="text" id="cekData" placeholder="Contoh: 6408xxxxxxxx"></div>
+        <button class="btn" onclick="cekStatus()"><i class="fas fa-magnifying-glass"></i> Cek Status</button>
+        <div class="status-box" id="hasilStatus">Belum ada pencarian.</div>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin" class="section">
+      <!-- LOGIN -->
+      <div id="adminLoginSection">
+        <div class="login-box">
+          <h2><i class="fas fa-lock"></i> Login Admin</h2><br>
+          <div class="form-group"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@mantaf.id"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="adminPass"></div>
+          <button class="btn btn-lg" onclick="loginAdmin()">Login</button>
+          <div id="adminResult" style="margin-top:15px;"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN DASHBOARD -->
+      <div id="adminDataSection" style="display:none">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+            <h2 style="margin:0"><i class="fas fa-shield-halved"></i> Panel Administrator</h2>
+            <button class="btn btn-danger" onclick="logoutAdmin()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+          </div>
+
+          <!-- Admin Tabs -->
+          <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchAdminTab('tabBezetting',this)"><i class="fas fa-table"></i> Bezetting</button>
+            <button class="admin-tab" onclick="switchAdminTab('tabUkom',this)"><i class="fas fa-file-signature"></i> Pendaftaran UKOM</button>
+            <button class="admin-tab" onclick="switchAdminTab('tabPeserta',this)"><i class="fas fa-users"></i> Peserta UKOM</button>
+            <button class="admin-tab" onclick="switchAdminTab('tabPengumuman',this)"><i class="fas fa-bullhorn"></i> Pengumuman</button>
+          </div>
+
+          <!-- TAB BEZETTING -->
+          <div id="tabBezetting" class="admin-tab-content active">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+              <h3>Kelola Data Bezetting</h3>
+              <button class="btn" onclick="openCrudModal('bezetting')"><i class="fas fa-plus"></i> Tambah Data</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr>
+              <th>Instansi</th><th>Jabatan</th><th>Jenjang</th><th>Kebutuhan</th><th>Pemangku</th><th>Lowongan</th><th>Aksi</th>
+            </tr></thead><tbody id="adminBezettingBody"></tbody></table></div>
+          </div>
+
+          <!-- TAB UKOM -->
+          <div id="tabUkom" class="admin-tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">
+              <h3>Kelola Pendaftaran UKOM</h3>
+              <div class="peserta-search" style="margin:0">
+                <input type="text" id="adminUkomSearch" placeholder="Cari nama..." oninput="renderAdminUkom()">
+                <select id="adminUkomStatus" onchange="renderAdminUkom()">
+                  <option value="">Semua Status</option>
+                  <option>Menunggu</option><option>Proses</option><option>Disetujui</option><option>Ditolak</option><option>Dilimpahkan</option><option>Batal</option><option>Perbaikan</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap"><table><thead><tr>
+              <th>NIK</th><th>Nama</th><th>Unit Kerja</th><th>Jabfung Tujuan</th><th>Status</th><th>Aksi</th>
+            </tr></thead><tbody id="adminUkomBody"></tbody></table></div>
+            <div id="adminUkomPag" class="pagination-bar"></div>
+          </div>
+
+          <!-- TAB PESERTA -->
+          <div id="tabPeserta" class="admin-tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+              <h3>Kelola Peserta UKOM (Published)</h3>
+              <button class="btn" onclick="openCrudModal('peserta')"><i class="fas fa-plus"></i> Tambah Peserta</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr>
+              <th>No Peserta</th><th>Nama</th><th>Periode</th><th>Instansi</th><th>Status UKOM</th><th>Aksi</th>
+            </tr></thead><tbody id="adminPesertaBody"></tbody></table></div>
+          </div>
+
+          <!-- TAB PENGUMUMAN -->
+          <div id="tabPengumuman" class="admin-tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+              <h3>Kelola Pengumuman</h3>
+              <button class="btn" onclick="openCrudModal('pengumuman')"><i class="fas fa-plus"></i> Tambah Pengumuman</button>
+            </div>
+            <div class="table-wrap"><table><thead><tr>
+              <th>Tanggal</th><th>Judul</th><th>Isi</th><th>Aksi</th>
+            </tr></thead><tbody id="adminPengumumanBody"></tbody></table></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- UNIVERSAL MODAL -->
+<div class="modal-overlay" id="universalModal" style="display:none" onclick="if(event.target===this) closeUniversalModal()">
+  <div class="modal-box" id="universalModalBox">
+    <div class="modal-header"><h3 id="modalTitle">Modal</h3><button class="modal-close" onclick="closeUniversalModal()">&times;</button></div>
+    <div class="modal-body" id="modalBody">...</div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/app-admin.js"></script>
+</body>
+</html>
