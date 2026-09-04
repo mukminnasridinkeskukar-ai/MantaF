@@ -1,0 +1,393 @@
+/* ============================================================
+   MANTAF v2 — ADMIN.CSS
+   Login admin, panel CRUD (tabs), modal form, detail peserta
+   ============================================================ */
+
+/* ---------- LOGIN ---------- */
+.login-box{
+max-width:420px;
+margin:30px auto;
+background:#fff;
+padding:34px 30px;
+border-radius:22px;
+box-shadow:var(--shadow-lg);
+border:1px solid rgba(226,232,240,.8);
+position:relative;
+overflow:hidden;
+}
+
+.login-box::before{
+content:'';
+position:absolute;
+top:0;left:0;right:0;
+height:5px;
+background:var(--grad-brand);
+}
+
+.login-box h2{font-family:'Montserrat',sans-serif;font-size:20px;color:var(--dark);display:flex;align-items:center;gap:10px}
+
+.login-box h2 i{color:var(--secondary);font-size:17px;background:rgba(20,184,166,.12);width:38px;height:38px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center}
+
+.login-hint{
+margin-top:18px;
+font-size:12px;
+color:var(--gray);
+background:#f8fafc;
+border:1px dashed var(--line);
+padding:12px 14px;
+border-radius:12px;
+line-height:1.7;
+}
+
+.login-hint code{background:rgba(15,118,110,.08);color:var(--primary-dark);padding:2px 7px;border-radius:6px;font-size:11.5px;font-weight:600}
+
+/* ---------- PANEL ADMIN ---------- */
+.admin-panel{padding:0;overflow:hidden}
+
+.admin-panel-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 24px;
+background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+color:#fff;
+flex-wrap:wrap;
+gap:12px;
+}
+
+.admin-panel-header h2{font-size:18px;display:flex;align-items:center;gap:10px;font-family:'Montserrat',sans-serif}
+
+.admin-panel-header h2 i{color:#5eead4}
+
+.admin-panel-header .ah-right{display:flex;gap:9px;flex-wrap:wrap}
+
+.admin-panel-header .btn-ghost{background:rgba(255,255,255,.14);color:#fff;box-shadow:none}
+.admin-panel-header .btn-ghost:hover{background:rgba(255,255,255,.24)}
+.admin-panel-header .btn-danger{background:rgba(220,38,38,.85);box-shadow:none}
+.admin-panel-header .btn-danger:hover{background:var(--danger)}
+
+.admin-tabs{
+display:flex;
+gap:6px;
+padding:14px 24px 0;
+background:#fff;
+border-bottom:1px solid var(--line);
+overflow-x:auto;
+}
+
+.admin-tab{
+border:none;
+background:transparent;
+padding:12px 20px 14px;
+font-size:13.5px;
+font-weight:600;
+color:var(--gray);
+cursor:pointer;
+position:relative;
+white-space:nowrap;
+transition:color .2s;
+display:flex;align-items:center;gap:8px;
+font-family:'Poppins',sans-serif;
+}
+
+.admin-tab i{font-size:13px}
+
+.admin-tab:hover{color:var(--primary-dark)}
+
+.admin-tab.active{color:var(--primary)}
+
+.admin-tab.active::after{
+content:'';
+position:absolute;
+left:14px;right:14px;bottom:0;
+height:3px;
+background:var(--grad-brand);
+border-radius:4px 4px 0 0;
+}
+
+.admin-tab .tab-count{
+background:rgba(20,184,166,.12);
+color:var(--primary-dark);
+font-size:10.5px;
+font-weight:700;
+padding:2px 9px;
+border-radius:12px;
+min-width:22px;
+text-align:center;
+}
+
+.admin-tabbody{display:none;padding:22px 24px 26px}
+.admin-tabbody.active{display:block;animation:fade .3s ease}
+
+.admin-toolbar{
+display:flex;
+gap:11px;
+margin-bottom:16px;
+flex-wrap:wrap;
+align-items:flex-end;
+}
+
+.admin-toolbar .search-group{display:flex;flex-direction:column}
+
+.admin-toolbar label{font-size:11px;font-weight:600;color:#334155;margin-bottom:5px}
+
+.admin-toolbar input,.admin-toolbar select{
+padding:10px 13px;
+border:1.5px solid var(--line);
+border-radius:10px;
+font-size:13px;
+outline:none;
+min-width:160px;
+background:#fff;
+transition:all .15s;
+}
+
+.admin-toolbar input:focus,.admin-toolbar select:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(20,184,166,.12)}
+
+.admin-toolbar .spacer{flex:1}
+
+/* ---------- TABEL ADMIN ---------- */
+.admin-table-wrap{
+overflow-x:auto;
+border-radius:14px;
+border:1px solid var(--line);
+}
+
+.admin-table-wrap table{min-width:900px}
+
+.admin-row-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+.act-btn{
+border:none;
+width:32px;height:32px;
+border-radius:9px;
+cursor:pointer;
+font-size:12.5px;
+display:inline-flex;
+align-items:center;justify-content:center;
+transition:all .15s;
+color:#fff;
+}
+
+.act-view{background:#0284c7}
+.act-view:hover{background:#0369a1;transform:scale(1.08)}
+
+.act-edit{background:#f59e0b}
+.act-edit:hover{background:#d97706;transform:scale(1.08)}
+
+.act-del{background:#dc2626}
+.act-del:hover{background:#b91c1c;transform:scale(1.08)}
+
+/* ---------- MODAL FORM CRUD ---------- */
+.crud-overlay{
+position:fixed;inset:0;
+background:rgba(15,23,42,.62);
+backdrop-filter:blur(6px);
+z-index:11000;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+animation:fade .2s ease;
+}
+
+.crud-overlay.hidden{display:none}
+
+.crud-modal{
+background:#fff;
+border-radius:20px;
+width:100%;
+max-width:680px;
+max-height:92vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+box-shadow:var(--shadow-lg);
+animation:lbPop .25s ease;
+}
+
+.crud-modal-lg{max-width:860px}
+
+.crud-modal-header{
+padding:18px 24px;
+border-bottom:1px solid var(--line);
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:linear-gradient(135deg,#f8fafc,#fff);
+flex-shrink:0;
+}
+
+.crud-modal-header h3{font-size:15.5px;color:var(--dark);display:flex;align-items:center;gap:10px}
+
+.crud-modal-header h3 i{color:var(--secondary)}
+
+.crud-modal-body{padding:22px 24px;overflow-y:auto;flex:1;min-height:0}
+
+.crud-modal-footer{
+padding:15px 24px;
+border-top:1px solid var(--line);
+display:flex;
+justify-content:flex-end;
+gap:10px;
+background:#fff;
+flex-shrink:0;
+flex-wrap:wrap;
+}
+
+.crud-hint{
+font-size:12px;
+color:var(--gray);
+background:#f8fafc;
+border:1px dashed var(--line);
+border-radius:10px;
+padding:10px 14px;
+margin-bottom:16px;
+line-height:1.6;
+}
+
+/* ---------- KONFIRMASI ---------- */
+.confirm-modal{max-width:400px;text-align:center}
+
+.confirm-icon{
+width:64px;height:64px;
+border-radius:50%;
+margin:6px auto 16px;
+display:flex;align-items:center;justify-content:center;
+font-size:26px;
+background:var(--danger-light);
+color:var(--danger);
+}
+
+.confirm-icon.info{background:var(--info-light);color:var(--info)}
+.confirm-modal h3{font-size:16px;margin-bottom:8px;color:var(--dark)}
+.confirm-modal p{font-size:13px;color:var(--gray);line-height:1.7;margin-bottom:20px}
+
+/* ---------- DETAIL PESERTA (lightbox) ---------- */
+#adminLightboxContent{
+max-width:960px !important;
+width:94% !important;
+max-height:90vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+padding:0 !important;
+border-radius:20px;
+position:relative;
+}
+
+.admin-lb-header{
+flex-shrink:0;
+padding:20px 26px 14px;
+position:relative;
+border-bottom:1px solid #f1f5f9;
+}
+
+.admin-lb-header h3{font-size:16px;color:var(--dark);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.admin-lb-body{
+flex:1;
+overflow-y:auto;
+overflow-x:hidden;
+min-height:0;
+padding:20px 26px 6px;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:thin;
+scrollbar-color:rgba(20,184,166,.25) transparent;
+}
+
+.admin-lb-footer{
+flex-shrink:0;
+padding:14px 26px 20px;
+border-top:1px solid var(--line);
+background:#fff;
+display:flex;
+gap:10px;
+align-items:center;
+justify-content:flex-end;
+flex-wrap:wrap;
+}
+
+/* Detail layout: data kiri, foto kanan */
+.admin-detail-wrap{display:flex;gap:20px;align-items:flex-start}
+
+.admin-detail-data{flex:1;min-width:0}
+
+.admin-detail-foto{flex-shrink:0;width:180px;text-align:center}
+
+.admin-detail-foto img{
+width:170px;height:210px;
+object-fit:cover;
+border-radius:14px;
+border:3px solid var(--line);
+box-shadow:0 4px 20px rgba(0,0,0,.08);
+transition:transform .2s,box-shadow .2s;
+cursor:pointer;
+}
+
+.admin-detail-foto img:hover{transform:scale(1.03);box-shadow:0 8px 30px rgba(0,0,0,.15)}
+
+.admin-detail-foto .foto-label{font-size:11px;color:var(--gray-light);margin-top:6px;font-weight:500}
+
+.admin-data-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:6px 18px;
+font-size:13px;
+}
+
+.admin-data-grid .dg-item{padding:5px 0;border-bottom:1px solid #f8fafc}
+
+.admin-data-grid .dg-label{
+font-size:10.5px;
+color:var(--gray-light);
+font-weight:600;
+text-transform:uppercase;
+letter-spacing:.4px;
+margin-bottom:1px;
+}
+
+.admin-data-grid .dg-value{color:#1e293b;font-weight:500;word-break:break-word}
+
+.admin-file-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+margin-top:14px;
+font-size:12px;
+}
+
+.admin-file-grid .af-item{
+background:#f8fafc;
+border-radius:10px;
+padding:9px 11px;
+border:1px solid #f1f5f9;
+transition:all .15s;
+}
+
+.admin-file-grid .af-item:hover{background:#f0fdfa;border-color:rgba(20,184,166,.3)}
+
+.admin-file-grid .af-item .af-label{font-size:10.5px;color:var(--gray);font-weight:600;margin-bottom:4px}
+
+.admin-file-grid .af-item a{font-size:11.5px;word-break:break-all}
+
+.admin-status-section{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+
+.admin-status-section .ss-title{font-size:13px;font-weight:600;color:#334155;margin-bottom:9px}
+
+.admin-status-btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:640px){
+.admin-panel-header,.admin-tabs,.admin-tabbody{padding-left:14px;padding-right:14px}
+.admin-lb-header{padding:16px 16px 10px}
+.admin-lb-body{padding:14px 14px 4px}
+.admin-lb-footer{padding:12px 14px 16px}
+.admin-detail-wrap{flex-direction:column-reverse;gap:12px}
+.admin-detail-foto{width:100%}
+.admin-detail-foto img{width:130px;height:160px}
+.admin-data-grid{grid-template-columns:1fr;gap:4px 0}
+.admin-file-grid{grid-template-columns:repeat(2,1fr)}
+.crud-overlay{padding:10px}
+.crud-modal-body{padding:16px}
+}

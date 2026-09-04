@@ -1,0 +1,85 @@
+<!-- ==================== DASHBOARD ==================== -->
+<div class="card-grid">
+
+  <div class="card dash-card-clickable" onclick="showDashPesertaModal()" title="Klik untuk lihat detail data peserta">
+    <div class="card-icon"><i class="fas fa-users"></i></div>
+    <h3>Total Peserta UKOM</h3>
+    <h1 id="pesertaCount">0</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-icon"><i class="fas fa-hospital"></i></div>
+    <h3>Total Instansi</h3>
+    <h1 id="instansiCount">0</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+    <h3>Total Lowongan</h3>
+    <h1 id="lowonganCount">0</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-icon"><i class="fas fa-code-branch"></i></div>
+    <h3>Status Sistem</h3>
+    <h1 style="font-size:20px;line-height:1.5">Pengembangan<br>Versi 2.0</h1>
+  </div>
+</div>
+
+<div class="card-grid" style="margin-top:25px">
+
+  <!-- Donut Status Verifikasi -->
+  <div class="card" style="text-align:center">
+    <h3 style="margin-bottom:15px">Status Verifikasi</h3>
+    <div style="position:relative;width:150px;height:150px;margin:0 auto">
+      <svg id="statusChart" viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+        <circle id="statusDisetujui" cx="50" cy="50" r="45" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+        <circle id="statusDitolak" cx="50" cy="50" r="45" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+        <circle id="statusDilimpahkan" cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+        <circle id="statusBatal" cx="50" cy="50" r="45" fill="none" stroke="#94a3b8" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+        <circle id="statusProses" cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+        <circle id="statusMenunggu" cx="50" cy="50" r="45" fill="none" stroke="#eab308" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+        <div style="font-size:12px;color:#64748b">Total</div>
+        <div id="statusTotal" style="font-size:24px;font-weight:700;color:#0f172a">0</div>
+      </div>
+    </div>
+
+    <div class="dash-status-list" id="dashStatusList">
+      <div class="dash-status-item" onclick="showDashStatusModal('Disetujui')"><span class="dot" style="background:#16a34a"></span><span>Disetujui</span><span class="count" id="cntDisetujui">0</span></div>
+      <div class="dash-status-item" onclick="showDashStatusModal('Ditolak')"><span class="dot" style="background:#dc2626"></span><span>Ditolak</span><span class="count" id="cntDitolak">0</span></div>
+      <div class="dash-status-item" onclick="showDashStatusModal('Dilimpahkan')"><span class="dot" style="background:#3b82f6"></span><span>Dilimpahkan</span><span class="count" id="cntDilimpahkan">0</span></div>
+      <div class="dash-status-item" onclick="showDashStatusModal('Batal')"><span class="dot" style="background:#94a3b8"></span><span>Batal</span><span class="count" id="cntBatal">0</span></div>
+      <div class="dash-status-item" onclick="showDashStatusModal('Proses')"><span class="dot" style="background:#f59e0b"></span><span>Proses</span><span class="count" id="cntProses">0</span></div>
+      <div class="dash-status-item" onclick="showDashStatusModal('Menunggu')"><span class="dot" style="background:#eab308"></span><span>Menunggu</span><span class="count" id="cntMenunggu">0</span></div>
+    </div>
+  </div>
+
+  <!-- Donut Jenis Jabfung -->
+  <div class="card" style="text-align:center">
+    <h3 style="margin-bottom:15px">Jenis Jabatan Fungsional</h3>
+    <div style="position:relative;width:150px;height:150px;margin:0 auto">
+      <svg id="jabfungChart" viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+        <g id="jabfungSegments"></g>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+        <div style="font-size:12px;color:#64748b">Jabfung</div>
+        <div id="jabfungTotal" style="font-size:24px;font-weight:700;color:#0f172a">0</div>
+      </div>
+    </div>
+    <div id="jabfungLegend" style="margin-top:15px;font-size:11px;max-height:120px;overflow-y:auto;text-align:left"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-circle-info"></i> Dashboard MantaF</h2>
+  <br>
+  <p style="line-height:1.9;font-size:14px;color:#334155">
+    MantaF merupakan platform digital Manajemen Tata Kelola Jabatan Fungsional Kesehatan yang dirancang untuk
+    mendukung pengelolaan data, layanan, monitoring, dan pengembangan SDM kesehatan secara terintegrasi, cepat,
+    dan akurat di lingkungan Dinas Kesehatan. @copyright Mukmin Nasri_2026
+  </p>
+</div>

@@ -1,0 +1,49 @@
+<!-- ==================== BEZETTING ==================== -->
+<div class="section-head">
+  <h2><i class="fas fa-table-cells-large"></i> Data Bezetting Jabatan Fungsional Kesehatan</h2>
+  <button class="btn btn-outline btn-sm" onclick="loadBezetting(true)"><i class="fas fa-rotate-right"></i> Muat Ulang</button>
+</div>
+
+<div class="panel">
+  <div class="form-grid" style="margin-bottom:20px">
+    <div class="form-group">
+      <label>Filter Instansi</label>
+      <select id="filterInstansi" onchange="applyBezettingFilter()"><option value="">Semua Instansi</option></select>
+    </div>
+    <div class="form-group">
+      <label>Filter Jenis Jabatan</label>
+      <select id="filterJabatan" onchange="applyBezettingFilter()"><option value="">Semua Jenis Jabatan</option></select>
+    </div>
+    <div class="form-group">
+      <label>Filter Jenjang</label>
+      <select id="filterJenjang" onchange="applyBezettingFilter()"><option value="">Semua Jenjang</option></select>
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button type="button" class="btn btn-ghost" onclick="resetBezettingFilter()"><i class="fas fa-rotate-left"></i> Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Instansi / Institusi Pelayanan Kesehatan</th>
+          <th>Jenis Jabatan Fungsional</th>
+          <th>Jenjang Jabatan</th>
+          <th>Kebutuhan</th>
+          <th>Pemangku</th>
+          <th>Lowongan Formasi</th>
+          <th>Nama-Nama Pemangku Saat Ini</th>
+          <th>Nama-Nama Pemangku Yang Telah Disetujui Untuk Mengisi Lowongan</th>
+          <th>Sisa</th>
+        </tr>
+      </thead>
+      <tbody id="bezettingBody">
+        <tr><td colspan="9" style="text-align:center;padding:40px;color:#64748b"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="pagination" style="margin-top:20px;text-align:center"></div>
+</div>

@@ -1,0 +1,24 @@
+<!-- ==================== CEK STATUS ==================== -->
+<div class="section-head">
+  <h2><i class="fas fa-magnifying-glass-chart"></i> Cek Status Peserta</h2>
+</div>
+
+<div class="panel">
+  <p style="font-size:13.5px;color:#64748b;line-height:1.8;margin-bottom:16px">
+    Masukkan <b>NIK</b> atau <b>NIP</b> yang Anda gunakan saat pendaftaran untuk melihat status verifikasi
+    berkas UKOM Anda secara langsung.
+  </p>
+
+  <div class="form-group" style="max-width:480px">
+    <label>Masukkan NIK atau NIP</label>
+    <input type="text" id="cekData" placeholder="Contoh: 6402xxxxxxxxxxxx">
+  </div>
+
+  <button class="btn" onclick="cekStatus()" style="margin-top:14px">
+    <i class="fas fa-magnifying-glass"></i> Cek Status
+  </button>
+
+  <div class="status-box" id="hasilStatus">
+    <span style="color:#94a3b8"><i class="fas fa-inbox"></i> Belum ada pencarian.</span>
+  </div>
+</div>

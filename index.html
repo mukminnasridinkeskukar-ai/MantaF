@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="MantaF - Manajemen Tata Kelola Jabatan Fungsional Kesehatan Dinas Kesehatan Kabupaten Kutai Kartanegara">
+<title>MantaF — Dinas Kesehatan Kutai Kartanegara</title>
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f766e'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>M</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- ===== CSS Modular ===== -->
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/landing.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splashScreen">
+  <div class="splash-glow"></div>
+  <div class="splash-logo-wrap">
+    <img class="splash-logo" src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" alt="Logo Dinkes Kukar" onerror="this.style.display='none'">
+  </div>
+  <div class="splash-title" id="splashTitle"></div>
+  <div class="splash-subtitle">Manajemen Tata Kelola Jabatan Fungsional Kesehatan<br>Dinas Kesehatan Kabupaten Kutai Kartanegara</div>
+  <div class="splash-progress-wrap"><div class="splash-progress-bar"></div></div>
+</div>
+
+<!-- ==================== LANDING PAGE (dimuat dari partials/landing.html) ==================== -->
+<div id="landingPage"><div class="partial-loading"><i class="fas fa-spinner fa-spin"></i></div></div>
+
+<!-- ==================== APP WRAPPER ==================== -->
+<div id="appWrapper">
+
+  <!-- ==================== SIDEBAR (3 BAGIAN) ==================== -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="profile-section" id="profileSection">
+      <div class="profile-avatar">
+        <img src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=MantaF&background=0f766e&color=fff'" id="profileImg" alt="MantaF">
+        <span class="profile-status"></span>
+      </div>
+      <div class="profile-name">MantaF</div>
+      <div class="profile-role">Platform Jabfung Kesehatan</div>
+      <div class="profile-status-text">Dinkes Kutai Kartanegara</div>
+    </div>
+
+    <div class="sidebar-scroll">
+      <!-- ===== BAGIAN 1 : MENU UTAMA ===== -->
+      <div class="menu-group">
+        <div class="menu-group-label"><i class="fas fa-house-flag"></i> Menu Utama</div>
+        <nav class="menu">
+          <button class="active" data-section="dashboard" onclick="showSection('dashboard',this)">
+            <i class="fas fa-gauge-high"></i><span>Dashboard</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- ===== BAGIAN 2 : DATA & INFORMASI ===== -->
+      <div class="menu-group">
+        <div class="menu-group-label"><i class="fas fa-database"></i> Data &amp; Informasi</div>
+        <nav class="menu">
+          <button data-section="pengumuman" onclick="showSection('pengumuman',this)">
+            <i class="fas fa-bullhorn"></i><span>Pengumuman</span>
+          </button>
+          <button data-section="bezetting" onclick="showSection('bezetting',this)">
+            <i class="fas fa-table-cells-large"></i><span>Bezetting</span>
+          </button>
+          <button data-section="pesertaUkom" onclick="showSection('pesertaUkom',this)">
+            <i class="fas fa-users"></i><span>Data Peserta UKOM</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- ===== BAGIAN 3 : LAYANAN & ADMIN ===== -->
+      <div class="menu-group">
+        <div class="menu-group-label"><i class="fas fa-hands-holding-circle"></i> Layanan &amp; Admin</div>
+        <nav class="menu">
+          <button data-section="ukom" onclick="showSection('ukom',this)">
+            <i class="fas fa-file-pen"></i><span>Daftar UKOM</span>
+          </button>
+          <button data-section="status" onclick="showSection('status',this)">
+            <i class="fas fa-magnifying-glass-chart"></i><span>Cek Status</span>
+          </button>
+          <button class="menu-admin" data-section="admin" onclick="showSection('admin',this)">
+            <i class="fas fa-user-shield"></i><span>Admin</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Ciutkan sidebar">
+        <i class="fas fa-angles-left" id="collapseIcon"></i>
+      </button>
+      <div class="sidebar-copy">© 2026 Dinkes Kukar</div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN ==================== -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-burger" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div>
+          <div class="title" id="topbarTitle">Dashboard</div>
+          <div class="subtitle" id="topbarSubtitle">Ringkasan aktivitas platform MantaF</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="topbarClock"><i class="fas fa-clock"></i> <span>--:--</span></div>
+        <button class="btn btn-outline" onclick="openLightbox()">
+          <i class="fas fa-circle-info"></i> Tentang Sistem
+        </button>
+      </div>
+    </div>
+
+    <!-- Semua section dimuat dinamis dari folder partials/ -->
+    <div id="sectionsMount">
+      <div class="partial-loading main-loading"><i class="fas fa-spinner fa-spin"></i> Menyiapkan dashboard…</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== LIGHTBOX UMUM ==================== -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this) closeLightbox()">
+  <div class="lightbox-content">
+    <span class="close" onclick="closeLightbox()">&times;</span>
+    <div class="lb-logo-wrap">
+      <img src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" alt="Logo" onerror="this.style.display='none'">
+    </div>
+    <h2>Tentang MantaF</h2>
+    <p class="lb-quote">
+      “MantaF hadir sebagai platform digital terintegrasi untuk mendukung tata kelola Jabatan
+      Fungsional Kesehatan yang modern, efektif, transparan, dan akuntabel.”
+    </p>
+    <div class="lb-meta">
+      <span><i class="fas fa-building"></i> Dinas Kesehatan Kab. Kutai Kartanegara</span>
+      <span><i class="fas fa-code-branch"></i> Versi 2.0 · Supabase Edition</span>
+      <span><i class="fas fa-user"></i> © Mukmin Nasri 2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LIGHTBOX GAMBAR ==================== -->
+<div class="lightbox" id="lightboxImg" onclick="if(event.target===this) closeLightboxImg()">
+  <div class="lightbox-content lb-img-wrap">
+    <span class="close" onclick="closeLightboxImg()">&times;</span>
+    <img id="lightboxImgEl" class="lb-img-preview" src="" alt="Preview">
+    <button class="btn" onclick="closeLightboxImg()" style="margin-top:20px">Tutup</button>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<!-- Not served over HTTP notice -->
+<div id="fileProtocolWarn" style="display:none;position:fixed;inset:0;z-index:200000;background:#0f172a;color:#fff;padding:24px;align-items:center;justify-content:center;">
+  <div style="max-width:520px;background:#1e293b;padding:28px;border-radius:16px;line-height:1.7">
+    <h3 style="color:#5eead4;margin-bottom:10px"><i class="fas fa-triangle-exclamation"></i> Perlu Server Web</h3>
+    <p>Aplikasi ini dimuat secara modular sehingga harus dibuka lewat HTTP(S), bukan langsung dari file (file://).</p>
+    <p style="margin-top:8px">Deploy ke <b>GitHub Pages</b>, atau uji lokal dengan:<br>
+    <code style="background:#0f172a;padding:4px 8px;border-radius:6px;display:inline-block;margin-top:6px">npx serve .</code> atau ekstensi <b>Live Server</b> VS Code.</p>
+  </div>
+</div>
+
+<!-- ===== Supabase JS v2 (CDN) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ===== JS Modular ===== -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/loader.js"></script>
+<script src="assets/js/landing.js"></script>
+<script src="assets/js/dashboard.js"></script>
+<script src="assets/js/pengumuman.js"></script>
+<script src="assets/js/bezetting.js"></script>
+<script src="assets/js/ukom.js"></script>
+<script src="assets/js/peserta-ukom.js"></script>
+<script src="assets/js/status.js"></script>
+<script src="assets/js/admin.js"></script>
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>

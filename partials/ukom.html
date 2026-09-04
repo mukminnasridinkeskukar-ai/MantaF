@@ -1,0 +1,134 @@
+<!-- ==================== DAFTAR UKOM ==================== -->
+<div class="section-head">
+  <h2><i class="fas fa-file-pen"></i> Formulir Pendaftaran UKOM</h2>
+</div>
+
+<div class="panel">
+  <div class="announcement">
+    <b>Template Dokumen:</b><br>
+    <a href="https://docs.google.com/document/d/1Ts3Reus9QifFwmBL444snBA3LE5Q1eMB/edit?usp=sharing&ouid=113049310293805241737&rtpof=true&sd=true" target="_blank" rel="noopener">Download Template Daftar Riwayat Hidup</a> |
+    <a href="https://docs.google.com/document/d/1TXurwjNMDh9HZuUZuCTEfawa7G0ftijq/edit?usp=sharing&ouid=113049310293805241737&rtpof=true&sd=true" target="_blank" rel="noopener">Download Template Surat Keterangan Tidak Sedang Menjalani Hukuman Disiplin</a>
+  </div>
+  <br>
+
+  <form id="ukomForm">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>NIK <span style="color:#dc2626">*</span></label>
+        <input type="text" name="nik" id="ukomNik" maxlength="16" required placeholder="16 digit NIK">
+      </div>
+      <div class="form-group">
+        <label>NIP <span style="color:#dc2626">*</span></label>
+        <input type="text" name="nip" required placeholder="Nomor Induk Pegawai">
+      </div>
+      <div class="form-group">
+        <label>Nama Tanpa Gelar <span style="color:#dc2626">*</span></label>
+        <input type="text" name="nama_tanpa_gelar" required>
+      </div>
+      <div class="form-group">
+        <label>Nama Unit Kerja <span style="color:#dc2626">*</span></label>
+        <select name="nama_unit_kerja" id="selUnitKerja" required><option value="">Pilih Instansi</option></select>
+      </div>
+      <div class="form-group">
+        <label>Pangkat dan Golongan</label>
+        <select name="pangkat_dan_golongan" id="selPangkat"><option value="">Pilih Pangkat</option></select>
+      </div>
+      <div class="form-group">
+        <label>Nomor SK Jabfung Terakhir</label>
+        <input type="text" name="nomor_sk_jabfungs_terakhir">
+      </div>
+      <div class="form-group">
+        <label>Jenis Kelamin</label>
+        <select name="jenis_kelamin" id="selJenisKelamin"><option value="">Pilih</option></select>
+      </div>
+      <div class="form-group">
+        <label>Jenis UKOM</label>
+        <select name="jenis_ukom" id="selJenisUkom"><option value="">Pilih Jenis UKOM</option></select>
+      </div>
+      <div class="form-group">
+        <label>Jabfung Saat Ini</label>
+        <select name="jabfung_saat_ini" id="selJabfungSaatIni"><option value="">Pilih Jabfung</option></select>
+      </div>
+      <div class="form-group">
+        <label>Jenjang Saat Ini</label>
+        <select name="jenjang_saat_ini" id="selJenjangSaatIni"><option value="">Pilih Jenjang</option></select>
+      </div>
+      <div class="form-group">
+        <label>Jabfung Tujuan</label>
+        <select name="jabfung_tujuan" id="selJabfungTujuan"><option value="">Pilih Jabfung</option></select>
+      </div>
+      <div class="form-group">
+        <label>Jenjang Tujuan</label>
+        <select name="jenjang_tujuan" id="selJenjangTujuan"><option value="">Pilih Jenjang</option></select>
+      </div>
+      <div class="form-group">
+        <label>Nomor WhatsApp</label>
+        <input type="text" name="nomor_whatsapp" id="ukomWa" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label>Email Aktif</label>
+        <input type="email" name="email_aktif">
+      </div>
+      <div class="form-group">
+        <label>Nilai PAK Terakhir</label>
+        <input type="text" name="nilai_pak_terakhir">
+      </div>
+    </div>
+
+    <br>
+    <h3 style="font-size:15px;color:#0f766e;margin-bottom:14px"><i class="fas fa-paperclip"></i> Unggah Dokumen Persyaratan</h3>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Upload PAK Konvensional, PAK Integrasi 2022 dan PAK Konversi (e-KIN) Terakhir (PDF) <span style="color:#dc2626">*</span></label>
+        <input type="file" name="upload_pak_konvensional_integrasi_konversi_terakhir" accept=".pdf" required>
+        <small>Format PDF, 300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload Foto 4x6 Latar Merah</label>
+        <input type="file" name="upload_foto_4x6_latar_merah" accept="image/*">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload Daftar Riwayat Hidup</label>
+        <input type="file" name="upload_daftar_riwayat_hidup" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload Ijazah Terakhir</label>
+        <input type="file" name="upload_ijazah_terakhir" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload STR</label>
+        <input type="file" name="upload_str" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload SK Pangkat Terakhir</label>
+        <input type="file" name="upload_sk_pangkat_terakhir" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload SK Jabfung Terakhir</label>
+        <input type="file" name="upload_sk_jabfung_terakhir" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload SKP 2 Tahun Terakhir</label>
+        <input type="file" name="upload_skp_2_tahun_terakhir" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+      <div class="form-group">
+        <label>Upload Surat Keterangan Tidak Sedang Menjalani Hukuman Disiplin</label>
+        <input type="file" name="upload_surat_keterangan_tidak_sedang_menjalani_hukuman_disiplin" accept=".pdf">
+        <small>300-700KB</small>
+      </div>
+    </div>
+
+    <br>
+    <button type="submit" class="btn" id="ukomSubmitBtn" style="padding:14px 34px">
+      <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
+    </button>
+  </form>
+</div>

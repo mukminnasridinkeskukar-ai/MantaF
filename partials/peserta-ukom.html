@@ -1,0 +1,39 @@
+<!-- ==================== DATA PESERTA UKOM ==================== -->
+<div class="section-head">
+  <h2><i class="fas fa-users"></i> Data Peserta UKOM</h2>
+  <button class="btn btn-outline btn-sm" onclick="loadPesertaUkom(true)"><i class="fas fa-rotate-right"></i> Muat Ulang</button>
+</div>
+
+<div class="panel">
+  <div class="peserta-search">
+    <div class="search-group">
+      <label>Cari Nama / No Peserta</label>
+      <input type="text" id="pesertaUkomSearch" placeholder="Ketik nama atau no peserta..." oninput="filterPesertaUkom()">
+    </div>
+    <div class="search-group">
+      <label>Filter Periode</label>
+      <select id="pesertaUkomPeriode" onchange="filterPesertaUkom()"><option value="">Semua Periode</option></select>
+    </div>
+    <div class="search-group">
+      <label>Filter Status UKOM</label>
+      <select id="pesertaUkomStatus" onchange="filterPesertaUkom()"><option value="">Semua Status</option></select>
+    </div>
+  </div>
+
+  <div class="peserta-ukom-wrap table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th><th>Foto</th><th>Periode</th><th>No Peserta</th><th>Nama</th><th>Instansi</th>
+          <th>Jenis UKOM</th><th>PAK Instansi</th><th>PAK SI ASN</th><th>Status Periode</th>
+          <th>Absen</th><th>Status UKOM</th><th>Sertifikat</th>
+        </tr>
+      </thead>
+      <tbody id="pesertaUkomBody">
+        <tr><td colspan="13" style="text-align:center;padding:40px;color:#64748b"><i class="fas fa-spinner fa-spin"></i> Memuat data peserta...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="pesertaUkomPagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:8px"></div>
+</div>

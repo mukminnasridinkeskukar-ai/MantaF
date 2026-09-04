@@ -1,0 +1,138 @@
+<!-- ==================== ADMIN ==================== -->
+<div id="adminLoginSection">
+  <div class="login-box">
+    <h2><i class="fas fa-user-shield"></i> Login Admin</h2>
+    <br>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="adminUser" autocomplete="username">
+    </div>
+    <br>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="adminPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginAdmin()">
+    </div>
+    <br>
+    <button class="btn" onclick="loginAdmin()" style="width:100%">
+      <i class="fas fa-right-to-bracket"></i> Login
+    </button>
+    <div id="adminResult" style="margin-top:16px"></div>
+    <div class="login-hint">
+      <i class="fas fa-circle-info"></i> Akun admin dikelola melalui tabel <code>admin_users</code> di Supabase.
+      Login default: <code>admin</code> / <code>admin123</code> — segera ganti setelah digunakan.
+    </div>
+  </div>
+</div>
+
+<div id="adminDataSection" style="display:none">
+
+  <div class="panel admin-panel">
+
+    <div class="admin-panel-header">
+      <h2><i class="fas fa-user-gear"></i> Panel Admin — Manajemen Data</h2>
+      <div class="ah-right">
+        <button class="btn btn-ghost btn-sm" onclick="adminRefreshAll()"><i class="fas fa-rotate-right"></i> Segarkan</button>
+        <button class="btn btn-ghost btn-sm" onclick="openChangePassword()"><i class="fas fa-key"></i> Ganti Password</button>
+        <button class="btn btn-danger btn-sm" onclick="logoutAdmin()"><i class="fas fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </div>
+
+    <!-- Tabs: bagian ke-2 sidebar = DATA & INFORMASI -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="pengumuman" onclick="switchAdminTab('pengumuman',this)">
+        <i class="fas fa-bullhorn"></i> Pengumuman <span class="tab-count" id="cntTabPengumuman">0</span>
+      </button>
+      <button class="admin-tab" data-tab="bezetting" onclick="switchAdminTab('bezetting',this)">
+        <i class="fas fa-table-cells-large"></i> Bezetting <span class="tab-count" id="cntTabBezetting">0</span>
+      </button>
+      <button class="admin-tab" data-tab="peserta" onclick="switchAdminTab('peserta',this)">
+        <i class="fas fa-users"></i> Peserta UKOM <span class="tab-count" id="cntTabPeserta">0</span>
+      </button>
+    </div>
+
+    <!-- ===== TAB PENGUMUMAN ===== -->
+    <div class="admin-tabbody active" id="tabBodyPengumuman">
+      <div class="admin-toolbar">
+        <div class="search-group">
+          <label>Cari Judul</label>
+          <input type="text" id="admPengSearch" placeholder="Ketik judul pengumuman..." oninput="renderAdmPengumuman()">
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="openPengumumanForm()"><i class="fas fa-plus"></i> Tambah Pengumuman</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table>
+          <thead><tr><th style="min-width:220px">Judul</th><th>Tanggal</th><th>Prioritas</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="admPengBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== TAB BEZETTING ===== -->
+    <div class="admin-tabbody" id="tabBodyBezetting">
+      <div class="admin-toolbar">
+        <div class="search-group">
+          <label>Cari</label>
+          <input type="text" id="admBezSearch" placeholder="Instansi / jabatan..." oninput="renderAdmBezetting()">
+        </div>
+        <div class="search-group">
+          <label>Filter Instansi</label>
+          <select id="admBezFilterInstansi" onchange="renderAdmBezetting()"><option value="">Semua</option></select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="openBezettingForm()"><i class="fas fa-plus"></i> Tambah Bezetting</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table>
+          <thead><tr><th>Instansi</th><th>Jenis Jabatan</th><th>Jenjang</th><th>Kebutuhan</th><th>Pemangku</th><th>Lowongan</th><th>Sisa</th><th>Aksi</th></tr></thead>
+          <tbody id="admBezBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== TAB PESERTA UKOM ===== -->
+    <div class="admin-tabbody" id="tabBodyPeserta">
+      <div class="admin-toolbar">
+        <div class="search-group">
+          <label>Cari Nama / NIK / NIP</label>
+          <input type="text" id="admPesSearch" placeholder="Ketik nama, NIK, atau NIP..." oninput="renderAdmPeserta()">
+        </div>
+        <div class="search-group">
+          <label>Filter Unit Kerja</label>
+          <select id="filterUnitKerja" onchange="renderAdmPeserta()"><option value="">Semua Unit Kerja</option></select>
+        </div>
+        <div class="search-group">
+          <label>Filter Status</label>
+          <select id="filterStatus" onchange="renderAdmPeserta()">
+            <option value="">Semua Status</option>
+            <option value="Menunggu">Menunggu</option>
+            <option value="Proses">Proses</option>
+            <option value="Disetujui">Disetujui</option>
+            <option value="Ditolak">Ditolak</option>
+            <option value="Dilimpahkan">Dilimpahkan</option>
+            <option value="Batal">Batal</option>
+            <option value="Perbaikan">Perbaikan</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="openPesertaForm()"><i class="fas fa-plus"></i> Tambah Peserta</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table>
+          <thead><tr><th>Foto</th><th>NIK</th><th>NIP</th><th>Nama Tanpa Gelar</th><th>Unit Kerja</th><th>Status Verifikasi</th><th>Catatan Admin</th><th>Aksi</th></tr></thead>
+          <tbody id="admPesBody"></tbody>
+        </table>
+      </div>
+      <div id="admPesPagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox detail peserta -->
+<div class="lightbox" id="adminLightbox" onclick="if(event.target===this) this.style.display='none'">
+  <div class="lightbox-content" id="adminLightboxContent">
+    <span class="close" onclick="document.getElementById('adminLightbox').style.display='none'">&times;</span>
+    <div id="adminLightboxBody"></div>
+  </div>
+</div>

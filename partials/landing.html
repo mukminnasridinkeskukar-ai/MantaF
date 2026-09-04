@@ -1,0 +1,160 @@
+<!-- ==================== LANDING PAGE PARTIAL ==================== -->
+<canvas id="particlesCanvas"></canvas>
+
+<nav class="lp-nav" id="lpNav">
+  <a href="#" class="lp-nav-brand" onclick="scrollToSection('lpHero');return false;">
+    <img class="lp-nav-logo" src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" alt="Logo" onerror="this.style.display='none'">
+    <div class="lp-nav-title">Manta<span>F</span></div>
+  </a>
+  <ul class="lp-nav-links">
+    <li><a href="#" onclick="scrollToSection('lpHero');return false;">Home</a></li>
+    <li><a href="#" onclick="scrollToSection('lpAbout');return false;">Tentang Platform</a></li>
+    <li><a href="#" onclick="scrollToSection('lpFeatures');return false;">Fitur</a></li>
+    <li><a href="#" onclick="scrollToSection('lpRoadmap');return false;">Roadmap</a></li>
+    <li><a href="#" onclick="scrollToSection('lpContact');return false;">Kontak</a></li>
+    <li><a href="#" class="lp-nav-btn" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Login</a></li>
+  </ul>
+  <button class="lp-nav-toggle" id="lpNavToggle" onclick="toggleMobileMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="lp-mobile-menu" id="lpMobileMenu">
+  <a href="#" onclick="scrollToSection('lpHero');closeMobileMenu();return false;">Home</a>
+  <a href="#" onclick="scrollToSection('lpAbout');closeMobileMenu();return false;">Tentang Platform</a>
+  <a href="#" onclick="scrollToSection('lpFeatures');closeMobileMenu();return false;">Fitur</a>
+  <a href="#" onclick="scrollToSection('lpRoadmap');closeMobileMenu();return false;">Roadmap</a>
+  <a href="#" onclick="scrollToSection('lpContact');closeMobileMenu();return false;">Kontak</a>
+  <a href="#" onclick="enterPlatform();closeMobileMenu();return false;" style="color:var(--lp-emerald);font-weight:600">Login</a>
+</div>
+
+<!-- HERO -->
+<section class="lp-hero" id="lpHero">
+  <div class="lp-hero-content lp-reveal">
+    <div class="lp-hero-badge"><i class="fas fa-shield-halved"></i> Platform Resmi Dinas Kesehatan</div>
+    <h1>Manta<span>F</span></h1>
+    <p class="lp-hero-sub">Manajemen Tata Kelola Jabatan Fungsional Kesehatan</p>
+    <p class="lp-hero-desc">Mewujudkan tata kelola jabatan fungsional kesehatan yang profesional, transparan, terintegrasi, dan berbasis digital untuk seluruh tenaga kesehatan di Kabupaten Kutai Kartanegara.</p>
+    <div class="lp-hero-buttons">
+      <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+      <a href="#" class="lp-btn-secondary" onclick="scrollToSection('lpFeatures');return false;"><i class="fas fa-book-open"></i> Pelajari Selengkapnya</a>
+    </div>
+  </div>
+</section>
+
+<!-- TENTANG -->
+<section class="lp-section lp-section-alt" id="lpAbout">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Tentang Platform</div>
+    <h2 class="lp-section-title">Apa itu MantaF?</h2>
+    <p class="lp-section-desc">MantaF adalah sistem digital terintegrasi yang dirancang khusus untuk mengelola tata kelola jabatan fungsional kesehatan di lingkungan Dinas Kesehatan Kabupaten Kutai Kartanegara. Platform ini menyederhanakan proses administrasi, meningkatkan transparansi, dan memastikan setiap tahapan berjalan sesuai regulasi yang berlaku.</p>
+  </div>
+</section>
+
+<!-- FITUR -->
+<section class="lp-section" id="lpFeatures">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Fitur Unggulan</div>
+    <h2 class="lp-section-title">Solusi Lengkap untuk Jabatan Fungsional</h2>
+    <p class="lp-section-desc">Fitur-fitur dirancang untuk memenuhi kebutuhan pengelolaan jabatan fungsional kesehatan secara menyeluruh dan efisien.</p>
+  </div>
+  <div class="lp-features-grid">
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-user-tie"></i></div><h3>Manajemen Jabatan Fungsional</h3><p>Pengelolaan data jabatan fungsional secara terpusat dan terstruktur untuk seluruh tenaga kesehatan.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-calculator"></i></div><h3>Pengelolaan Angka Kredit</h3><p>Perhitungan dan pelacakan angka kredit secara otomatis sesuai dengan peraturan yang berlaku.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-graduation-cap"></i></div><h3>Pengembangan Kompetensi</h3><p>Akses informasi dan pelatihan pengembangan kompetensi untuk meningkatkan kualitas SDMK.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-chart-line"></i></div><h3>Penilaian Kinerja</h3><p>Sistem penilaian kinerja yang objektif dan terukur untuk setiap tenaga kesehatan.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-briefcase"></i></div><h3>Portofolio Digital</h3><p>Dokumentasi portofolio digital lengkap untuk mendukung proses kenaikan jabatan.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-eye"></i></div><h3>Monitoring</h3><p>Pantau progres dan status pengajuan secara real-time dari satu dashboard terpusat.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-gauge-high"></i></div><h3>Dashboard</h3><p>Visualisasi data yang informatif dan interaktif untuk pengambilan keputusan strategis.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-file-lines"></i></div><h3>Pelaporan</h3><p>Generate laporan komprehensif yang dapat diunduh dalam berbagai format sesuai kebutuhan.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-folder-open"></i></div><h3>Manajemen Dokumen</h3><p>Pengelolaan dokumen penting secara digital, aman, dan mudah diakses kapan saja.</p></div>
+    <div class="lp-feature-card lp-reveal"><div class="lp-feature-icon"><i class="fas fa-bell"></i></div><h3>Notifikasi</h3><p>Sistem notifikasi otomatis untuk informasi terbaru terkait pengajuan dan status.</p></div>
+  </div>
+</section>
+
+<!-- STATISTIK -->
+<section class="lp-stats" id="lpStats">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Data &amp; Statistik</div>
+    <h2 class="lp-section-title">Platform dalam Angka</h2>
+  </div>
+  <div class="lp-stats-grid">
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="1250">0</div><div class="lp-stat-label">Total SDMK</div></div>
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="42">0</div><div class="lp-stat-label">Total Jabatan Fungsional</div></div>
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="3850">0</div><div class="lp-stat-label">Total Pengajuan</div></div>
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="28600">0</div><div class="lp-stat-label">Total Angka Kredit</div></div>
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="520">0</div><div class="lp-stat-label">Total Pengguna</div></div>
+    <div class="lp-stat-item lp-reveal"><div class="lp-stat-number" data-target="35">0</div><div class="lp-stat-label">Total Instansi</div></div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="lp-section lp-roadmap" id="lpRoadmap">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Alur Proses</div>
+    <h2 class="lp-section-title">Roadmap Pengajuan</h2>
+    <p class="lp-section-desc">Langkah-langkah sistematis dalam pengelolaan jabatan fungsional kesehatan melalui platform MantaF.</p>
+  </div>
+  <div class="lp-roadmap-container">
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 1</div><h3>Registrasi</h3><p>Pendaftaran akun dan pengisian data profil tenaga kesehatan secara lengkap dan akurat.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 2</div><h3>Verifikasi</h3><p>Proses verifikasi data dan dokumen yang telah diunggah oleh tenaga kesehatan.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 3</div><h3>Pengajuan</h3><p>Penyampaian pengajuan kenaikan jabatan fungsional beserta kelengkapan berkas.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 4</div><h3>Validasi</h3><p>Pemeriksaan dan validasi kelengkapan serta kesesuaian dokumen pengajuan.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 5</div><h3>Penilaian</h3><p>Proses penilaian angka kredit dan kinerja oleh tim penilai yang berwenang.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 6</div><h3>Persetujuan</h3><p>Keputusan persetujuan kenaikan jabatan fungsional oleh pejabat berwenang.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 7</div><h3>Monitoring</h3><p>Pemantauan berkala terhadap progres dan status jabatan fungsional.</p></div></div>
+    <div class="lp-roadmap-item lp-reveal"><div class="lp-roadmap-dot"></div><div class="lp-roadmap-content"><div class="lp-roadmap-step">Langkah 8</div><h3>Pelaporan</h3><p>Penyusunan laporan komprehensif untuk keperluan evaluasi dan arsip.</p></div></div>
+  </div>
+</section>
+
+<!-- KEUNGGULAN -->
+<section class="lp-section lp-section-alt" id="lpAdvantages">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Mengapa MantaF?</div>
+    <h2 class="lp-section-title">Keunggulan Platform</h2>
+    <p class="lp-section-desc">Platform ini dirancang dengan standar tertinggi untuk memberikan pengalaman terbaik bagi seluruh pengguna.</p>
+  </div>
+  <div class="lp-advantages-grid">
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-bolt"></i></div><div><h4>Cepat</h4><p>Proses pengajuan dan penilaian berjalan secara efisien tanpa hambatan.</p></div></div>
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-eye"></i></div><div><h4>Transparan</h4><p>Seluruh proses dapat dipantau secara real-time oleh setiap pihak terkait.</p></div></div>
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-leaf"></i></div><div><h4>Paperless</h4><p>Digitalisasi penuh mengurangi penggunaan kertas dan meningkatkan efisiensi.</p></div></div>
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-link"></i></div><div><h4>Terintegrasi</h4><p>Terhubung dengan berbagai sistem dan database untuk data yang konsisten.</p></div></div>
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-lock"></i></div><div><h4>Aman</h4><p>Perlindungan data berlapis memastikan kerahasiaan informasi terjaga.</p></div></div>
+    <div class="lp-advantage-card lp-reveal"><div class="lp-advantage-icon"><i class="fas fa-headset"></i></div><div><h4>Dukungan</h4><p>Tim pendukung siap membantu kendala teknis dan administrasi sehari-hari.</p></div></div>
+  </div>
+</section>
+
+<!-- KONTAK -->
+<section class="lp-section" id="lpContact">
+  <div class="lp-section-header lp-reveal">
+    <div class="lp-section-label">Hubungi Kami</div>
+    <h2 class="lp-section-title">Kontak &amp; Informasi</h2>
+    <p class="lp-section-desc">Narasi informasi lebih lanjut seputar platform, silakan hubungi tim Dinas Kesehatan Kabupaten Kutai Kartanegara.</p>
+  </div>
+  <div class="lp-contact-grid">
+    <div class="lp-contact-card lp-reveal">
+      <i class="fas fa-building"></i>
+      <h4>Dinas Kesehatan</h4>
+      <p>Kabupaten Kutai Kartanegara, Provinsi Kalimantan Timur</p>
+    </div>
+    <div class="lp-contact-card lp-reveal">
+      <i class="fas fa-envelope"></i>
+      <h4>Email Resmi</h4>
+      <p>dinkes@kukarkab.go.id</p>
+    </div>
+    <div class="lp-contact-card lp-reveal">
+      <i class="fas fa-globe"></i>
+      <h4>Website</h4>
+      <p>dinkes.kukarkab.go.id</p>
+    </div>
+  </div>
+  <div style="text-align:center" class="lp-reveal">
+    <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;" style="font-size:16px;padding:16px 44px;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="lp-footer">
+  <div class="lp-footer-brand">Manta<span>F</span></div>
+  <p>© 2026 Dinas Kesehatan Kabupaten Kutai Kartanegara · Manajemen Tata Kelola Jabatan Fungsional Kesehatan<br>© Mukmin Nasri 2026 · All Rights Reserved</p>
+</footer>
