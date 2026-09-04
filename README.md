@@ -41,7 +41,12 @@ mantaf/
 │       ├── ukom.js           Submit pendaftaran + upload storage
 │       ├── peserta-ukom.js   Tabel peserta publik
 │       ├── status.js         Cek status + form perbaikan
-│       └── admin.js          Login + CRUD total 3 tab
+│       ├── admin.js          Login + CRUD total 3 tab
+│       └── csvimport.js      Upload massal CSV (semua menu admin)
+├── templates/               ← Template CSV siap isi (sesuai tabel Supabase)
+│   ├── template-pengumuman.csv
+│   ├── template-bezetting.csv
+│   └── template-peserta-ukom.csv
 └── supabase/
     └── schema.sql            ← SQL lengkap untuk Supabase
 ```
@@ -114,6 +119,27 @@ Login sebagai admin, lalu tersedia 3 tab yang masing-masing mendukung **Create, 
 
 Perubahan admin langsung tampil di halaman publik (dashboard, pengumuman, bezetting, data peserta, cek status).
 
+## 📥 Upload Massal (Import CSV) — Semua Menu Admin
+
+Setiap tab Panel Admin (**Pengumuman**, **Bezetting**, **Peserta UKOM**) memiliki tombol **Import CSV** untuk menambah/memperbarui data dalam jumlah besar:
+
+1. **Unduh Template** — klik *Import CSV* → *Unduh Template*. Template kolomnya **identik dengan tabel Supabase** (`pengumuman`, `bezetting`, `peserta_ukom`) dan sudah termasuk 2 baris contoh (otomatis dilewati saat import). Salinan statis juga tersedia di folder `templates/`.
+2. **Isi di Excel / Google Sheets** — simpan sebagai CSV. Format fleksibel:
+   - pemisah `;` atau `,` (dideteksi otomatis),
+   - tanggal `YYYY-MM-DD` **atau** `DD/MM/YYYY`,
+   - status `Aktif`/`Nonaktif`, `true`/`false`, `Ya`/`Tidak` — semuanya diterima,
+   - huruf besar-kecil tidak dipermasalahkan.
+3. **Upload & Pratinjau** — file divalidasi per baris: baris error ditandai beserta alasannya (NIK bukan 16 digit, nilai status tidak dikenal, dll). Baris duplikat terdeteksi otomatis:
+   - Pengumuman → kunci duplikat **judul**
+   - Bezetting → kunci **instansi + jenis jabatan + jenjang**
+   - Peserta UKOM → kunci **NIK**
+4. **Pilih mode duplikat** — *Lewati* (hanya data baru) atau *Perbarui* (timpa data lama; kolom kosong di CSV tidak diubah).
+5. **Import** — dikirim per-chunk (100 baris/request) dengan progress bar; baris yang gagal di tengah proses dilaporkan satu per satu. Ringkasan hasil + refresh data otomatis.
+
+Opsi tambahan: **mode ganti total** (hapus semua data lama di tabel sebelum import) — meminta konfirmasi ulang sebelum dijalankan.
+
+> ⚠️ **Tips Excel:** format kolom **NIK** sebagai *Text* sebelum menempel data, agar 16 digit tidak berubah menjadi notasi ilmiah (mis. `3,5E+15`).
+
 ## 🗃️ Skema Database (Ringkas)
 
 | Tabel | Fungsi | Kolom kunci |
@@ -139,6 +165,9 @@ Storage: bucket **foto** (foto 4x6, sertifikat) & **dokumen** (PDF persyaratan) 
 | Layar "Perlu Server Web" | Buka via GitHub Pages / `npx serve .`, bukan file:// |
 | Data gagal dimuat | Cek `config.js` (URL & anon key), cek tabel sudah dibuat via schema.sql |
 | Login admin gagal | Pastikan schema.sql sudah dijalankan (seed admin) |
+| Error `crypt()` saat run schema | Gunakan schema.sql versi terbaru (sudah `with schema extensions`) |
+| Import CSV: banyak NIK error | Format kolom NIK sebagai Text di Excel; jangan biarkan jadi notasi ilmiah |
+| Import CSV: kolom wajib tidak ditemukan | Gunakan template dari tombol *Unduh Template* tanpa mengubah baris header |
 | Upload gagal | Pastikan bucket `foto` & `dokumen` ada; ukuran file ≤ 2MB |
 | Foto tidak tampil | Foto diupload ke bucket publik; cek URL di kolom `file_foto` |
 

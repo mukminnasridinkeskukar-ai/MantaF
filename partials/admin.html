@@ -58,6 +58,7 @@
           <input type="text" id="admPengSearch" placeholder="Ketik judul pengumuman..." oninput="renderAdmPengumuman()">
         </div>
         <div class="spacer"></div>
+        <button class="btn btn-sm btn-csv" onclick="openCsvImport('pengumuman')"><i class="fas fa-file-csv"></i> Import CSV</button>
         <button class="btn btn-sm" onclick="openPengumumanForm()"><i class="fas fa-plus"></i> Tambah Pengumuman</button>
       </div>
       <div class="admin-table-wrap">
@@ -80,6 +81,7 @@
           <select id="admBezFilterInstansi" onchange="renderAdmBezetting()"><option value="">Semua</option></select>
         </div>
         <div class="spacer"></div>
+        <button class="btn btn-sm btn-csv" onclick="openCsvImport('bezetting')"><i class="fas fa-file-csv"></i> Import CSV</button>
         <button class="btn btn-sm" onclick="openBezettingForm()"><i class="fas fa-plus"></i> Tambah Bezetting</button>
       </div>
       <div class="admin-table-wrap">
@@ -115,6 +117,7 @@
           </select>
         </div>
         <div class="spacer"></div>
+        <button class="btn btn-sm btn-csv" onclick="openCsvImport('peserta')"><i class="fas fa-file-csv"></i> Import CSV</button>
         <button class="btn btn-sm" onclick="openPesertaForm()"><i class="fas fa-plus"></i> Tambah Peserta</button>
       </div>
       <div class="admin-table-wrap">

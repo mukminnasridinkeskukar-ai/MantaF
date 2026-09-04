@@ -391,3 +391,134 @@ transition:all .15s;
 .crud-overlay{padding:10px}
 .crud-modal-body{padding:16px}
 }
+
+/* ============================================================
+   IMPORT CSV (upload massal) — csvimport.js
+   ============================================================ */
+.btn-csv{
+  background:linear-gradient(135deg,#4f46e5,#7c3aed)!important;
+  color:#fff!important;
+  box-shadow:0 2px 8px rgba(79,70,229,.35);
+}
+.btn-csv:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+.csv-step{margin-bottom:18px}
+.csv-step-title{display:flex;align-items:center;gap:10px;font-weight:700;color:#0f172a;font-size:14px;margin-bottom:10px}
+.csv-step-num{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;
+}
+.csv-hintbox{
+  display:flex;gap:10px;align-items:flex-start;
+  background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;
+  padding:11px 13px;font-size:12.8px;color:#134e4a;line-height:1.6;margin-bottom:12px;
+}
+.csv-hintbox i{color:#0d9488;margin-top:2px}
+.csv-hintbox code{background:#ccfbf1;padding:1px 6px;border-radius:5px;font-size:11.5px}
+
+.csv-drop{
+  border:2px dashed #c7d2fe;border-radius:14px;background:#f8fafc;
+  padding:26px 16px;text-align:center;cursor:pointer;color:#475569;
+  transition:all .18s ease;
+}
+.csv-drop:hover,.csv-drop.dragover{
+  border-color:#4f46e5;background:#eef2ff;color:#3730a3;
+  box-shadow:0 0 0 4px rgba(79,70,229,.08);
+}
+.csv-drop i{font-size:30px;color:#6366f1;margin-bottom:8px;display:block}
+.csv-drop-sub{font-size:11.5px;color:#94a3b8;margin-top:4px}
+
+.csv-file-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;
+  padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:12px;
+}
+.csv-recheck{
+  background:none;border:none;color:#4f46e5;cursor:pointer;font-size:11.5px;
+  text-decoration:underline;padding:0;font-weight:600;
+}
+
+.csv-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.csv-stat{
+  display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;
+  border:1px solid #e2e8f0;background:#f8fafc;
+}
+.csv-stat i{font-size:19px}
+.csv-stat-num{font-size:20px;font-weight:800;line-height:1.1;font-family:Montserrat,sans-serif}
+.csv-stat-label{font-size:11px;color:#64748b;font-weight:600}
+.csv-stat.st-total i{color:#475569}
+.csv-stat.st-ok{background:#f0fdf4;border-color:#bbf7d0}.csv-stat.st-ok i,.csv-stat.st-ok .csv-stat-num{color:#16a34a}
+.csv-stat.st-err{background:#fef2f2;border-color:#fecaca}.csv-stat.st-err i,.csv-stat.st-err .csv-stat-num{color:#dc2626}
+.csv-stat.st-dup{background:#fffbeb;border-color:#fde68a}.csv-stat.st-dup i,.csv-stat.st-dup .csv-stat-num{color:#d97706}
+
+.csv-options{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.csv-opt-title{font-size:12.8px;font-weight:700;color:#92400e;margin-bottom:8px}
+.csv-radio{display:flex;align-items:flex-start;gap:8px;font-size:12.8px;color:#334155;margin:7px 0;cursor:pointer;line-height:1.5}
+.csv-radio input{margin-top:2px;accent-color:#0f766e}
+.csv-radio-danger{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px 12px;color:#b91c1c;font-weight:600}
+
+.csv-preview-wrap{
+  border:1px solid #e2e8f0;border-radius:12px;overflow:auto;max-height:300px;
+  background:#fff;margin-bottom:10px;
+}
+.csv-preview-wrap table{width:100%;border-collapse:collapse;font-size:12.3px;min-width:520px}
+.csv-preview-wrap th{
+  position:sticky;top:0;background:#f1f5f9;color:#475569;
+  padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+  border-bottom:1px solid #e2e8f0;white-space:nowrap;z-index:1;
+}
+.csv-preview-wrap td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.csv-row-err{background:#fef2f2}
+.csv-row-dup{background:#fffbeb}
+.csv-row-ok{background:transparent}
+
+.csv-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;
+  font-size:10.5px;font-weight:700;white-space:nowrap;
+}
+.csv-badge-ok{background:#dcfce7;color:#15803d}
+.csv-badge-dup{background:#fef3c7;color:#b45309}
+.csv-badge-err{background:#fee2e2;color:#b91c1c}
+
+.csv-more{padding:9px 12px;font-size:11.8px;color:#64748b;background:#f8fafc}
+.csv-note-info{
+  display:flex;gap:8px;align-items:flex-start;font-size:12.3px;color:#475569;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;margin-bottom:8px;line-height:1.55;
+}
+.csv-note-info i{color:#0d9488;margin-top:2px}
+
+.csv-progress{height:9px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:12px 0 7px}
+.csv-progress-bar{
+  height:100%;width:0%;border-radius:999px;transition:width .25s ease;
+  background:linear-gradient(90deg,#0f766e,#14b8a6,#2dd4bf);
+}
+.csv-progress-text{font-size:12.5px;color:#475569;text-align:center;font-weight:600}
+
+.csv-result{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:8px}
+.csv-result-title{font-weight:800;color:#0f172a;font-size:14px;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.csv-result-title i.fa-circle-check{color:#16a34a}
+.csv-result-title i.fa-circle-exclamation{color:#d97706}
+.csv-err-list{
+  background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 13px;
+  font-size:12px;color:#991b1b;margin-top:10px;line-height:1.6;
+}
+.csv-err-list ul{margin:5px 0 0 16px}
+
+.csv-cols-details{
+  border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;overflow:hidden;
+}
+.csv-cols-details summary{
+  cursor:pointer;padding:10px 13px;font-size:12.8px;font-weight:600;color:#334155;
+  display:flex;align-items:center;gap:8px;user-select:none;
+}
+.csv-cols-details summary i{color:#0f766e}
+.csv-cols-list{
+  margin:0;padding:4px 16px 12px 30px;font-size:12.2px;color:#475569;line-height:1.75;
+}
+.csv-cols-list li::marker{color:#0f766e}
+
+@media (max-width:640px){
+  .csv-stats{grid-template-columns:repeat(2,1fr)}
+  .csv-drop{padding:20px 10px}
+}

@@ -93,6 +93,12 @@ const API = {
     db.rpc('admin_change_password', { p_username: username, p_password_lama: oldPass, p_password_baru: newPass })
   ),
 
+  /* ================= BULK (IMPORT CSV MASSAL) ================= */
+  bulkInsert: (table, rows) => sbQuery(db.from(table).insert(rows).select()),
+  bulkUpdate: (table, id, row) => sbQuery(db.from(table).update(row).eq('id', id).select()),
+  /* hapus semua baris: neq id yang mustahil ada = delete all */
+  truncateTable: (table) => sbQuery(db.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000')),
+
   /* ================= STORAGE ================= */
   async uploadFile(bucket, file, folder){
     if(!file) return null;

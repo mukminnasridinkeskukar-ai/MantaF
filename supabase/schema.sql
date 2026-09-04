@@ -6,7 +6,7 @@
 -- CARA PAKAI:
 --   1. Buka Supabase Dashboard > SQL Editor
 --   2. Copy seluruh isi file ini, lalu klik "Run"
---   3. Pastikan ekstensi pgcrypto aktif (script ini sudah mengaktifkannya)
+--   3. Ekstensi pgcrypto otomatis diaktifkan di schema "extensions"
 --   4. Login admin default -> username: admin | password: admin123
 --      SEGERA ganti password setelah login pertama (lihat catatan di bawah).
 -- ============================================================================
@@ -14,7 +14,7 @@
 -- ---------------------------------------------------------------------------
 -- 0. EKSTENSI
 -- ---------------------------------------------------------------------------
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- 1. TABEL ADMIN_USERS (login panel admin)
@@ -163,7 +163,7 @@ create or replace function public.admin_login(p_username text, p_password text)
 returns table (id uuid, username text, nama text, role text)
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select id, username, nama, role
   from public.admin_users
@@ -178,7 +178,7 @@ create or replace function public.admin_change_password(p_username text, p_passw
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare v_ok boolean;
 begin
