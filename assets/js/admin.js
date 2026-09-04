@@ -397,7 +397,7 @@ function admShowDetail(id){
   }
   function fileLink(url, label){
     return '<div class="af-item"><div class="af-label">' + label + '</div>' +
-      (url ? '<a class="btn-file btn-file-view" href="' + escAttr(url) + '" target="_blank" rel="noopener" title="Buka berkas di tab baru"><i class="fas fa-up-right-from-square"></i> Lihat Berkas</a>' : '<span style="color:#cbd5e1">Belum ada</span>') +
+      (url ? '<a class="btn-file btn-file-view" href="' + escAttr(url) + '" target="_blank" rel="noopener" title="Buka berkas di tab baru" onclick="openFileTab(event, this.href)"><i class="fas fa-up-right-from-square"></i> Lihat Berkas</a>' : '<span style="color:#cbd5e1">Belum ada</span>') +
       '</div>';
   }
 
@@ -501,13 +501,28 @@ function pesFileName(url){
   try{ return decodeURIComponent(raw); }catch(e){ return raw; }
 }
 
+/* Buka berkas di tab baru dengan aman: hanya URL http/https yang diizinkan.
+   Dipakai semua tombol "Lihat" berkas peserta & dokumen petunjuk. */
+function openFileTab(ev, url){
+  if(ev) ev.preventDefault();
+  const u = String(url || '').trim();
+  if(!u || !/^https?:\/\//i.test(u)){
+    showToast('URL berkas tidak valid atau belum tersedia', 'error');
+    return;
+  }
+  window.open(u, '_blank', 'noopener');
+}
+
 function openPesertaForm(id){
   const p = id ? admPesCache.find(function(x){ return x.id === id; }) : null;
   /* state tiap kolom berkas: { file: File|null, clear: bool } */
   const pesFileState = {};
 
   function optHtml(opts, cur){
-    return opts.map(function(v){
+    /* Rapikan: nilai tersimpan yang tidak ada di daftar (mis. hasil import CSV)
+       TETAP ditampilkan agar tidak hilang / tidak ikut terhapus saat Simpan. */
+    const list = (cur && opts.indexOf(cur) === -1) ? opts.concat([cur]) : opts;
+    return list.map(function(v){
       return '<option value="' + escAttr(v) + '"' + (cur === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>';
     }).join('');
   }
@@ -520,11 +535,11 @@ function openPesertaForm(id){
         '<span class="pf-icon"><i class="fas ' + f.icon + '"></i></span>' +
         '<div class="pf-meta">' +
           '<div class="pf-label">' + f.label + '</div>' +
-          '<div class="pf-name" id="pfName_' + f.col + '">' + (cur ? escapeHtml(pesFileName(cur)) : '<span style="color:#94a3b8">Belum ada berkas</span>') + '</div>' +
+          '<div class="pf-name" id="pfName_' + f.col + '" title="' + escAttr(cur) + '">' + (cur ? escapeHtml(pesFileName(cur)) : '<span style="color:#94a3b8">Belum ada berkas</span>') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="pf-actions">' +
-        (cur ? '<a class="btn-file btn-file-view" href="' + escAttr(cur) + '" target="_blank" rel="noopener" id="pfView_' + f.col + '" title="Buka berkas di tab baru"><i class="fas fa-up-right-from-square"></i> Lihat</a>' : '') +
+        (cur ? '<a class="btn-file btn-file-view" href="' + escAttr(cur) + '" target="_blank" rel="noopener" id="pfView_' + f.col + '" title="Buka berkas di tab baru" onclick="openFileTab(event, this.href)"><i class="fas fa-up-right-from-square"></i> Lihat</a>' : '') +
         '<label class="btn-file btn-file-ganti" for="pfInput_' + f.col + '" title="Pilih berkas dari komputer"><i class="fas fa-' + (cur ? 'rotate' : 'upload') + '"></i> ' + (cur ? 'Ganti' : 'Unggah') + '</label>' +
         '<input type="file" id="pfInput_' + f.col + '" accept="' + f.accept + '" hidden>' +
         '<button type="button" class="btn-file btn-file-del" id="pfDel_' + f.col + '" style="' + (cur ? '' : 'display:none') + '" title="Hapus berkas"><i class="fas fa-xmark"></i></button>' +
@@ -570,9 +585,9 @@ function openPesertaForm(id){
       '<div class="form-group"><label>No. Peserta</label><input type="text" id="fPesNoPeserta" value="' + escAttr(p ? p.no_peserta : '') + '"></div>' +
       '<div class="form-group"><label>PAK Instansi</label><input type="text" id="fPesPakInstansi" value="' + escAttr(p ? p.pak_instansi : '') + '"></div>' +
       '<div class="form-group"><label>PAK SI ASN</label><input type="text" id="fPesPakSiasn" value="' + escAttr(p ? p.pak_siasn : '') + '"></div>' +
-      '<div class="form-group"><label>Status Periode</label><select id="fPesStatusPeriode">' + optHtml(['Aktif','Tidak Aktif','-'], p ? (p.status_periode || '-') : '') + '</select></div>' +
-      '<div class="form-group"><label>Absen</label><select id="fPesAbsen">' + optHtml(['Hadir','Tidak Hadir','-'], p ? (p.absen || '-') : '') + '</select></div>' +
-      '<div class="form-group"><label>Status UKOM</label><select id="fPesStatusUkom">' + optHtml(['Lulus','Tidak Lulus','Menunggu','-'], p ? (p.status_ukom || '-') : '') + '</select></div>' +
+      '<div class="form-group"><label>Status Periode</label><select id="fPesStatusPeriode">' + optHtml(['Aktif','Tidak Aktif','-'], p ? (p.status_periode || '-') : '-') + '</select></div>' +
+      '<div class="form-group"><label>Absen</label><select id="fPesAbsen">' + optHtml(['Hadir','Tidak Hadir','-'], p ? (p.absen || '-') : '-') + '</select></div>' +
+      '<div class="form-group"><label>Status UKOM</label><select id="fPesStatusUkom">' + optHtml(['Lulus','Tidak Lulus','Menunggu','-'], p ? (p.status_ukom || '-') : '-') + '</select></div>' +
       '<div class="form-group"><label>Status Verifikasi</label><select id="fPesStatusVerifikasi">' + optHtml(['Menunggu','Proses','Disetujui','Ditolak','Dilimpahkan','Batal','Perbaikan'], p ? p.status_verifikasi : '') + '</select></div>' +
       '<div class="form-group" style="grid-column:1/-1"><label>Catatan Admin (tampil di hasil Cek Status peserta)</label><textarea id="fPesCatatan" rows="2">' + escapeHtml(p ? p.catatan_admin : '') + '</textarea></div>' +
     '</div>' +
@@ -790,7 +805,7 @@ function openPetunjukForm(id){
       '<div class="form-group"><label>' + (p ? 'Ganti File PDF (opsional)' : 'File PDF <span style="color:#dc2626">*</span>') + '</label>' +
       '<input type="file" id="fPetFile" accept="application/pdf,.pdf">' +
       (p ? '<div style="font-size:11.5px;color:#64748b;margin-top:6px"><i class="fas fa-link"></i> File saat ini: ' +
-        '<a href="' + escAttr(p.file_url) + '" target="_blank" rel="noopener" style="color:#0d9488">' + escapeHtml(String(p.file_url).split('/').pop().split('?')[0]) + '</a></div>' : '') +
+        '<a href="' + escAttr(p.file_url) + '" target="_blank" rel="noopener" title="Buka di tab baru" onclick="openFileTab(event, this.href)" style="color:#0d9488">' + escapeHtml(String(p.file_url).split('/').pop().split('?')[0]) + '</a></div>' : '') +
       '</div>' +
       '<div class="form-group"><label>Urutan Tampil</label><input type="number" id="fPetUrutan" min="0" max="9999" value="' + (p ? (p.urutan ?? 0) : (admPetCache.length + 1)) + '"></div>' +
       '<div class="form-group"><label>Status</label><select id="fPetAktif">' +

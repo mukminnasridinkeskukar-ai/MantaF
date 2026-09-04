@@ -110,8 +110,8 @@ const CSV_TEMPLATES = {
       { key:'jenis_kelamin',   header:'jenis_kelamin',   type:'enum', values:['Laki-Laki','Perempuan'] },
       { key:'nama_unit_kerja', header:'nama_unit_kerja', type:'softenum',
         valuesFn: function(){ return (typeof OPT_UNIT_KERJA !== 'undefined') ? OPT_UNIT_KERJA : []; } },
-      { key:'pangkat_golongan',header:'pangkat_golongan',type:'text', max:20 },
-      { key:'no_sk_jabfung',   header:'no_sk_jabfung',   type:'text', max:50 },
+      { key:'pangkat_golongan',header:'pangkat_golongan',type:'text', max:50 },
+      { key:'no_sk_jabfung',   header:'no_sk_jabfung',   type:'text', max:100 },
       /* --- Data jabatan --- */
       { key:'jabfung_saat_ini',header:'jabfung_saat_ini',type:'softenum',
         valuesFn: function(){ return (typeof OPT_JABFUNG !== 'undefined') ? OPT_JABFUNG : []; } },
@@ -123,7 +123,7 @@ const CSV_TEMPLATES = {
         valuesFn: function(){ return (typeof OPT_JENJANG !== 'undefined') ? OPT_JENJANG : []; } },
       { key:'jenis_ukom',      header:'jenis_ukom',      type:'softenum',
         valuesFn: function(){ return (typeof OPT_JENIS_UKOM !== 'undefined') ? OPT_JENIS_UKOM : ['Naik Jabatan','Pindah Jabatan']; } },
-      { key:'nilai_pak_terakhir', header:'nilai_pak_terakhir', type:'text', max:10 },
+      { key:'nilai_pak_terakhir', header:'nilai_pak_terakhir', type:'text', max:50 },
       /* --- Kontak --- */
       { key:'nomor_whatsapp',  header:'nomor_whatsapp',  type:'text', max:20, subtype:'phone' },
       { key:'email_aktif',     header:'email_aktif',     type:'text', max:100, subtype:'email' },
@@ -151,8 +151,8 @@ const CSV_TEMPLATES = {
       { key:'catatan_admin',   header:'catatan_admin',   type:'text' }
     ],
     exampleRows: [
-      ['CONTOH - hapus baris ini','197001012005011001','Nama Contoh Pertama','Laki-Laki','Dinas Kesehatan','III/d','800.1/1234/2025','Administrator Kesehatan','Ahli Pertama','Administrator Kesehatan','Ahli Muda','Naik Jabatan','90','081234567890','contoh.pertama@email.com','','','','','','','','','','2026-1','001','90','85','Aktif','Hadir','Menunggu','','Menunggu',''],
-      ['CONTOH - hapus baris ini','198506152010012002','Nama Contoh Kedua','Perempuan','RSUD Aji Muhammad Parikesit','III/c','800.1/5678/2025','Perawat','Penyelia','Perawat','Ahli Pertama','Pindah Jabatan','85','081298765432','contoh.kedua@email.com','','','','','','','','','','2026-1','002','85','80','Aktif','Hadir','Menunggu','','Menunggu','']
+      ['CONTOH - hapus baris ini','197001012005011001','Nama Contoh Pertama','Laki-Laki','Dinas Kesehatan','Penata Tk. I - III/d','800.1/1234/2025','Administrator Kesehatan','Ahli Pertama','Administrator Kesehatan','Ahli Muda','Naik Jabatan','90','081234567890','contoh.pertama@email.com','','','','','','','','','','2026-1','001','90','85','Aktif','Hadir','Menunggu','','Menunggu',''],
+      ['CONTOH - hapus baris ini','198506152010012002','Nama Contoh Kedua','Perempuan','RSUD Aji Muhammad Parikesit','Penata - III/c','800.1/5678/2025','PERAWAT','Penyelia','PERAWAT','Ahli Pertama','Pindah Jabatan','85','081298765432','contoh.kedua@email.com','','','','','','','','','','2026-1','002','85','80','Aktif','Hadir','Menunggu','','Menunggu','']
     ],
     previewFields: ['nik','nama_tanpa_gelar','nama_unit_kerja','status_verifikasi'],
     cacheGet: function(){ return (typeof admPesCache !== 'undefined') ? admPesCache : null; },

@@ -6,8 +6,10 @@
 -- CARA PAKAI:
 --   1. Buka Supabase Dashboard > SQL Editor
 --   2. Copy seluruh isi file ini, lalu klik "Run"
---   3. Ekstensi pgcrypto otomatis diaktifkan di schema "extensions"
---   4. Login admin default -> username: admin | password: admin123
+--   3. AMAN dijalankan BERULANG kali (idempotent): tabel / kolom / policy /
+--      bucket yang sudah ada akan DIREVISI, tanpa menghapus data Anda.
+--   4. Ekstensi pgcrypto otomatis diaktifkan di schema "extensions"
+--   5. Login admin default -> username: admin | password: admin123
 --      SEGERA ganti password setelah login pertama (lihat catatan di bawah).
 -- ============================================================================
 
@@ -30,6 +32,11 @@ create table if not exists public.admin_users (
   updated_at    timestamptz not null default now()
 );
 
+-- Revisi tabel lama: pastikan kolom lengkap (tidak mengubah data yang ada)
+alter table public.admin_users add column if not exists nama  text not null default 'Administrator';
+alter table public.admin_users add column if not exists role  text not null default 'admin';
+alter table public.admin_users add column if not exists aktif boolean not null default true;
+
 -- Seed admin default (password: admin123) -- GANTI SETELAH LOGIN PERTAMA!
 insert into public.admin_users (username, password_hash, nama)
 values ('admin', crypt('admin123', gen_salt('bf')), 'Administrator MantaF')
@@ -49,6 +56,10 @@ create table if not exists public.pengumuman (
   updated_at timestamptz not null default now()
 );
 
+-- Revisi tabel lama: pastikan kolom lengkap
+alter table public.pengumuman add column if not exists prioritas text not null default 'Normal';
+alter table public.pengumuman add column if not exists aktif      boolean not null default true;
+
 -- ---------------------------------------------------------------------------
 -- 3. TABEL BEZETTING
 -- ---------------------------------------------------------------------------
@@ -66,6 +77,14 @@ create table if not exists public.bezetting (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
+
+-- Revisi tabel lama: pastikan kolom lengkap
+alter table public.bezetting add column if not exists kebutuhan          integer not null default 0;
+alter table public.bezetting add column if not exists pemangku           integer not null default 0;
+alter table public.bezetting add column if not exists lowongan           integer not null default 0;
+alter table public.bezetting add column if not exists pemangku_saat_ini  text default '';
+alter table public.bezetting add column if not exists pemangku_disetujui text default '';
+alter table public.bezetting add column if not exists sisa integer generated always as (greatest(lowongan, 0)) stored;
 
 create index if not exists idx_bezetting_instansi      on public.bezetting (instansi);
 create index if not exists idx_bezetting_jenis_jabatan on public.bezetting (jenis_jabatan);
@@ -124,6 +143,45 @@ create table if not exists public.peserta_ukom (
   updated_at         timestamptz not null default now()
 );
 
+-- Revisi tabel lama: pastikan SEMUA kolom peserta_ukom lengkap
+-- (termasuk kolom yang ditambahkan belakangan: sertifikat, absen, dst.)
+alter table public.peserta_ukom add column if not exists nik                text;
+alter table public.peserta_ukom add column if not exists nip                text;
+alter table public.peserta_ukom add column if not exists nama_tanpa_gelar   text;
+alter table public.peserta_ukom add column if not exists jenis_kelamin      text;
+alter table public.peserta_ukom add column if not exists nama_unit_kerja    text;
+alter table public.peserta_ukom add column if not exists pangkat_golongan   text;
+alter table public.peserta_ukom add column if not exists no_sk_jabfung      text;
+alter table public.peserta_ukom add column if not exists jabfung_saat_ini   text;
+alter table public.peserta_ukom add column if not exists jenjang_saat_ini   text;
+alter table public.peserta_ukom add column if not exists jabfung_tujuan     text;
+alter table public.peserta_ukom add column if not exists jenjang_tujuan     text;
+alter table public.peserta_ukom add column if not exists jenis_ukom         text;
+alter table public.peserta_ukom add column if not exists nilai_pak_terakhir text;
+alter table public.peserta_ukom add column if not exists nomor_whatsapp     text;
+alter table public.peserta_ukom add column if not exists email_aktif        text;
+alter table public.peserta_ukom add column if not exists file_pak           text;
+alter table public.peserta_ukom add column if not exists file_foto          text;
+alter table public.peserta_ukom add column if not exists file_drh           text;
+alter table public.peserta_ukom add column if not exists file_ijazah        text;
+alter table public.peserta_ukom add column if not exists file_str           text;
+alter table public.peserta_ukom add column if not exists file_sk_pangkat    text;
+alter table public.peserta_ukom add column if not exists file_sk_jabfung    text;
+alter table public.peserta_ukom add column if not exists file_skp           text;
+alter table public.peserta_ukom add column if not exists file_skmd          text;
+alter table public.peserta_ukom add column if not exists periode            text;
+alter table public.peserta_ukom add column if not exists no_peserta         text;
+alter table public.peserta_ukom add column if not exists pak_instansi       text;
+alter table public.peserta_ukom add column if not exists pak_siasn          text;
+alter table public.peserta_ukom add column if not exists status_periode     text default '-';
+alter table public.peserta_ukom add column if not exists absen              text default '-';
+alter table public.peserta_ukom add column if not exists status_ukom        text default '-';
+alter table public.peserta_ukom add column if not exists sertifikat         text;
+alter table public.peserta_ukom add column if not exists status_verifikasi  text not null default 'Menunggu';
+alter table public.peserta_ukom add column if not exists catatan_admin      text default '';
+alter table public.peserta_ukom add column if not exists created_at         timestamptz not null default now();
+alter table public.peserta_ukom add column if not exists updated_at         timestamptz not null default now();
+
 create index if not exists idx_peserta_nik       on public.peserta_ukom (nik);
 create index if not exists idx_peserta_nip       on public.peserta_ukom (nip);
 create index if not exists idx_peserta_nama      on public.peserta_ukom (nama_tanpa_gelar);
@@ -146,6 +204,13 @@ create table if not exists public.petunjuk (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+
+-- Revisi tabel lama: pastikan kolom lengkap
+alter table public.petunjuk add column if not exists judul     text;
+alter table public.petunjuk add column if not exists deskripsi text default '';
+alter table public.petunjuk add column if not exists file_url  text;
+alter table public.petunjuk add column if not exists urutan    integer not null default 0;
+alter table public.petunjuk add column if not exists aktif     boolean not null default true;
 
 create index if not exists idx_petunjuk_urutan on public.petunjuk (urutan);
 
@@ -241,9 +306,11 @@ alter table public.petunjuk      enable row level security;
 -- admin_users: tidak ada policy -> tidak bisa dibaca/diubah langsung dari client.
 -- Akses hanya melalui RPC security definer di atas.
 
--- pengumuman
+-- pengumuman  (SEMUA policy wajib punya drop if exists agar bisa dijalankan ulang)
 drop policy if exists "pengumuman_read"   on public.pengumuman;
 drop policy if exists "pengumuman_write"  on public.pengumuman;
+drop policy if exists "pengumuman_upd"    on public.pengumuman;
+drop policy if exists "pengumuman_del"    on public.pengumuman;
 create policy "pengumuman_read"  on public.pengumuman for select to anon, authenticated using (true);
 create policy "pengumuman_write" on public.pengumuman for insert to anon, authenticated with check (true);
 create policy "pengumuman_upd"   on public.pengumuman for update to anon, authenticated using (true) with check (true);
@@ -284,31 +351,37 @@ create policy "petunjuk_del"   on public.petunjuk for delete to anon, authentica
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('foto', 'foto', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
 insert into storage.buckets (id, name, public)
 values ('dokumen', 'dokumen', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
 -- Bucket petunjuk: menyimpan file PDF petunjuk penggunaan (akses publik baca)
 insert into storage.buckets (id, name, public)
 values ('petunjuk', 'petunjuk', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
 -- Policy storage: publik boleh upload & baca file di bucket foto/dokumen/petunjuk
 drop policy if exists "foto_public_read"   on storage.objects;
 drop policy if exists "foto_public_write"  on storage.objects;
+drop policy if exists "foto_public_update" on storage.objects;
 drop policy if exists "dokumen_public_read"  on storage.objects;
 drop policy if exists "dokumen_public_write" on storage.objects;
+drop policy if exists "dokumen_public_update" on storage.objects;
 drop policy if exists "petunjuk_public_read" on storage.objects;
 drop policy if exists "petunjuk_public_write" on storage.objects;
+drop policy if exists "petunjuk_public_update" on storage.objects;
 
 create policy "foto_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'foto');
 create policy "foto_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'foto');
+create policy "foto_public_update" on storage.objects for update to anon, authenticated using (bucket_id = 'foto') with check (bucket_id = 'foto');
 create policy "dokumen_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'dokumen');
 create policy "dokumen_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'dokumen');
+create policy "dokumen_public_update" on storage.objects for update to anon, authenticated using (bucket_id = 'dokumen') with check (bucket_id = 'dokumen');
 create policy "petunjuk_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'petunjuk');
 create policy "petunjuk_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'petunjuk');
+create policy "petunjuk_public_update" on storage.objects for update to anon, authenticated using (bucket_id = 'petunjuk') with check (bucket_id = 'petunjuk');
 
 -- Izinkan penghapusan objek storage petunjuk (saat admin menghapus dokumen)
 drop policy if exists "petunjuk_public_delete" on storage.objects;
@@ -324,7 +397,8 @@ create policy "dokumen_public_delete" on storage.objects for delete to anon, aut
 -- ---------------------------------------------------------------------------
 -- 9. VIEW STATISTIK DASHBOARD (opsional, untuk monitoring cepat di Supabase)
 -- ---------------------------------------------------------------------------
-create or replace view public.v_dashboard_stats as
+drop view if exists public.v_dashboard_stats;
+create view public.v_dashboard_stats as
 select
   (select count(*) from public.peserta_ukom)                              as total_peserta,
   (select count(distinct nama_unit_kerja) from public.peserta_ukom)       as total_instansi,
