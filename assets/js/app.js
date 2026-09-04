@@ -5,6 +5,7 @@
 
 const SECTION_PARTIALS = {
   dashboard:   'dashboard',
+  petunjuk:    'petunjuk',
   pengumuman:  'pengumuman',
   bezetting:   'bezetting',
   pesertaUkom: 'peserta-ukom',
@@ -15,6 +16,7 @@ const SECTION_PARTIALS = {
 
 const SECTION_IDS = {
   dashboard:   'secDashboard',
+  petunjuk:    'secPetunjuk',
   pengumuman:  'secPengumuman',
   bezetting:   'secBezetting',
   pesertaUkom: 'secPesertaUkom',

@@ -132,6 +132,24 @@ create index if not exists idx_peserta_status    on public.peserta_ukom (status_
 create index if not exists idx_peserta_periode   on public.peserta_ukom (periode);
 
 -- ---------------------------------------------------------------------------
+-- 4b. TABEL PETUNJUK (menu "Petunjuk Penggunaan" — kartu PDF)
+--     - file_url : URL public PDF dari Supabase Storage (bucket: petunjuk)
+--     - urutan   : urutan tampil kartu (kecil = atas)
+-- ---------------------------------------------------------------------------
+create table if not exists public.petunjuk (
+  id          uuid primary key default gen_random_uuid(),
+  judul       text not null,
+  deskripsi   text default '',
+  file_url    text not null,
+  urutan      integer not null default 0,
+  aktif       boolean not null default true,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_petunjuk_urutan on public.petunjuk (urutan);
+
+-- ---------------------------------------------------------------------------
 -- 5. TRIGGER updated_at otomatis
 -- ---------------------------------------------------------------------------
 create or replace function public.set_updated_at()
@@ -153,6 +171,9 @@ create trigger trg_bezetting_updated   before update on public.bezetting      fo
 
 drop trigger if exists trg_peserta_updated     on public.peserta_ukom;
 create trigger trg_peserta_updated     before update on public.peserta_ukom   for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_petunjuk_updated    on public.petunjuk;
+create trigger trg_petunjuk_updated    before update on public.petunjuk        for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
 -- 6. RPC: LOGIN ADMIN
@@ -215,6 +236,7 @@ alter table public.admin_users   enable row level security;
 alter table public.pengumuman    enable row level security;
 alter table public.bezetting     enable row level security;
 alter table public.peserta_ukom  enable row level security;
+alter table public.petunjuk      enable row level security;
 
 -- admin_users: tidak ada policy -> tidak bisa dibaca/diubah langsung dari client.
 -- Akses hanya melalui RPC security definer di atas.
@@ -247,6 +269,16 @@ create policy "peserta_write" on public.peserta_ukom for insert to anon, authent
 create policy "peserta_upd"   on public.peserta_ukom for update to anon, authenticated using (true) with check (true);
 create policy "peserta_del"   on public.peserta_ukom for delete to anon, authenticated using (true);
 
+-- petunjuk
+drop policy if exists "petunjuk_read"   on public.petunjuk;
+drop policy if exists "petunjuk_write"  on public.petunjuk;
+drop policy if exists "petunjuk_upd"    on public.petunjuk;
+drop policy if exists "petunjuk_del"    on public.petunjuk;
+create policy "petunjuk_read"  on public.petunjuk for select to anon, authenticated using (true);
+create policy "petunjuk_write" on public.petunjuk for insert to anon, authenticated with check (true);
+create policy "petunjuk_upd"   on public.petunjuk for update to anon, authenticated using (true) with check (true);
+create policy "petunjuk_del"   on public.petunjuk for delete to anon, authenticated using (true);
+
 -- ---------------------------------------------------------------------------
 -- 8. STORAGE BUCKETS (untuk upload foto & dokumen)
 -- ---------------------------------------------------------------------------
@@ -258,16 +290,29 @@ insert into storage.buckets (id, name, public)
 values ('dokumen', 'dokumen', true)
 on conflict (id) do nothing;
 
--- Policy storage: publik boleh upload & baca file di bucket foto/dokumen
+-- Bucket petunjuk: menyimpan file PDF petunjuk penggunaan (akses publik baca)
+insert into storage.buckets (id, name, public)
+values ('petunjuk', 'petunjuk', true)
+on conflict (id) do nothing;
+
+-- Policy storage: publik boleh upload & baca file di bucket foto/dokumen/petunjuk
 drop policy if exists "foto_public_read"   on storage.objects;
 drop policy if exists "foto_public_write"  on storage.objects;
 drop policy if exists "dokumen_public_read"  on storage.objects;
 drop policy if exists "dokumen_public_write" on storage.objects;
+drop policy if exists "petunjuk_public_read" on storage.objects;
+drop policy if exists "petunjuk_public_write" on storage.objects;
 
 create policy "foto_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'foto');
 create policy "foto_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'foto');
 create policy "dokumen_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'dokumen');
 create policy "dokumen_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'dokumen');
+create policy "petunjuk_public_read"  on storage.objects for select to anon, authenticated using (bucket_id = 'petunjuk');
+create policy "petunjuk_public_write" on storage.objects for insert to anon, authenticated with check (bucket_id = 'petunjuk');
+
+-- Izinkan penghapusan objek storage petunjuk (saat admin menghapus dokumen)
+drop policy if exists "petunjuk_public_delete" on storage.objects;
+create policy "petunjuk_public_delete" on storage.objects for delete to anon, authenticated using (bucket_id = 'petunjuk');
 
 -- ---------------------------------------------------------------------------
 -- 9. VIEW STATISTIK DASHBOARD (opsional, untuk monitoring cepat di Supabase)
@@ -277,11 +322,14 @@ select
   (select count(*) from public.peserta_ukom)                              as total_peserta,
   (select count(distinct nama_unit_kerja) from public.peserta_ukom)       as total_instansi,
   (select coalesce(sum(lowongan), 0) from public.bezetting)               as total_lowongan,
-  (select count(*) from public.pengumuman where aktif = true)             as total_pengumuman;
+  (select count(*) from public.pengumuman where aktif = true)             as total_pengumuman,
+  (select count(*) from public.petunjuk where aktif = true)               as total_petunjuk;
 
 -- ============================================================================
 -- SELESAI. Catatan:
 -- 1. Login admin default -> admin / admin123. Ganti via panel admin.
 -- 2. Isi SUPABASE_URL dan SUPABASE_ANON_KEY pada file assets/js/config.js
 -- 3. Kolom "sisa" pada bezetting otomatis mengikuti nilai "lowongan".
+-- 4. Dokumen PDF "Petunjuk Penggunaan" diunggah lewat Panel Admin (tab
+--    Petunjuk); file tersimpan di bucket storage "petunjuk".
 -- ============================================================================

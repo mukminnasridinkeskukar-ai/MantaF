@@ -72,6 +72,30 @@ const API = {
       .select()
   ),
 
+  /* ================= PETUNJUK PENGGUNAAN (kartu PDF) ================= */
+  getPetunjuk: (onlyActive = true) => {
+    let q = db.from('petunjuk').select('*')
+      .order('urutan', { ascending:true })
+      .order('created_at', { ascending:false });
+    if(onlyActive) q = q.eq('aktif', true);
+    return sbQuery(q);
+  },
+
+  createPetunjuk: (row) => sbQuery(db.from('petunjuk').insert(row).select()),
+  updatePetunjuk: (id, row) => sbQuery(db.from('petunjuk').update(row).eq('id', id).select()),
+  deletePetunjuk: (id) => sbQuery(db.from('petunjuk').delete().eq('id', id)),
+  /* hapus file PDF dari bucket storage petunjuk berdasarkan URL public */
+  async deletePetunjukFile(fileUrl){
+    if(!fileUrl) return;
+    try{
+      const marker = '/storage/v1/object/public/' + SUPABASE_CONFIG.buckets.petunjuk + '/';
+      const idx = fileUrl.indexOf(marker);
+      if(idx === -1) return; /* URL bukan dari bucket petunjuk — biarkan */
+      const path = fileUrl.substring(idx + marker.length).split('?')[0];
+      if(path) await db.storage.from(SUPABASE_CONFIG.buckets.petunjuk).remove([path]);
+    }catch(e){ /* penghapusan file gagal — abaikan, baris tetap terhapus */ }
+  },
+
   /* ================= STATISTIK DASHBOARD ================= */
   async getDashboardStats(){
     const [peserta, bezetting] = await Promise.all([

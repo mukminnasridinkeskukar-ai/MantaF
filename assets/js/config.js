@@ -10,13 +10,14 @@
    ============================================================ */
 
 const SUPABASE_CONFIG = {
-  url: 'https://nawpbcksuomzqjynlapt.supabase.co',   // <-- GANTI dengan Project URL Anda
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0',                // <-- GANTI dengan anon public key Anda
+  url: 'https://nawpbcksuomzqjynlapt.supabase.co',   // Project URL Anda
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0',  // anon public key Anda
 
   // Bucket storage untuk upload berkas (dibuat oleh supabase/schema.sql)
   buckets: {
     foto: 'foto',
-    dokumen: 'dokumen'
+    dokumen: 'dokumen',
+    petunjuk: 'petunjuk'
   },
 
   // Batas ukuran file upload (bytes) = 2 MB

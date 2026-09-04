@@ -48,6 +48,9 @@
       <button class="admin-tab" data-tab="peserta" onclick="switchAdminTab('peserta',this)">
         <i class="fas fa-users"></i> Peserta UKOM <span class="tab-count" id="cntTabPeserta">0</span>
       </button>
+      <button class="admin-tab" data-tab="petunjuk" onclick="switchAdminTab('petunjuk',this)">
+        <i class="fas fa-book-open-reader"></i> Petunjuk <span class="tab-count" id="cntTabPetunjuk">0</span>
+      </button>
     </div>
 
     <!-- ===== TAB PENGUMUMAN ===== -->
@@ -127,6 +130,29 @@
         </table>
       </div>
       <div id="admPesPagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
+    <!-- ===== TAB PETUNJUK ===== -->
+    <div class="admin-tabbody" id="tabBodyPetunjuk">
+      <div class="admin-toolbar">
+        <div class="search-group">
+          <label>Cari Judul</label>
+          <input type="text" id="admPetSearch" placeholder="Ketik judul dokumen petunjuk..." oninput="renderAdmPetunjuk()">
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm btn-csv" onclick="openCsvImport('petunjuk')"><i class="fas fa-file-csv"></i> Import CSV</button>
+        <button class="btn btn-sm" onclick="openPetunjukForm()"><i class="fas fa-plus"></i> Tambah Dokumen</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table>
+          <thead><tr><th style="min-width:220px">Judul &amp; Deskripsi</th><th>File</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="admPetBody"></tbody>
+        </table>
+      </div>
+      <div class="csv-hintbox" style="margin-top:14px"><i class="fas fa-circle-info"></i><div>
+        Dokumen yang <b>aktif</b> tampil sebagai kartu PDF pada menu <b>Petunjuk Penggunaan</b> (di bawah Dashboard).
+        File PDF tersimpan di bucket storage <code>petunjuk</code> dan dapat dipratinjau pengunjung lewat popup.
+      </div></div>
     </div>
 
   </div>

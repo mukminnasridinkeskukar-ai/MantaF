@@ -1,0 +1,3 @@
+judul;deskripsi;file_url;urutan;aktif
+CONTOH - hapus baris ini;Panduan mendaftar UKOM melalui menu Daftar UKOM. Hapus baris contoh sebelum import.;https://<PROJECT>.supabase.co/storage/v1/object/public/petunjuk/dokumen/petunjuk-daftar-ukom.pdf;1;Aktif
+CONTOH - hapus baris ini;Panduan admin mengelola data peserta dan import CSV.;https://<PROJECT>.supabase.co/storage/v1/object/public/petunjuk/dokumen/petunjuk-admin.pdf;2;Aktif

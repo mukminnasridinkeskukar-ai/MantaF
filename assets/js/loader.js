@@ -52,6 +52,7 @@ const Loader = {
 /* ---------- Metadata topbar per section ---------- */
 const SECTION_META = {
   dashboard:   { title:'Dashboard',                    subtitle:'Ringkasan aktivitas platform MantaF' },
+  petunjuk:    { title:'Petunjuk Penggunaan',          subtitle:'Panduan penggunaan platform dalam bentuk dokumen PDF' },
   pengumuman:  { title:'Pengumuman',                   subtitle:'Informasi resmi terbaru seputar UKOM & jabfung' },
   bezetting:   { title:'Bezetting',                    subtitle:'Data kebutuhan jabatan fungsional kesehatan' },
   pesertaUkom: { title:'Data Peserta UKOM',            subtitle:'Rekap peserta uji kompetensi seluruh periode' },

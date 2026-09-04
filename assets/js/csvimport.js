@@ -1,7 +1,7 @@
 /* ============================================================
    MANTAF v2 — CSVIMPORT.JS
    Upload massal (import CSV) untuk SEMUA menu panel admin:
-   Pengumuman, Bezetting, dan Peserta UKOM.
+   Pengumuman, Bezetting, Peserta UKOM, dan Petunjuk.
    Template CSV disesuaikan dengan kolom tabel Supabase (schema.sql).
 
    Alur: Unduh template -> isi di Excel / Google Sheets ->
@@ -72,6 +72,28 @@ const CSV_TEMPLATES = {
     dupKeyOf: function(obj){
       return [obj.instansi, obj.jenis_jabatan, obj.jenjang].map(function(v){ return String(v||'').trim().toLowerCase(); }).join('|');
     }
+  },
+
+  petunjuk: {
+    table: 'petunjuk',
+    label: 'Petunjuk',
+    icon: 'fa-book-open-reader',
+    fileName: 'template-petunjuk.csv',
+    dupLabel: 'Judul',
+    columns: [
+      { key:'judul',     header:'judul',     req:true, type:'text', max:200 },
+      { key:'deskripsi', header:'deskripsi', type:'text' },
+      { key:'file_url',  header:'file_url',  req:true, type:'text', max:500 },
+      { key:'urutan',    header:'urutan',    type:'int', def:0 },
+      { key:'aktif',     header:'aktif',     type:'bool', def:true }
+    ],
+    exampleRows: [
+      ['CONTOH - hapus baris ini','Panduan mendaftar UKOM melalui menu Daftar UKOM. Hapus baris contoh sebelum import.','https://<PROJECT>.supabase.co/storage/v1/object/public/petunjuk/dokumen/petunjuk-daftar-ukom.pdf','1','Aktif'],
+      ['CONTOH - hapus baris ini','Panduan admin mengelola data peserta dan import CSV.','https://<PROJECT>.supabase.co/storage/v1/object/public/petunjuk/dokumen/petunjuk-admin.pdf','2','Aktif']
+    ],
+    previewFields: ['judul','urutan','aktif'],
+    cacheGet: function(){ return (typeof admPetCache !== 'undefined') ? admPetCache : null; },
+    dupKeyOf: function(obj){ return String(obj.judul || '').trim().toLowerCase(); }
   },
 
   peserta: {
@@ -696,6 +718,8 @@ function csvAfterImport(tableKey){
     }else if(tableKey === 'peserta'){
       if(typeof pesertaUkomCache !== 'undefined') pesertaUkomCache = null;
       if(typeof dashPesertaCache !== 'undefined') dashPesertaCache = null;
+    }else if(tableKey === 'petunjuk'){
+      if(typeof petunjukCacheInvalidate === 'function') petunjukCacheInvalidate();
     }
     if(typeof adminRefreshAll === 'function') adminRefreshAll();
   }catch(e){ /* abaikan */ }

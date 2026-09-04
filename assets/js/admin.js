@@ -1,12 +1,14 @@
 /* ============================================================
    MANTAF v2 — ADMIN.JS
    Panel admin: login + CRUD TOTAL data bagian ke-2 sidebar
-   (Pengumuman, Bezetting, Peserta UKOM)
+   (Pengumuman, Bezetting, Peserta UKOM) + Petunjuk Penggunaan
+   (upload PDF ke Supabase Storage bucket "petunjuk")
    ============================================================ */
 
 let admPengCache = null;
 let admBezCache = null;
 let admPesCache = null;
+let admPetCache = null;
 let admPesPage = 1;
 const ADM_PES_PER_PAGE = 20;
 let adminInited = false;
@@ -66,18 +68,20 @@ function logoutAdmin(){
 async function adminRefreshAll(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
   try{
-    const [peng, bez, pes] = await Promise.all([
-      API.getPengumuman(false), API.getBezetting(), API.getPesertaUkom()
+    const [peng, bez, pes, pet] = await Promise.all([
+      API.getPengumuman(false), API.getBezetting(), API.getPesertaUkom(), API.getPetunjuk(false)
     ]);
-    admPengCache = peng; admBezCache = bez; admPesCache = pes;
+    admPengCache = peng; admBezCache = bez; admPesCache = pes; admPetCache = pet;
     document.getElementById('cntTabPengumuman').textContent = peng.length;
     document.getElementById('cntTabBezetting').textContent = bez.length;
     document.getElementById('cntTabPeserta').textContent = pes.length;
+    document.getElementById('cntTabPetunjuk').textContent = pet.length;
     populateAdmBezFilter();
     populateAdmPesUnitFilter();
     renderAdmPengumuman();
     renderAdmBezetting();
     renderAdmPeserta();
+    renderAdmPetunjuk();
   }catch(err){
     showToast('Gagal memuat data admin: ' + err.message, 'error');
   }
@@ -571,6 +575,141 @@ function admDeletePeserta(id){
       adminRefreshAll();
     }catch(err){ showToast('Gagal menghapus: ' + err.message, 'error'); }
   });
+}
+
+/* ============================================================
+   TAB 4 : PETUNJUK PENGGUNAAN (CRUD + upload PDF ke storage)
+   ============================================================ */
+function renderAdmPetunjuk(){
+  if(!admPetCache) return;
+  const q = ((document.getElementById('admPetSearch') || {}).value || '').toLowerCase();
+  const rows = admPetCache.filter(function(p){
+    return !q ||
+      String(p.judul || '').toLowerCase().indexOf(q) !== -1 ||
+      String(p.deskripsi || '').toLowerCase().indexOf(q) !== -1;
+  });
+
+  const body = document.getElementById('admPetBody');
+  let html = '';
+  rows.forEach(function(p){
+    const namaFile = String(p.file_url || '').split('/').pop().split('?')[0] || '-';
+    html += '<tr>' +
+      '<td style="font-weight:600;color:#0f172a">' + escapeHtml(p.judul || '') +
+        '<div style="font-size:11.5px;color:#94a3b8;margin-top:3px;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.deskripsi || '') + '</div></td>' +
+      '<td><span style="font-size:11.5px;color:#64748b;display:inline-flex;align-items:center;gap:6px;max-width:180px">' +
+        '<i class="fas fa-file-pdf" style="color:#dc2626"></i>' +
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escAttr(p.file_url || '') + '">' + escapeHtml(namaFile) + '</span></span></td>' +
+      '<td>' + escapeHtml(String(p.urutan ?? 0)) + '</td>' +
+      '<td>' + (p.aktif ? '<span class="badge-status badge-aktif">Aktif</span>' : '<span class="badge-status badge-nonaktif">Nonaktif</span>') + '</td>' +
+      '<td><div class="admin-row-actions">' +
+        '<button class="act-btn act-view" title="Preview PDF" onclick="openPetunjukPreview(\'' + p.id + '\')"><i class="fas fa-eye"></i></button>' +
+        '<button class="act-btn act-edit" title="Edit" onclick="openPetunjukForm(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' +
+        '<button class="act-btn act-del" title="Hapus" onclick="admDeletePetunjuk(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' +
+      '</div></td>' +
+      '</tr>';
+  });
+  body.innerHTML = html || '<tr><td colspan="5" class="empty-state" style="padding:34px"><i class="fas fa-book-open-reader"></i>Tidak ada dokumen. Klik "Tambah Dokumen" untuk mengunggah PDF petunjuk.</td></tr>';
+}
+
+/* Preview PDF dari panel admin (pakai popup publik di petunjuk.js) */
+function openPetunjukPreview(id){
+  const p = admPetCache && admPetCache.find(function(x){ return x.id === id; });
+  if(!p || !p.file_url){ showToast('File dokumen tidak ditemukan', 'error'); return; }
+  _pdfPreviewUrl = p.file_url;
+  document.getElementById('pdfPreviewTitle').textContent = p.judul || 'Dokumen';
+  document.getElementById('pdfPreviewDownload').href = p.file_url;
+  document.getElementById('pdfPreviewFallbackLink').href = p.file_url;
+  const frame = document.getElementById('pdfPreviewFrame');
+  const fallback = document.getElementById('pdfPreviewFallback');
+  fallback.style.display = 'none';
+  frame.style.display = 'block';
+  frame.src = p.file_url + '#view=FitH';
+  document.getElementById('lightboxPdf').classList.add('show');
+}
+
+function openPetunjukForm(id){
+  const p = id ? admPetCache.find(function(x){ return x.id === id; }) : null;
+  const overlay = crudModal(p ? 'Edit Dokumen Petunjuk' : 'Tambah Dokumen Petunjuk', 'fa-book-open-reader',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Judul Dokumen <span style="color:#dc2626">*</span></label>' +
+      '<input type="text" id="fPetJudul" maxlength="200" placeholder="cth: Petunjuk Pendaftaran UKOM" value="' + escAttr(p ? p.judul : '') + '"></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Deskripsi Singkat</label>' +
+      '<textarea id="fPetDesk" rows="3" placeholder="Jelaskan isi dokumen dalam 1–3 kalimat...">' + escapeHtml(p ? p.deskripsi : '') + '</textarea></div>' +
+      '<div class="form-group"><label>' + (p ? 'Ganti File PDF (opsional)' : 'File PDF <span style="color:#dc2626">*</span>') + '</label>' +
+      '<input type="file" id="fPetFile" accept="application/pdf,.pdf">' +
+      (p ? '<div style="font-size:11.5px;color:#64748b;margin-top:6px"><i class="fas fa-link"></i> File saat ini: ' +
+        '<a href="' + escAttr(p.file_url) + '" target="_blank" rel="noopener" style="color:#0d9488">' + escapeHtml(String(p.file_url).split('/').pop().split('?')[0]) + '</a></div>' : '') +
+      '</div>' +
+      '<div class="form-group"><label>Urutan Tampil</label><input type="number" id="fPetUrutan" min="0" max="9999" value="' + (p ? (p.urutan ?? 0) : (admPetCache.length + 1)) + '"></div>' +
+      '<div class="form-group"><label>Status</label><select id="fPetAktif">' +
+        '<option value="true"' + (!p || p.aktif ? ' selected' : '') + '>Aktif (tampil di menu publik)</option>' +
+        '<option value="false"' + (p && !p.aktif ? ' selected' : '') + '>Nonaktif (disembunyikan)</option>' +
+      '</select></div>' +
+    '</div>' +
+    '<div class="csv-hintbox" style="margin-top:6px"><i class="fas fa-lightbulb"></i><div>' +
+      'Gunakan file <b>PDF</b> ukuran maksimal ' + Math.round(SUPABASE_CONFIG.maxFileSize / 1024 / 1024) + ' MB. ' +
+      'Dokumen dengan urutan terkecil tampil paling atas. Semua pengunjung dapat membaca lewat popup preview.' +
+    '</div></div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn" id="fPetSave"><i class="fas fa-floppy-disk"></i> Simpan</button>'
+  );
+
+  overlay.querySelector('#fPetSave').addEventListener('click', async function(){
+    const judul = sanitizeInput(overlay.querySelector('#fPetJudul').value, 200);
+    if(!judul){ showToast('Judul dokumen wajib diisi', 'error'); return; }
+
+    const fFile = overlay.querySelector('#fPetFile').files[0];
+    if(!p && !fFile){ showToast('Pilih file PDF terlebih dahulu', 'error'); return; }
+    if(fFile){
+      if(!/\.pdf$/i.test(fFile.name) && fFile.type !== 'application/pdf'){
+        showToast('File harus berformat PDF', 'error'); return;
+      }
+      if(fFile.size > SUPABASE_CONFIG.maxFileSize){
+        showToast('Ukuran PDF melebihi ' + Math.round(SUPABASE_CONFIG.maxFileSize / 1024 / 1024) + ' MB', 'error'); return;
+      }
+    }
+
+    const row = {
+      judul: judul,
+      deskripsi: overlay.querySelector('#fPetDesk').value.trim().slice(0, 1000),
+      urutan: parseInt(overlay.querySelector('#fPetUrutan').value, 10) || 0,
+      aktif: overlay.querySelector('#fPetAktif').value === 'true'
+    };
+
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
+    try{
+      if(fFile){
+        const urlBaru = await API.uploadFile(SUPABASE_CONFIG.buckets.petunjuk, fFile, 'dokumen');
+        row.file_url = urlBaru;
+        /* file lama dihapus agar storage tidak menumpuk */
+        if(p && p.file_url) await API.deletePetunjukFile(p.file_url);
+      }
+      if(p) await API.updatePetunjuk(p.id, row);
+      else await API.createPetunjuk(row);
+
+      showToast(p ? 'Dokumen diperbarui' : 'Dokumen petunjuk ditambahkan', 'success');
+      overlay.remove();
+      petunjukCacheInvalidate();
+      adminRefreshAll();
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; }
+  });
+}
+
+function admDeletePetunjuk(id){
+  const p = admPetCache && admPetCache.find(function(x){ return x.id === id; });
+  confirmDialog('Hapus Dokumen Petunjuk?',
+    'Dokumen "' + (p ? p.judul : '') + '" beserta file PDF-nya akan dihapus permanen dari storage.',
+    async function(){
+      try{
+        if(p && p.file_url) await API.deletePetunjukFile(p.file_url);
+        await API.deletePetunjuk(id);
+        showToast('Dokumen dihapus', 'success');
+        petunjukCacheInvalidate();
+        adminRefreshAll();
+      }catch(err){ showToast('Gagal menghapus: ' + err.message, 'error'); }
+    },
+    { icon:'fa-file-pdf', yesText:'Ya, Hapus Dokumen', yesClass:'btn-danger' });
 }
 
 /* ---------- GANTI PASSWORD ---------- */

@@ -1,0 +1,27 @@
+<!-- ==================== PETUNJUK PENGGUNAAN ==================== -->
+<div class="panel petunjuk-hero">
+  <div class="petunjuk-hero-icon"><i class="fas fa-book-open-reader"></i></div>
+  <div class="petunjuk-hero-text">
+    <h2 style="margin-bottom:6px">Petunjuk Penggunaan</h2>
+    <p style="margin:0;font-size:13.5px;line-height:1.8;color:#475569">
+      Panduan resmi penggunaan platform MantaF dalam bentuk dokumen PDF — mencakup cara mendaftar UKOM,
+      mengisi formulir, mengunggah berkas, hingga panduan khusus bagi admin. Klik <b>Preview</b> pada kartu
+      untuk membaca dokumen langsung di layar, atau <b>Unduh</b> untuk menyimpannya ke perangkat Anda.
+    </p>
+  </div>
+</div>
+
+<div class="petunjuk-toolbar">
+  <div class="search-group" style="max-width:380px">
+    <label>Cari Dokumen</label>
+    <input type="text" id="petunjukSearch" placeholder="Ketik judul atau kata kunci petunjuk..." oninput="renderPetunjukCards()">
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost btn-sm" onclick="loadPetunjuk(true)" title="Muat ulang daftar dokumen">
+    <i class="fas fa-rotate-right"></i> Segarkan
+  </button>
+</div>
+
+<div id="petunjukGrid" class="petunjuk-grid">
+  <div class="empty-state" style="grid-column:1/-1;padding:40px"><i class="fas fa-spinner fa-spin"></i>Memuat dokumen petunjuk…</div>
+</div>
