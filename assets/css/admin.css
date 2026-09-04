@@ -183,7 +183,7 @@ color:#fff;
 position:fixed;inset:0;
 background:rgba(15,23,42,.62);
 backdrop-filter:blur(6px);
-z-index:11000;
+z-index:115000;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -244,6 +244,100 @@ border-radius:10px;
 padding:10px 14px;
 margin-bottom:16px;
 line-height:1.6;
+}
+
+/* ---------- FORM MODAL CRUD (judul seksi) ---------- */
+.form-section-title{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:12px;
+font-weight:700;
+color:#0f766e;
+text-transform:uppercase;
+letter-spacing:.06em;
+margin:20px 0 12px;
+padding-bottom:8px;
+border-bottom:1px dashed var(--line);
+}
+
+.form-section-title:first-child{margin-top:0}
+
+.form-section-title .fst-note{
+margin-left:auto;
+font-weight:500;
+color:#94a3b8;
+text-transform:none;
+letter-spacing:0;
+font-size:11px;
+display:inline-flex;
+align-items:center;
+gap:5px;
+}
+
+/* ---------- BARIS BERKAS PESERTA (modal CRUD) ---------- */
+.pf-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.pf-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+border:1px solid var(--line);
+border-radius:12px;
+padding:8px 10px;
+background:#fff;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.pf-row:hover{background:#f0fdfa;border-color:rgba(20,184,166,.35)}
+
+.pf-info{display:flex;align-items:center;gap:9px;min-width:0}
+
+.pf-icon{
+width:30px;height:30px;
+border-radius:9px;
+flex-shrink:0;
+display:flex;align-items:center;justify-content:center;
+background:#fef2f2;color:#dc2626;font-size:13px;
+}
+
+.pf-meta{min-width:0}
+
+.pf-label{font-size:11px;font-weight:700;color:#0f172a;line-height:1.3}
+
+.pf-name{
+font-size:10.5px;color:#64748b;max-width:200px;
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.pf-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+
+.btn-file{
+display:inline-flex;align-items:center;gap:4px;
+font-size:10.5px;font-weight:600;
+border-radius:8px;padding:5px 9px;
+border:1px solid var(--line);background:#fff;color:#334155;
+cursor:pointer;text-decoration:none;line-height:1.2;
+transition:all .15s ease;white-space:nowrap;
+font-family:inherit;
+}
+
+.btn-file:hover{transform:translateY(-1px)}
+
+.btn-file-view{background:#0d9488;border-color:#0d9488;color:#fff}
+.btn-file-view:hover{background:#0f766e;border-color:#0f766e;color:#fff}
+
+.btn-file-ganti{color:#0d9488;border-color:rgba(13,148,136,.45)}
+.btn-file-ganti:hover{background:#f0fdfa;color:#0f766e}
+
+.btn-file-del{color:#dc2626;border-color:rgba(220,38,38,.35)}
+.btn-file-del:hover{background:#fef2f2;color:#b91c1c}
+
+@media (max-width:760px){
+.pf-list{grid-template-columns:1fr}
+.form-section-title .fst-note{display:none}
+.pf-name{max-width:150px}
 }
 
 /* ---------- KONFIRMASI ---------- */

@@ -256,7 +256,7 @@ backdrop-filter:blur(6px);
 display:none;
 justify-content:center;
 align-items:center;
-z-index:9999;
+z-index:115000;
 padding:20px;
 }
 

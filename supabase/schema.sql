@@ -314,6 +314,13 @@ create policy "petunjuk_public_write" on storage.objects for insert to anon, aut
 drop policy if exists "petunjuk_public_delete" on storage.objects;
 create policy "petunjuk_public_delete" on storage.objects for delete to anon, authenticated using (bucket_id = 'petunjuk');
 
+-- Izinkan penghapusan objek storage foto/dokumen
+-- (dipakai panel admin saat berkas peserta diganti/dikosongkan)
+drop policy if exists "foto_public_delete"    on storage.objects;
+drop policy if exists "dokumen_public_delete" on storage.objects;
+create policy "foto_public_delete"    on storage.objects for delete to anon, authenticated using (bucket_id = 'foto');
+create policy "dokumen_public_delete" on storage.objects for delete to anon, authenticated using (bucket_id = 'dokumen');
+
 -- ---------------------------------------------------------------------------
 -- 9. VIEW STATISTIK DASHBOARD (opsional, untuk monitoring cepat di Supabase)
 -- ---------------------------------------------------------------------------

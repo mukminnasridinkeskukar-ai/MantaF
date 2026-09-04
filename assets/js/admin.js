@@ -67,23 +67,26 @@ function logoutAdmin(){
 
 async function adminRefreshAll(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
-  try{
-    const [peng, bez, pes, pet] = await Promise.all([
-      API.getPengumuman(false), API.getBezetting(), API.getPesertaUkom(), API.getPetunjuk(false)
-    ]);
-    admPengCache = peng; admBezCache = bez; admPesCache = pes; admPetCache = pet;
-    document.getElementById('cntTabPengumuman').textContent = peng.length;
-    document.getElementById('cntTabBezetting').textContent = bez.length;
-    document.getElementById('cntTabPeserta').textContent = pes.length;
-    document.getElementById('cntTabPetunjuk').textContent = pet.length;
-    populateAdmBezFilter();
-    populateAdmPesUnitFilter();
-    renderAdmPengumuman();
-    renderAdmBezetting();
-    renderAdmPeserta();
-    renderAdmPetunjuk();
-  }catch(err){
-    showToast('Gagal memuat data admin: ' + err.message, 'error');
+  /* Muat tiap tabel SECARA TERPISAH: satu tabel gagal (mis. tabel petunjuk
+     belum dibuat karena schema belum di-run ulang) tidak membuat seluruh
+     panel admin kosong. */
+  const jobs = [
+    ['pengumuman', API.getPengumuman(false), v => { admPengCache = v; document.getElementById('cntTabPengumuman').textContent = v.length; renderAdmPengumuman(); }],
+    ['bezetting',  API.getBezetting(),       v => { admBezCache = v;  document.getElementById('cntTabBezetting').textContent  = v.length; renderAdmBezetting(); }],
+    ['peserta',    API.getPesertaUkom(),     v => { admPesCache = v;  document.getElementById('cntTabPeserta').textContent    = v.length; renderAdmPeserta(); }],
+    ['petunjuk',   API.getPetunjuk(false),   v => { admPetCache = v;  document.getElementById('cntTabPetunjuk').textContent   = v.length; renderAdmPetunjuk(); }]
+  ];
+  const results = await Promise.allSettled(jobs.map(j => j[1]));
+  const gagal = [];
+  results.forEach(function(res, i){
+    if(res.status === 'fulfilled') jobs[i][2](res.value);
+    else gagal.push(jobs[i][0]);
+  });
+  populateAdmBezFilter();
+  populateAdmPesUnitFilter();
+  if(gagal.length){
+    showToast('Sebagian data gagal dimuat (' + gagal.join(', ') + '). ' +
+      (gagal.includes('petunjuk') ? 'Jalankan ulang supabase/schema.sql terbaru untuk membuat tabel & bucket petunjuk.' : ''), 'error');
   }
 }
 
@@ -394,7 +397,7 @@ function admShowDetail(id){
   }
   function fileLink(url, label){
     return '<div class="af-item"><div class="af-label">' + label + '</div>' +
-      (url ? '<a href="' + escAttr(url) + '" target="_blank" rel="noopener"><i class="fas fa-file-arrow-down"></i> Lihat Berkas</a>' : '<span style="color:#cbd5e1">Belum ada</span>') +
+      (url ? '<a class="btn-file btn-file-view" href="' + escAttr(url) + '" target="_blank" rel="noopener" title="Buka berkas di tab baru"><i class="fas fa-up-right-from-square"></i> Lihat Berkas</a>' : '<span style="color:#cbd5e1">Belum ada</span>') +
       '</div>';
   }
 
@@ -475,60 +478,200 @@ async function admSaveCatatan(id){
   }catch(err){ showToast('Gagal: ' + err.message, 'error'); }
 }
 
-/* ---------- FORM TAMBAH / EDIT PESERTA ---------- */
+/* ---------- FORM TAMBAH / EDIT PESERTA (LENGKAP, sesuai seluruh kolom tabel peserta_ukom) ---------- */
+
+/* Konfigurasi 10 kolom berkas: label tampilan, bucket storage, tipe file diterima */
+const PES_FILE_FIELDS = [
+  { col:'file_pak',        label:'PAK Terakhir',                     bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_foto',       label:'Foto 4x6 Latar Merah',             bucket:'foto',    accept:'image/*',      icon:'fa-file-image' },
+  { col:'file_drh',        label:'Daftar Riwayat Hidup (DRH)',       bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_ijazah',     label:'Ijazah Terakhir',                  bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_str',        label:'STR (Surat Tanda Registrasi)',     bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_sk_pangkat', label:'SK Pangkat Terakhir',              bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_sk_jabfung', label:'SK Jabfung Terakhir',              bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_skp',        label:'SKP 2 Tahun Terakhir',             bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'file_skmd',       label:'SK Tidak Sedang Hukuman Disiplin', bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   },
+  { col:'sertifikat',      label:'Sertifikat',                       bucket:'dokumen', accept:'.pdf,image/*', icon:'fa-file-pdf'   }
+];
+
+/* nama berkas yang rapi dari URL storage */
+function pesFileName(url){
+  if(!url) return '';
+  const raw = String(url).split('/').pop().split('?')[0] || '-';
+  try{ return decodeURIComponent(raw); }catch(e){ return raw; }
+}
+
 function openPesertaForm(id){
   const p = id ? admPesCache.find(function(x){ return x.id === id; }) : null;
+  /* state tiap kolom berkas: { file: File|null, clear: bool } */
+  const pesFileState = {};
+
+  function optHtml(opts, cur){
+    return opts.map(function(v){
+      return '<option value="' + escAttr(v) + '"' + (cur === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>';
+    }).join('');
+  }
+
+  function fileRowHtml(f){
+    pesFileState[f.col] = { file:null, clear:false };
+    const cur = p ? (p[f.col] || '') : '';
+    return '<div class="pf-row" id="pfRow_' + f.col + '">' +
+      '<div class="pf-info">' +
+        '<span class="pf-icon"><i class="fas ' + f.icon + '"></i></span>' +
+        '<div class="pf-meta">' +
+          '<div class="pf-label">' + f.label + '</div>' +
+          '<div class="pf-name" id="pfName_' + f.col + '">' + (cur ? escapeHtml(pesFileName(cur)) : '<span style="color:#94a3b8">Belum ada berkas</span>') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pf-actions">' +
+        (cur ? '<a class="btn-file btn-file-view" href="' + escAttr(cur) + '" target="_blank" rel="noopener" id="pfView_' + f.col + '" title="Buka berkas di tab baru"><i class="fas fa-up-right-from-square"></i> Lihat</a>' : '') +
+        '<label class="btn-file btn-file-ganti" for="pfInput_' + f.col + '" title="Pilih berkas dari komputer"><i class="fas fa-' + (cur ? 'rotate' : 'upload') + '"></i> ' + (cur ? 'Ganti' : 'Unggah') + '</label>' +
+        '<input type="file" id="pfInput_' + f.col + '" accept="' + f.accept + '" hidden>' +
+        '<button type="button" class="btn-file btn-file-del" id="pfDel_' + f.col + '" style="' + (cur ? '' : 'display:none') + '" title="Hapus berkas"><i class="fas fa-xmark"></i></button>' +
+      '</div>' +
+    '</div>';
+  }
+
   const overlay = crudModal(p ? 'Edit Data Peserta' : 'Tambah Data Peserta', 'fa-users',
+    /* ==== 1. DATA PRIBADI ==== */
+    '<div class="form-section-title"><i class="fas fa-id-card"></i> Data Pribadi</div>' +
     '<div class="form-grid">' +
-      '<div class="form-group"><label>NIK <span style="color:#dc2626">*</span></label><input type="text" id="fPesNik" maxlength="16" value="' + escAttr(p ? p.nik : '') + '"></div>' +
-      '<div class="form-group"><label>NIP</label><input type="text" id="fPesNip" value="' + escAttr(p ? p.nip : '') + '"></div>' +
+      '<div class="form-group"><label>NIK <span style="color:#dc2626">*</span></label><input type="text" id="fPesNik" maxlength="16" inputmode="numeric" placeholder="16 digit angka" value="' + escAttr(p ? p.nik : '') + '"></div>' +
+      '<div class="form-group"><label>NIP <span style="color:#dc2626">*</span></label><input type="text" id="fPesNip" value="' + escAttr(p ? p.nip : '') + '"></div>' +
       '<div class="form-group" style="grid-column:1/-1"><label>Nama Tanpa Gelar <span style="color:#dc2626">*</span></label><input type="text" id="fPesNama" value="' + escAttr(p ? p.nama_tanpa_gelar : '') + '"></div>' +
-      '<div class="form-group"><label>Jenis Kelamin</label><select id="fPesKelamin">' +
-        '<option value="">Pilih</option><option' + (p && p.jenis_kelamin === 'Laki-Laki' ? ' selected' : '') + '>Laki-Laki</option><option' + (p && p.jenis_kelamin === 'Perempuan' ? ' selected' : '') + '>Perempuan</option></select></div>' +
-      '<div class="form-group"><label>Unit Kerja</label><select id="fPesUnit">' +
-        '<option value="">Pilih Instansi</option>' + OPT_UNIT_KERJA.map(function(v){ return '<option' + (p && p.nama_unit_kerja === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Jenis UKOM</label><select id="fPesJenisUkom">' +
-        '<option value="">Pilih</option>' + OPT_JENIS_UKOM.map(function(v){ return '<option' + (p && p.jenis_ukom === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Jabfung Tujuan</label><select id="fPesJabfungTujuan">' +
-        '<option value="">Pilih</option>' + OPT_JABFUNG.map(function(v){ return '<option' + (p && p.jabfung_tujuan === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Jenjang Tujuan</label><select id="fPesJenjangTujuan">' +
-        '<option value="">Pilih</option>' + OPT_JENJANG.map(function(v){ return '<option' + (p && p.jenjang_tujuan === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
+      '<div class="form-group"><label>Jenis Kelamin</label><select id="fPesKelamin"><option value="">Pilih</option>' + optHtml(['Laki-Laki','Perempuan'], p ? p.jenis_kelamin : '') + '</select></div>' +
+      '<div class="form-group"><label>Unit Kerja <span style="color:#dc2626">*</span></label><select id="fPesUnit"><option value="">Pilih Instansi</option>' + optHtml(OPT_UNIT_KERJA, p ? p.nama_unit_kerja : '') + '</select></div>' +
+      '<div class="form-group"><label>Pangkat / Golongan</label><select id="fPesPangkat"><option value="">Pilih</option>' + optHtml(OPT_PANGKAT, p ? p.pangkat_golongan : '') + '</select></div>' +
+      '<div class="form-group"><label>No. SK Jabfung Terakhir</label><input type="text" id="fPesNoSkJabfung" value="' + escAttr(p ? p.no_sk_jabfung : '') + '"></div>' +
+    '</div>' +
+
+    /* ==== 2. DATA JABATAN & UKOM ==== */
+    '<div class="form-section-title"><i class="fas fa-briefcase"></i> Data Jabatan &amp; UKOM</div>' +
+    '<div class="form-grid">' +
+      '<div class="form-group"><label>Jabfung Saat Ini</label><select id="fPesJabfungSaatIni"><option value="">Pilih</option>' + optHtml(OPT_JABFUNG, p ? p.jabfung_saat_ini : '') + '</select></div>' +
+      '<div class="form-group"><label>Jenjang Saat Ini</label><select id="fPesJenjangSaatIni"><option value="">Pilih</option>' + optHtml(OPT_JENJANG, p ? p.jenjang_saat_ini : '') + '</select></div>' +
+      '<div class="form-group"><label>Jabfung Tujuan</label><select id="fPesJabfungTujuan"><option value="">Pilih</option>' + optHtml(OPT_JABFUNG, p ? p.jabfung_tujuan : '') + '</select></div>' +
+      '<div class="form-group"><label>Jenjang Tujuan</label><select id="fPesJenjangTujuan"><option value="">Pilih</option>' + optHtml(OPT_JENJANG, p ? p.jenjang_tujuan : '') + '</select></div>' +
+      '<div class="form-group"><label>Jenis UKOM</label><select id="fPesJenisUkom"><option value="">Pilih</option>' + optHtml(OPT_JENIS_UKOM, p ? p.jenis_ukom : '') + '</select></div>' +
+      '<div class="form-group"><label>Nilai PAK Terakhir</label><input type="text" id="fPesNilaiPak" placeholder="cth: 85.50" value="' + escAttr(p ? p.nilai_pak_terakhir : '') + '"></div>' +
+    '</div>' +
+
+    /* ==== 3. KONTAK ==== */
+    '<div class="form-section-title"><i class="fas fa-address-book"></i> Kontak</div>' +
+    '<div class="form-grid">' +
+      '<div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="fPesWa" inputmode="tel" placeholder="08xxxxxxxxxx" value="' + escAttr(p ? p.nomor_whatsapp : '') + '"></div>' +
+      '<div class="form-group"><label>Email Aktif</label><input type="email" id="fPesEmail" placeholder="nama@email.com" value="' + escAttr(p ? p.email_aktif : '') + '"></div>' +
+    '</div>' +
+
+    /* ==== 4. DATA KELOLA ADMIN ==== */
+    '<div class="form-section-title"><i class="fas fa-sliders"></i> Data Kelola Admin</div>' +
+    '<div class="form-grid">' +
       '<div class="form-group"><label>Periode</label><input type="text" id="fPesPeriode" value="' + escAttr(p ? p.periode : '') + '" placeholder="cth: 2026-1"></div>' +
       '<div class="form-group"><label>No. Peserta</label><input type="text" id="fPesNoPeserta" value="' + escAttr(p ? p.no_peserta : '') + '"></div>' +
       '<div class="form-group"><label>PAK Instansi</label><input type="text" id="fPesPakInstansi" value="' + escAttr(p ? p.pak_instansi : '') + '"></div>' +
       '<div class="form-group"><label>PAK SI ASN</label><input type="text" id="fPesPakSiasn" value="' + escAttr(p ? p.pak_siasn : '') + '"></div>' +
-      '<div class="form-group"><label>Status Periode</label><select id="fPesStatusPeriode">' +
-        ['Aktif','Tidak Aktif','-'].map(function(v){ return '<option' + (p && (p.status_periode || '-') === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Absen</label><select id="fPesAbsen">' +
-        ['Hadir','Tidak Hadir','-'].map(function(v){ return '<option' + (p && (p.absen || '-') === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Status UKOM</label><select id="fPesStatusUkom">' +
-        ['Lulus','Tidak Lulus','Menunggu','-'].map(function(v){ return '<option' + (p && (p.status_ukom || '-') === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group"><label>Status Verifikasi</label><select id="fPesStatusVerifikasi">' +
-        ['Menunggu','Proses','Disetujui','Ditolak','Dilimpahkan','Batal','Perbaikan'].map(function(v){ return '<option' + (p && p.status_verifikasi === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
-      '<div class="form-group" style="grid-column:1/-1"><label>Catatan Admin</label><textarea id="fPesCatatan" rows="2">' + escapeHtml(p ? p.catatan_admin : '') + '</textarea></div>' +
-      '<div class="form-group"><label>Ganti Foto (opsional)</label><input type="file" id="fPesFileFoto" accept="image/*"></div>' +
-      '<div class="form-group"><label>Ganti Sertifikat (opsional)</label><input type="file" id="fPesFileSertifikat" accept="image/*,.pdf"></div>' +
-    '</div>',
+      '<div class="form-group"><label>Status Periode</label><select id="fPesStatusPeriode">' + optHtml(['Aktif','Tidak Aktif','-'], p ? (p.status_periode || '-') : '') + '</select></div>' +
+      '<div class="form-group"><label>Absen</label><select id="fPesAbsen">' + optHtml(['Hadir','Tidak Hadir','-'], p ? (p.absen || '-') : '') + '</select></div>' +
+      '<div class="form-group"><label>Status UKOM</label><select id="fPesStatusUkom">' + optHtml(['Lulus','Tidak Lulus','Menunggu','-'], p ? (p.status_ukom || '-') : '') + '</select></div>' +
+      '<div class="form-group"><label>Status Verifikasi</label><select id="fPesStatusVerifikasi">' + optHtml(['Menunggu','Proses','Disetujui','Ditolak','Dilimpahkan','Batal','Perbaikan'], p ? p.status_verifikasi : '') + '</select></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Catatan Admin (tampil di hasil Cek Status peserta)</label><textarea id="fPesCatatan" rows="2">' + escapeHtml(p ? p.catatan_admin : '') + '</textarea></div>' +
+    '</div>' +
+
+    /* ==== 5. BERKAS PENDUKUNG (10 kolom file) ==== */
+    '<div class="form-section-title"><i class="fas fa-paperclip"></i> Berkas Pendukung' +
+      '<span class="fst-note"><i class="fas fa-up-right-from-square"></i> tombol Lihat membuka berkas di tab baru</span></div>' +
+    '<div class="pf-list">' + PES_FILE_FIELDS.map(fileRowHtml).join('') + '</div>' +
+    '<div class="csv-hintbox" style="margin-top:12px"><i class="fas fa-lightbulb"></i><div>' +
+      'Form ini mencakup <b>seluruh kolom</b> tabel <code>peserta_ukom</code> di Supabase. Berkas maksimal ' + Math.round(SUPABASE_CONFIG.maxFileSize / 1024 / 1024) +
+      ' MB; tanda <span style="color:#dc2626">*</span> wajib diisi. Perubahan berkas tersimpan saat tombol <b>Simpan</b> ditekan.' +
+    '</div></div>',
     '<button class="btn btn-ghost" data-close>Batal</button>' +
     '<button class="btn" id="fPesSave"><i class="fas fa-floppy-disk"></i> Simpan</button>',
     { large: true }
   );
 
+  /* ---- interaksi tiap baris berkas: pilih / batalkan / tandai hapus ---- */
+  PES_FILE_FIELDS.forEach(function(f){
+    const input = overlay.querySelector('#pfInput_' + f.col);
+    const delBtn = overlay.querySelector('#pfDel_' + f.col);
+    const viewA  = overlay.querySelector('#pfView_' + f.col);
+    const nameEl = overlay.querySelector('#pfName_' + f.col);
+    const cur = p ? (p[f.col] || '') : '';
+    const noFileTxt = '<span style="color:#94a3b8">Belum ada berkas</span>';
+
+    input.addEventListener('change', function(){
+      const file = input.files[0];
+      if(!file) return;
+      if(file.size > SUPABASE_CONFIG.maxFileSize){
+        showToast('Ukuran "' + file.name + '" melebihi ' + Math.round(SUPABASE_CONFIG.maxFileSize / 1024 / 1024) + ' MB', 'error');
+        input.value = '';
+        return;
+      }
+      pesFileState[f.col] = { file: file, clear: false };
+      nameEl.innerHTML = '<span style="color:#0d9488"><i class="fas fa-file-circle-check"></i></span> ' + escapeHtml(file.name);
+      delBtn.style.display = '';
+      delBtn.innerHTML = '<i class="fas fa-xmark"></i>';
+      delBtn.title = 'Batalkan berkas yang dipilih';
+      if(cur && viewA) viewA.style.display = '';
+    });
+
+    delBtn.addEventListener('click', function(){
+      const st = pesFileState[f.col];
+      if(st && st.file){
+        /* buang pilihan berkas baru → kembali ke kondisi sebelumnya */
+        st.file = null;
+        input.value = '';
+        nameEl.innerHTML = cur ? escapeHtml(pesFileName(cur)) : noFileTxt;
+        if(!cur){ delBtn.style.display = 'none'; }
+        else{ delBtn.innerHTML = '<i class="fas fa-xmark"></i>'; delBtn.title = 'Hapus berkas saat disimpan'; }
+        return;
+      }
+      if(cur){
+        /* tandai hapus / urungkan penandaan */
+        const cleared = !(st && st.clear);
+        pesFileState[f.col] = { file: null, clear: cleared };
+        nameEl.innerHTML = cleared
+          ? '<span style="color:#dc2626"><i class="fas fa-trash-can"></i> Berkas dihapus saat disimpan</span>'
+          : escapeHtml(pesFileName(cur));
+        if(viewA) viewA.style.display = cleared ? 'none' : '';
+        delBtn.innerHTML = cleared ? '<i class="fas fa-rotate-left"></i>' : '<i class="fas fa-xmark"></i>';
+        delBtn.title = cleared ? 'Urungkan penghapusan' : 'Hapus berkas saat disimpan';
+      }
+    });
+  });
+
+  /* ---- SIMPAN ---- */
   overlay.querySelector('#fPesSave').addEventListener('click', async function(){
-    const nik = sanitizeInput(overlay.querySelector('#fPesNik').value, 16);
+    const nik  = sanitizeInput(overlay.querySelector('#fPesNik').value, 16);
+    const nip  = sanitizeInput(overlay.querySelector('#fPesNip').value, 30);
     const nama = sanitizeInput(overlay.querySelector('#fPesNama').value, 100);
+    const unit = overlay.querySelector('#fPesUnit').value;
+    const email = overlay.querySelector('#fPesEmail').value.trim();
+    const wa    = overlay.querySelector('#fPesWa').value.trim();
+
     if(!/^[0-9]{16}$/.test(nik)){ showToast('NIK harus 16 digit angka', 'error'); return; }
+    if(!nip){ showToast('NIP wajib diisi', 'error'); return; }
     if(!nama){ showToast('Nama wajib diisi', 'error'); return; }
+    if(!unit){ showToast('Unit kerja wajib dipilih', 'error'); return; }
+    if(email && !validateEmail(email)){ showToast('Format email tidak valid', 'error'); return; }
+    if(wa && !validatePhone(wa)){ showToast('Format nomor WhatsApp tidak valid (contoh: 081234567890)', 'error'); return; }
 
     const row = {
       nik: nik,
-      nip: sanitizeInput(overlay.querySelector('#fPesNip').value, 30),
+      nip: nip,
       nama_tanpa_gelar: nama,
       jenis_kelamin: overlay.querySelector('#fPesKelamin').value || null,
-      nama_unit_kerja: overlay.querySelector('#fPesUnit').value || null,
-      jenis_ukom: overlay.querySelector('#fPesJenisUkom').value || null,
+      nama_unit_kerja: unit,
+      pangkat_golongan: overlay.querySelector('#fPesPangkat').value || null,
+      no_sk_jabfung: sanitizeInput(overlay.querySelector('#fPesNoSkJabfung').value, 100) || null,
+      jabfung_saat_ini: overlay.querySelector('#fPesJabfungSaatIni').value || null,
+      jenjang_saat_ini: overlay.querySelector('#fPesJenjangSaatIni').value || null,
       jabfung_tujuan: overlay.querySelector('#fPesJabfungTujuan').value || null,
       jenjang_tujuan: overlay.querySelector('#fPesJenjangTujuan').value || null,
+      jenis_ukom: overlay.querySelector('#fPesJenisUkom').value || null,
+      nilai_pak_terakhir: sanitizeInput(overlay.querySelector('#fPesNilaiPak').value, 50) || null,
+      nomor_whatsapp: sanitizeInput(wa, 20) || null,
+      email_aktif: sanitizeInput(email, 100) || null,
       periode: sanitizeInput(overlay.querySelector('#fPesPeriode').value, 30) || null,
       no_peserta: sanitizeInput(overlay.querySelector('#fPesNoPeserta').value, 30) || null,
       pak_instansi: sanitizeInput(overlay.querySelector('#fPesPakInstansi').value, 50) || null,
@@ -543,25 +686,34 @@ function openPesertaForm(id){
     const btn = this;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
     try{
-      const fFoto = overlay.querySelector('#fPesFileFoto').files[0];
-      if(fFoto){
-        if(fFoto.size > SUPABASE_CONFIG.maxFileSize) throw new Error('Ukuran foto melebihi 2MB');
-        row.file_foto = await API.uploadFile('foto', fFoto, nik);
-      }
-      const fSert = overlay.querySelector('#fPesFileSertifikat').files[0];
-      if(fSert){
-        if(fSert.size > SUPABASE_CONFIG.maxFileSize) throw new Error('Ukuran sertifikat melebihi 2MB');
-        row.sertifikat = await API.uploadFile(fSert.type && fSert.type.startsWith('image/') ? 'foto' : 'dokumen', fSert, nik);
+      /* unggah berkas baru & terapkan penghapusan (berkas lama dibuang dari storage SETELAH data tersimpan) */
+      const oldUrls = [];
+      for(const f of PES_FILE_FIELDS){
+        const st = pesFileState[f.col] || {};
+        const curUrl = p ? (p[f.col] || '') : '';
+        if(st.file){
+          row[f.col] = await API.uploadFile(f.bucket, st.file, nik);
+          if(curUrl) oldUrls.push(curUrl);
+        }else if(st.clear && curUrl){
+          row[f.col] = null;
+          oldUrls.push(curUrl);
+        }
       }
 
       if(p) await API.updatePeserta(p.id, row);
       else await API.createPeserta(row);
 
+      oldUrls.forEach(function(u){ API.deleteStorageFile(u); });
+
       showToast(p ? 'Data peserta diperbarui' : 'Peserta ditambahkan', 'success');
       overlay.remove();
       pesertaUkomCache = null; dashPesertaCache = null;
       adminRefreshAll();
-    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; }
+    }catch(err){
+      showToast('Gagal: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan';
+    }
   });
 }
 

@@ -96,6 +96,24 @@ const API = {
     }catch(e){ /* penghapusan file gagal — abaikan, baris tetap terhapus */ }
   },
 
+  /* hapus objek storage (bucket foto/dokumen/petunjuk) berdasarkan URL public.
+     Dipakai panel admin saat berkas peserta diganti/dikosongkan. */
+  async deleteStorageFile(fileUrl){
+    if(!fileUrl || typeof fileUrl !== 'string') return;
+    try{
+      const marker = '/storage/v1/object/public/';
+      const idx = fileUrl.indexOf(marker);
+      if(idx === -1) return; /* URL bukan public storage Supabase — biarkan */
+      const rest = fileUrl.substring(idx + marker.length).split('?')[0];
+      const slash = rest.indexOf('/');
+      if(slash <= 0) return;
+      const bucket = rest.substring(0, slash);
+      const path = rest.substring(slash + 1);
+      if(!bucket || !path) return;
+      await db.storage.from(bucket).remove([path]);
+    }catch(e){ /* abaikan — kegagalan hapus file tidak boleh blok simpan data */ }
+  },
+
   /* ================= STATISTIK DASHBOARD ================= */
   async getDashboardStats(){
     const [peserta, bezetting] = await Promise.all([
