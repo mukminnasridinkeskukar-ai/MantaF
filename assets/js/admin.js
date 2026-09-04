@@ -784,13 +784,13 @@ function openPetunjukPreview(id){
   if(!p || !p.file_url){ showToast('File dokumen tidak ditemukan', 'error'); return; }
   _pdfPreviewUrl = p.file_url;
   document.getElementById('pdfPreviewTitle').textContent = p.judul || 'Dokumen';
-  document.getElementById('pdfPreviewDownload').href = p.file_url;
   document.getElementById('pdfPreviewFallbackLink').href = p.file_url;
   const frame = document.getElementById('pdfPreviewFrame');
   const fallback = document.getElementById('pdfPreviewFallback');
   fallback.style.display = 'none';
   frame.style.display = 'block';
-  frame.src = p.file_url + '#view=FitH';
+  /* toolbar=0 & navpanes=0: viewer hanya untuk membaca (tanpa tombol unduh browser) */
+  frame.src = p.file_url + '#view=FitH&toolbar=0&navpanes=0';
   document.getElementById('lightboxPdf').classList.add('show');
 }
 

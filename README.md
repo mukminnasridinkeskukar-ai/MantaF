@@ -110,12 +110,12 @@ git push -u origin main
 | **2. Data & Informasi** | Pengumuman · Bezetting · Data Peserta UKOM |
 | **3. Layanan & Admin** | Daftar UKOM · Cek Status · Admin |
 
-## 📖 Petunjuk Penggunaan (Kartu PDF + Popup Preview)
+## 📖 Petunjuk Penggunaan (Kartu PDF + Popup Baca-Saja)
 
 Menu **Petunjuk Penggunaan** (di bawah Dashboard) menampilkan setiap panduan sebagai **kartu PDF**:
 
-- **Preview** — dokumen terbuka dalam *popup* dan dapat dibaca langsung (iframe PDF bawaan browser), lengkap dengan tombol **Tab Baru** dan **Unduh** di bar atasnya.
-- **Unduh** — mengunduh file PDF dari Supabase Storage.
+- **Baca Dokumen** — dokumen terbuka dalam *popup* dan dapat dibaca langsung (iframe PDF bawaan browser), lengkap dengan tombol **Tab Baru** di bar atasnya.
+- **Baca-saja (read-only)** — fungsi unduh telah dihilangkan sepenuhnya: tombol Unduh tidak ada pada kartu maupun popup, dan toolbar viewer browser (unduh/cetak) disembunyikan via `#toolbar=0&navpanes=0`.
 - Pencarian dokumen + tombol segarkan tersedia di toolbar.
 - Sumber file: **bucket storage `petunjuk`** (URL publik tersimpan pada kolom `file_url` tabel `petunjuk`).
 - Di perangkat iOS yang tidak mendukung iframe PDF, popup otomatis menampilkan tombol pembuka di tab baru.

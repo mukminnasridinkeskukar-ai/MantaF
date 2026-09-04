@@ -83,10 +83,7 @@ function renderPetunjukCards(){
       '<div class="pet-card-meta"><i class="fas fa-clock"></i> Diunggah ' + escapeHtml(formatDateId(p.created_at)) + '</div>' +
       '<div class="pet-card-actions">' +
         '<button class="btn btn-sm" onclick="openPdfPreview(\'' + escAttr(p.id) + '\')">' +
-          '<i class="fas fa-eye"></i> Preview' +
-        '</button>' +
-        '<button class="btn btn-outline btn-sm" onclick="downloadPetunjuk(\'' + escAttr(p.id) + '\')">' +
-          '<i class="fas fa-download"></i> Unduh' +
+          '<i class="fas fa-book-open"></i> Baca Dokumen' +
         '</button>' +
       '</div>' +
     '</div>';
@@ -107,7 +104,6 @@ function openPdfPreview(id){
   const judul = p.judul || 'Dokumen Petunjuk';
 
   document.getElementById('pdfPreviewTitle').textContent = judul;
-  document.getElementById('pdfPreviewDownload').href = p.file_url;
   document.getElementById('pdfPreviewFallbackLink').href = p.file_url;
 
   const frame = document.getElementById('pdfPreviewFrame');
@@ -122,14 +118,18 @@ function openPdfPreview(id){
   }else{
     fallback.style.display = 'none';
     frame.style.display = 'block';
-    frame.src = p.file_url + '#view=FitH';
+    /* toolbar=0 & navpanes=0: sembunyikan toolbar bawaan viewer PDF browser
+       (Chrome/Edge) sehingga tombol unduh/cetak tidak tersedia — hanya baca. */
+    frame.src = p.file_url + '#view=FitH&toolbar=0&navpanes=0';
   }
 
   document.getElementById('lightboxPdf').classList.add('show');
 }
 
 function openPdfInNewTab(){
-  if(_pdfPreviewUrl) window.open(_pdfPreviewUrl, '_blank', 'noopener');
+  if(!_pdfPreviewUrl) return;
+  const sep = _pdfPreviewUrl.indexOf('#') === -1 ? '#' : '&';
+  window.open(_pdfPreviewUrl + sep + 'toolbar=0&navpanes=0', '_blank', 'noopener');
 }
 
 function closePdfPreview(){
@@ -140,22 +140,6 @@ function closePdfPreview(){
   frame.style.display = 'block';
   document.getElementById('pdfPreviewFallback').style.display = 'none';
   _pdfPreviewUrl = '';
-}
-
-/* Tambahkan parameter download ke URL storage Supabase saat mengunduh */
-function downloadPetunjuk(id){
-  const p = petunjukById(id);
-  if(!p || !p.file_url){ showToast('File dokumen tidak ditemukan', 'error'); return; }
-  const sep = p.file_url.indexOf('?') === -1 ? '?' : '&';
-  const a = document.createElement('a');
-  a.href = p.file_url + sep + 'download=true';
-  a.download = (p.judul || 'petunjuk') + '.pdf';
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(function(){ a.remove(); }, 400);
-  showToast('Mengunduh ' + (p.judul || 'dokumen') + '…', 'info');
 }
 
 /* Tutup popup dengan tombol ESC */
