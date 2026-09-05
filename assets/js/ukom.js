@@ -1,6 +1,10 @@
 /* ============================================================
    MANTAF v2 — UKOM.JS
    Formulir pendaftaran UKOM → Supabase (Storage + tabel)
+   Fitur:
+   - Nomor registrasi + waktu otomatis di paling atas formulir
+   - Konfirmasi "sudah benar & lengkap?" sebelum kirim
+   - Bukti registrasi (receipt) + cetak setelah terkirim
    ============================================================ */
 
 /* ---------- Data opsi select ---------- */
@@ -30,7 +34,7 @@ const UKOM_FILE_MAP = {
 let ukomInited = false;
 
 SectionInit['ukom'] = function(){
-  if(ukomInited) return;
+  if(ukomInited){ regClockTick(); return; }
   ukomInited = true;
 
   fillSelect('selUnitKerja', OPT_UNIT_KERJA);
@@ -43,6 +47,8 @@ SectionInit['ukom'] = function(){
   fillSelect('selJenjangTujuan', OPT_JENJANG);
 
   document.getElementById('ukomForm').addEventListener('submit', submitUkomForm);
+
+  newRegistrasiIdentity();
 };
 
 function fillSelect(id, options){
@@ -53,13 +59,49 @@ function fillSelect(id, options){
   });
 }
 
-/* ---------- SUBMIT ---------- */
+/* ============================================================
+   IDENTITAS REGISTRASI (nomor + waktu otomatis)
+   ============================================================ */
+function genNoRegistrasi(){
+  const d = new Date();
+  const ymd = d.getFullYear() +
+    String(d.getMonth() + 1).padStart(2, '0') +
+    String(d.getDate()).padStart(2, '0');
+  /* tanpa karakter mudah tertukar (I,O,0,1) */
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let rnd = '';
+  for(let i = 0; i < 6; i++) rnd += chars[Math.floor(Math.random() * chars.length)];
+  return 'REG-' + ymd + '-' + rnd;
+}
+
+function regClockTick(){
+  const el = document.getElementById('regTime');
+  if(!el) return;
+  const d = new Date();
+  el.textContent =
+    d.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) +
+    ' • ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+let regClockTimer = null;
+
+function newRegistrasiIdentity(){
+  const n = document.getElementById('regNumber');
+  if(n) n.textContent = genNoRegistrasi();
+  regClockTick();
+  if(!regClockTimer) regClockTimer = setInterval(regClockTick, 1000);
+}
+
+/* ============================================================
+   SUBMIT — alur: validasi → konfirmasi → unggah+simpan → bukti
+   ============================================================ */
+let _ukomPending = null;
+
 async function submitUkomForm(e){
   e.preventDefault();
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
 
   const form = e.target;
-  const btn = document.getElementById('ukomSubmitBtn');
   const nik = sanitizeInput(form.querySelector('[name="nik"]').value, 16);
   const nama = sanitizeInput(form.querySelector('[name="nama_tanpa_gelar"]').value, 100);
   const unitKerja = form.querySelector('[name="nama_unit_kerja"]').value;
@@ -80,18 +122,98 @@ async function submitUkomForm(e){
     }
   }
 
+  /* ringkasan untuk konfirmasi */
+  let nFile = 0;
+  for(const input of fileInputs){ if(input.files[0]) nFile++; }
+
+  _ukomPending = {
+    form: form,
+    noRegistrasi: ((document.getElementById('regNumber') || {}).textContent || '').replace(/[^A-Z0-9-]/gi, '') || genNoRegistrasi(),
+    nama: nama,
+    nik: nik,
+    unit: unitKerja,
+    jenis: form.querySelector('[name="jenis_ukom"]').value || '-',
+    tujuan: form.querySelector('[name="jabfung_tujuan"]').value || '-',
+    nFile: nFile
+  };
+
+  openUkomConfirm();
+}
+
+/* ---------- MODAL KONFIRMASI ---------- */
+function openUkomConfirm(){
+  const d = _ukomPending;
+  if(!d) return;
+
+  const old = document.getElementById('ukomConfirmOverlay');
+  if(old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'crud-overlay';
+  overlay.id = 'ukomConfirmOverlay';
+  overlay.innerHTML =
+    '<div class="crud-modal" style="max-width:480px">' +
+      '<div class="crud-modal-header"><h3><i class="fas fa-clipboard-question" style="color:#0f766e"></i> Konfirmasi Pengiriman</h3>' +
+      '<button class="close" onclick="closeUkomConfirm()">&times;</button></div>' +
+      '<div class="crud-modal-body">' +
+        '<div class="ukom-confirm-q"><i class="fas fa-circle-question"></i> Apakah data yang Anda isi sudah benar dan lengkap?</div>' +
+        '<div class="ukom-confirm-summary">' +
+          ucsRow('Nomor Registrasi', d.noRegistrasi) +
+          ucsRow('Nama', d.nama) +
+          ucsRow('NIK', d.nik) +
+          ucsRow('Unit Kerja', d.unit) +
+          ucsRow('Jenis UKOM', d.jenis) +
+          ucsRow('Jabfung Tujuan', d.tujuan) +
+          ucsRow('Dokumen Diunggah', d.nFile + ' dari ' + Object.keys(UKOM_FILE_MAP).length + ' berkas') +
+        '</div>' +
+        '<div class="crud-hint" style="margin-top:12px"><i class="fas fa-triangle-exclamation"></i> ' +
+        'Pastikan seluruh data dan berkas sudah sesuai sebelum dikirim. Pendaftaran yang sudah terkirim ' +
+        'akan diverifikasi oleh admin dan tidak dapat diubah dari sisi peserta.</div>' +
+      '</div>' +
+      '<div class="crud-modal-footer">' +
+        '<button class="btn btn-ghost" onclick="closeUkomConfirm()"><i class="fas fa-rotate-left"></i> Periksa Lagi</button>' +
+        '<button class="btn" id="ukomConfirmYes"><i class="fas fa-paper-plane"></i> Ya, Kirim Pendaftaran</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#ukomConfirmYes').addEventListener('click', function(){
+    closeUkomConfirm();
+    doSubmitUkom();
+  });
+}
+
+function ucsRow(label, val){
+  return '<div class="ucs-row"><span>' + label + '</span><b>' + escapeHtml(String(val || '-')) + '</b></div>';
+}
+
+function closeUkomConfirm(){
+  const o = document.getElementById('ukomConfirmOverlay');
+  if(o) o.remove();
+}
+
+/* ---------- KIRIM KE SUPABASE ---------- */
+async function doSubmitUkom(){
+  const d = _ukomPending;
+  if(!d) return;
+
+  const form = d.form;
+  const btn = document.getElementById('ukomSubmitBtn');
+  const fileInputs = form.querySelectorAll('input[type="file"]');
+
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah & Mengirim…';
 
   try{
-    /* 1) Upload file ke Supabase Storage */
+    /* 1) Susun baris data (termasuk nomor registrasi) */
     const row = {
-      nik: nik,
+      no_registrasi: d.noRegistrasi,
+      nik: d.nik,
       nip: sanitizeInput(form.querySelector('[name="nip"]').value, 30),
-      nama_tanpa_gelar: nama,
+      nama_tanpa_gelar: d.nama,
       jenis_kelamin: form.querySelector('[name="jenis_kelamin"]').value || null,
-      nama_unit_kerja: unitKerja,
+      nama_unit_kerja: d.unit,
       pangkat_golongan: form.querySelector('[name="pangkat_dan_golongan"]').value || null,
       no_sk_jabfung: sanitizeInput(form.querySelector('[name="nomor_sk_jabfungs_terakhir"]').value, 100) || null,
       jabfung_saat_ini: form.querySelector('[name="jabfung_saat_ini"]').value || null,
@@ -100,25 +222,54 @@ async function submitUkomForm(e){
       jenjang_tujuan: form.querySelector('[name="jenjang_tujuan"]').value || null,
       jenis_ukom: form.querySelector('[name="jenis_ukom"]').value || null,
       nilai_pak_terakhir: sanitizeInput(form.querySelector('[name="nilai_pak_terakhir"]').value, 50) || null,
-      nomor_whatsapp: sanitizeInput(wa, 20) || null,
-      email_aktif: sanitizeInput(email, 100) || null,
+      nomor_whatsapp: sanitizeInput(form.querySelector('[name="nomor_whatsapp"]').value, 20) || null,
+      email_aktif: sanitizeInput(form.querySelector('[name="email_aktif"]').value, 100) || null,
       status_verifikasi: 'Menunggu'
     };
 
+    /* 2) Upload file ke Supabase Storage */
     for(const input of fileInputs){
       const file = input.files[0];
       if(!file) continue;
       const conf = UKOM_FILE_MAP[input.name];
       if(!conf) continue;
-      const url = await API.uploadFile(conf.bucket, file, nik);
+      const url = await API.uploadFile(conf.bucket, file, d.nik);
       if(url) row[conf.col] = url;
     }
 
-    /* 2) Insert ke tabel peserta_ukom */
-    await API.createPeserta(row);
+    /* 3) Insert ke tabel peserta_ukom.
+       Tahan banting: bila kolom no_registrasi belum ada (schema lama belum
+       di-update), kirim ulang tanpa kolom tersebut agar pendaftaran tetap masuk. */
+    try{
+      await API.createPeserta(row);
+    }catch(err){
+      if(/no[_-]?registrasi|PGRST204|42703/i.test(err.message || '')){
+        delete row.no_registrasi;
+        await API.createPeserta(row);
+      }else{
+        throw err;
+      }
+    }
 
-    showToast('Pendaftaran berhasil dikirim! Silakan pantau status di menu Cek Status.', 'success');
+    /* 4) Terbitkan BUKTI REGISTRASI */
+    const waktuDaftar = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) +
+      ' • ' + new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    showBuktiRegistrasi({
+      noRegistrasi: d.noRegistrasi,
+      nama: d.nama,
+      nik: d.nik,
+      unit: d.unit,
+      jenis: d.jenis,
+      tujuan: d.tujuan,
+      nFile: d.nFile,
+      waktu: waktuDaftar
+    });
+
+    showToast('Pendaftaran berhasil dikirim! Bukti registrasi diterbitkan.', 'success');
+
+    /* 5) Formulir segar untuk pendaftar berikutnya */
     form.reset();
+    newRegistrasiIdentity();
   }catch(err){
     console.error(err);
     showToast('Gagal mengirim: ' + err.message, 'error');
@@ -126,4 +277,67 @@ async function submitUkomForm(e){
     btn.disabled = false;
     btn.innerHTML = originalHtml;
   }
+}
+
+/* ============================================================
+   BUKTI REGISTRASI (receipt + cetak)
+   ============================================================ */
+function buktiRow(label, val){
+  return '<div class="bukti-row"><span>' + label + '</span><b>' +
+    (val ? escapeHtml(String(val)) : '-') + '</b></div>';
+}
+
+function showBuktiRegistrasi(d){
+  const old = document.getElementById('buktiOverlay');
+  if(old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'crud-overlay';
+  overlay.id = 'buktiOverlay';
+  overlay.innerHTML =
+    '<div class="crud-modal" style="max-width:520px">' +
+      '<div class="crud-modal-header"><h3><i class="fas fa-circle-check" style="color:#16a34a"></i> Pendaftaran Terkirim</h3>' +
+      '<button class="close" onclick="closeBuktiRegistrasi()">&times;</button></div>' +
+      '<div class="crud-modal-body">' +
+        '<div class="bukti-card" id="buktiCard">' +
+          '<div class="bukti-brand"><i class="fas fa-hospital"></i> MantaF &mdash; Dinas Kesehatan Kutai Kartanegara</div>' +
+          '<div class="bukti-title">BUKTI REGISTRASI UKOM</div>' +
+          '<div class="bukti-no">' + escapeHtml(d.noRegistrasi) + '</div>' +
+          '<div class="bukti-rows">' +
+            buktiRow('Nama', d.nama) +
+            buktiRow('NIK', d.nik) +
+            buktiRow('Unit Kerja', d.unit) +
+            buktiRow('Jenis UKOM', d.jenis) +
+            buktiRow('Jabfung Tujuan', d.tujuan) +
+            buktiRow('Dokumen Terunggah', d.nFile + ' berkas') +
+            buktiRow('Waktu Daftar', d.waktu) +
+          '</div>' +
+          '<div class="bukti-status"><span class="badge-status badge-menunggu">Menunggu Verifikasi</span></div>' +
+          '<div class="bukti-foot">Simpan / cetak bukti ini. Pantau pendaftaran melalui menu ' +
+          '<b>Cek Status</b> dengan memasukkan NIK, NIP, atau nomor registrasi Anda.</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="crud-modal-footer bukti-actions">' +
+        '<button class="btn btn-ghost" onclick="closeBuktiRegistrasi()">Tutup</button>' +
+        '<button class="btn" onclick="printBuktiRegistrasi()"><i class="fas fa-print"></i> Cetak Bukti</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function closeBuktiRegistrasi(){
+  const o = document.getElementById('buktiOverlay');
+  if(o) o.remove();
+}
+
+function printBuktiRegistrasi(){
+  document.body.classList.add('printing-receipt');
+  const done = function(){
+    document.body.classList.remove('printing-receipt');
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 2000); /* fallback bila afterprint tidak terpanggil */
 }

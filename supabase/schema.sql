@@ -135,6 +135,7 @@ create table if not exists public.peserta_ukom (
   absen              text default '-',
   status_ukom        text default '-',
   sertifikat         text,
+  no_registrasi      text,
   -- Verifikasi
   status_verifikasi  text not null default 'Menunggu'
                      check (status_verifikasi in ('Menunggu','Proses','Disetujui','Ditolak','Dilimpahkan','Batal','Perbaikan')),
@@ -177,6 +178,7 @@ alter table public.peserta_ukom add column if not exists status_periode     text
 alter table public.peserta_ukom add column if not exists absen              text default '-';
 alter table public.peserta_ukom add column if not exists status_ukom        text default '-';
 alter table public.peserta_ukom add column if not exists sertifikat         text;
+alter table public.peserta_ukom add column if not exists no_registrasi      text;
 alter table public.peserta_ukom add column if not exists status_verifikasi  text not null default 'Menunggu';
 alter table public.peserta_ukom add column if not exists catatan_admin      text default '';
 alter table public.peserta_ukom add column if not exists created_at         timestamptz not null default now();
@@ -188,6 +190,7 @@ create index if not exists idx_peserta_nama      on public.peserta_ukom (nama_ta
 create index if not exists idx_peserta_unit      on public.peserta_ukom (nama_unit_kerja);
 create index if not exists idx_peserta_status    on public.peserta_ukom (status_verifikasi);
 create index if not exists idx_peserta_periode   on public.peserta_ukom (periode);
+create unique index if not exists idx_peserta_noreg on public.peserta_ukom (no_registrasi);
 
 -- ---------------------------------------------------------------------------
 -- 4b. TABEL PETUNJUK (menu "Petunjuk Penggunaan" — kartu PDF)

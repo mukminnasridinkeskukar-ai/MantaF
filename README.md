@@ -110,6 +110,25 @@ git push -u origin main
 | **2. Data & Informasi** | Pengumuman · Bezetting · Data Peserta UKOM |
 | **3. Layanan & Admin** | Daftar UKOM · Cek Status · Admin |
 
+## 📝 Daftar UKOM (Nomor Registrasi + Konfirmasi + Bukti)
+
+Formulir pendaftaran kini menerbitkan identitas registrasi otomatis:
+
+- **Strip registrasi di paling atas formulir** — **Nomor Registrasi** (format `REG-YYYYMMDD-XXXXXX`) dan **Waktu Pendaftaran** (jam berjalan, hari + tanggal + jam) dibuat otomatis sistem saat formulir dibuka; nomor tersimpan di kolom `no_registrasi` tabel `peserta_ukom` (unik, ada di schema.sql terbaru — **re-run schema.sql**).
+- **Konfirmasi sebelum kirim** — setelah tombol *Kirim Pendaftaran*, muncul popup konfirmasi **"Apakah data yang Anda isi sudah benar dan lengkap?"** lengkap dengan ringkasan (nomor registrasi, nama, NIK, unit kerja, jenis UKOM, jabfung tujuan, jumlah dokumen). Peserta dapat memilih *Periksa Lagi* atau *Ya, Kirim Pendaftaran*.
+- **Bukti Registrasi diterbitkan otomatis** setelah terkirim — kartu bukti berisi nomor registrasi, data pendaftar, waktu daftar, status *Menunggu Verifikasi*, dengan tombol **Cetak Bukti** (mencetak kartu bukti saja) dan **Tutup**. Formulir otomatis direset untuk pendaftar berikutnya.
+- **Integrasi** — nomor registrasi tampil di hasil *Cek Status* dan di Panel Admin (modal detail & form edit peserta). Jika kolom `no_registrasi` belum ada di tabel (schema lama), pendaftaran tetap tersimpan otomatis (fallback tanpa kolom tsb).
+
+## 🔍 Cek Status (Catatan Admin + Panduan Status)
+
+Peserta mengecek pendaftaran dengan **NIK/NIP**, hasilnya kini lengkap:
+
+- **Kartu hasil** — nama, NIK/NIP, badge status verifikasi, dan detail data (unit kerja, jenis UKOM, jabfung/jenjang tujuan, periode, no. peserta, status UKOM).
+- **Panduan langkah berikutnya** — kotak berwarna per status (Menunggu, Proses, Disetujui, Ditolak, Dilimpahkan, Batal, Perbaikan) yang menjelaskan apa arti status tersebut bagi peserta.
+- **Catatan Admin** — catatan yang ditulis admin (di Panel Admin) tampil menonjol dengan warna mengikuti status dan **waktu pembaruan**; jika kosong tampil keterangan "Belum ada catatan".
+- **Lihat Sertifikat** — tombol muncul saat status *Disetujui* dan kolom `sertifikat` berisi URL; membuka di tab baru.
+- **Perbaiki Data** — saat status *Perbaikan*, peserta dapat memperbarui NIP/nama dan mengunggah ulang 6 berkas (PAK, foto, ijazah, STR, SK pangkat, SK jabfung, maks 2MB). Setelah dikirim, status otomatis kembali ke *Menunggu* dan catatan admin dipertahankan + jejak audit pengiriman perbaikan.
+
 ## 📖 Petunjuk Penggunaan (Kartu PDF + Popup Baca-Saja)
 
 Menu **Petunjuk Penggunaan** (di bawah Dashboard) menampilkan setiap panduan sebagai **kartu PDF**:

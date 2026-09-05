@@ -423,7 +423,7 @@ function admShowDetail(id){
     '<div class="admin-lb-body">' +
       '<div class="admin-detail-wrap">' +
         '<div class="admin-detail-data"><div class="admin-data-grid">' +
-          dg('NIK', p.nik) + dg('NIP', p.nip) + dg('Nama Tanpa Gelar', p.nama_tanpa_gelar) + dg('Jenis Kelamin', p.jenis_kelamin) +
+          dg('No. Registrasi', p.no_registrasi) + dg('NIK', p.nik) + dg('NIP', p.nip) + dg('Nama Tanpa Gelar', p.nama_tanpa_gelar) + dg('Jenis Kelamin', p.jenis_kelamin) +
           dg('Unit Kerja', p.nama_unit_kerja) + dg('Pangkat / Golongan', p.pangkat_golongan) +
           dg('No. SK Jabfung', p.no_sk_jabfung) + dg('Jenis UKOM', p.jenis_ukom) +
           dg('Jabfung Saat Ini', p.jabfung_saat_ini) + dg('Jenjang Saat Ini', p.jenjang_saat_ini) +
@@ -551,6 +551,7 @@ function openPesertaForm(id){
     /* ==== 1. DATA PRIBADI ==== */
     '<div class="form-section-title"><i class="fas fa-id-card"></i> Data Pribadi</div>' +
     '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>No. Registrasi (otomatis dari pendaftaran)</label><input type="text" value="' + escAttr(p ? (p.no_registrasi || '') : '') + '" readonly placeholder="Diterbitkan sistem saat peserta mendaftar"></div>' +
       '<div class="form-group"><label>NIK <span style="color:#dc2626">*</span></label><input type="text" id="fPesNik" maxlength="16" inputmode="numeric" placeholder="16 digit angka" value="' + escAttr(p ? p.nik : '') + '"></div>' +
       '<div class="form-group"><label>NIP <span style="color:#dc2626">*</span></label><input type="text" id="fPesNip" value="' + escAttr(p ? p.nip : '') + '"></div>' +
       '<div class="form-group" style="grid-column:1/-1"><label>Nama Tanpa Gelar <span style="color:#dc2626">*</span></label><input type="text" id="fPesNama" value="' + escAttr(p ? p.nama_tanpa_gelar : '') + '"></div>' +
