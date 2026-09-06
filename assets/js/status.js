@@ -35,10 +35,10 @@ function cekItem(label, val){
 /* ---------- CEK STATUS ---------- */
 async function cekStatus(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
-  const keyword = sanitizeInput(document.getElementById('cekData').value, 30);
+  const keyword = sanitizeInput(document.getElementById('cekData').value, 30).replace(/[,()"]/g, '').trim();
   const hasil = document.getElementById('hasilStatus');
 
-  if(!keyword){ showToast('Masukkan NIK atau NIP terlebih dahulu', 'info'); return; }
+  if(!keyword){ showToast('Masukkan NIK, NIP, atau No. Registrasi terlebih dahulu', 'info'); return; }
 
   hasil.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari data...';
 

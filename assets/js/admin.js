@@ -41,10 +41,16 @@ async function loginAdmin(){
       showToast('Selamat datang, ' + admin.nama + '!', 'success');
       showAdminPanel(admin);
     }else{
-      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah.</span>';
+      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah. ' +
+        'Pastikan sama persis dengan baris tabel admin di Supabase (huruf besar/kecil dan spasi), ' +
+        'dan kebijakan RLS tabel admin mengizinkan SELECT untuk klien anonim.</span>';
+      /* Login gagal: kredensial tidak cocok ATAU query ke tabel admin
+         terblokir RLS / tabel kosong. Detail teknis dicetak ke console (F12). */
+      console.warn('[admin] Login gagal untuk username:', JSON.stringify(user));
     }
   }catch(err){
-    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px">Error: ' + escapeHtml(err.message) + '</span>';
+    console.error('[admin] Error login:', err);
+    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px">Error: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</span>';
   }
 }
 
@@ -57,6 +63,9 @@ function showAdminPanel(admin){
 function logoutAdmin(){
   confirmDialog('Keluar dari Panel Admin?', 'Sesi Anda akan diakhiri dan kembali ke halaman login.', function(){
     clearAdminSession();
+    /* bersihkan cache data agar tidak tertinggal di memori setelah logout */
+    admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null;
+    admPesPage = 1;
     document.getElementById('adminDataSection').style.display = 'none';
     document.getElementById('adminLoginSection').style.display = 'block';
     document.getElementById('adminUser').value = '';
@@ -298,7 +307,7 @@ function openBezettingForm(id){
       else await API.createBezetting(row);
       showToast(b ? 'Data bezetting diperbarui' : 'Data bezetting ditambahkan', 'success');
       overlay.remove();
-      if(document.getElementById('bezettingBody') && bezettingCache) loadBezetting(true);
+      if(document.getElementById('bezettingBody') && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
       adminRefreshAll();
     }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; }
   });
@@ -310,7 +319,7 @@ function admDeleteBezetting(id){
     try{
       await API.deleteBezetting(id);
       showToast('Data bezetting dihapus', 'success');
-      if(document.getElementById('bezettingBody') && bezettingCache) loadBezetting(true);
+      if(document.getElementById('bezettingBody') && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
       adminRefreshAll();
     }catch(err){ showToast('Gagal menghapus: ' + err.message, 'error'); }
   });
@@ -796,7 +805,8 @@ function openPetunjukPreview(id){
 }
 
 function openPetunjukForm(id){
-  const p = id ? admPetCache.find(function(x){ return x.id === id; }) : null;
+  /* aman saat data petunjuk gagal dimuat (admPetCache masih null) */
+  const p = (id && admPetCache) ? admPetCache.find(function(x){ return x.id === id; }) : null;
   const overlay = crudModal(p ? 'Edit Dokumen Petunjuk' : 'Tambah Dokumen Petunjuk', 'fa-book-open-reader',
     '<div class="form-grid">' +
       '<div class="form-group" style="grid-column:1/-1"><label>Judul Dokumen <span style="color:#dc2626">*</span></label>' +
@@ -808,7 +818,7 @@ function openPetunjukForm(id){
       (p ? '<div style="font-size:11.5px;color:#64748b;margin-top:6px"><i class="fas fa-link"></i> File saat ini: ' +
         '<a href="' + escAttr(p.file_url) + '" target="_blank" rel="noopener" title="Buka di tab baru" onclick="openFileTab(event, this.href)" style="color:#0d9488">' + escapeHtml(String(p.file_url).split('/').pop().split('?')[0]) + '</a></div>' : '') +
       '</div>' +
-      '<div class="form-group"><label>Urutan Tampil</label><input type="number" id="fPetUrutan" min="0" max="9999" value="' + (p ? (p.urutan ?? 0) : (admPetCache.length + 1)) + '"></div>' +
+      '<div class="form-group"><label>Urutan Tampil</label><input type="number" id="fPetUrutan" min="0" max="9999" value="' + (p ? (p.urutan ?? 0) : ((admPetCache ? admPetCache.length : 0) + 1)) + '"></div>' +
       '<div class="form-group"><label>Status</label><select id="fPetAktif">' +
         '<option value="true"' + (!p || p.aktif ? ' selected' : '') + '>Aktif (tampil di menu publik)</option>' +
         '<option value="false"' + (p && !p.aktif ? ' selected' : '') + '>Nonaktif (disembunyikan)</option>' +
@@ -858,7 +868,7 @@ function openPetunjukForm(id){
 
       showToast(p ? 'Dokumen diperbarui' : 'Dokumen petunjuk ditambahkan', 'success');
       overlay.remove();
-      petunjukCacheInvalidate();
+      if(typeof petunjukCacheInvalidate === 'function') petunjukCacheInvalidate();
       adminRefreshAll();
     }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; }
   });
@@ -873,7 +883,7 @@ function admDeletePetunjuk(id){
         if(p && p.file_url) await API.deletePetunjukFile(p.file_url);
         await API.deletePetunjuk(id);
         showToast('Dokumen dihapus', 'success');
-        petunjukCacheInvalidate();
+        if(typeof petunjukCacheInvalidate === 'function') petunjukCacheInvalidate();
         adminRefreshAll();
       }catch(err){ showToast('Gagal menghapus: ' + err.message, 'error'); }
     },

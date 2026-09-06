@@ -57,9 +57,17 @@ const API = {
     db.from('peserta_ukom').select('*').order('created_at', { ascending:false })
   ),
 
-  getPesertaByKeyword: (keyword) => sbQuery(
-    db.from('peserta_ukom').select('*').or('nik.eq.' + keyword + ',nip.eq.' + keyword).limit(1)
-  ),
+  /* Cari peserta untuk Cek Status: NIK / NIP / No. Registrasi
+     (bukti registrasi menjanjikan ketiganya). Karakter yang bisa
+     merusak sintaks or= PostgREST dibuang lebih dulu. */
+  getPesertaByKeyword: (keyword) => {
+    const k = String(keyword || '').replace(/[,()"]/g, '').trim();
+    return sbQuery(
+      db.from('peserta_ukom').select('*')
+        .or('nik.eq.' + k + ',nip.eq.' + k + ',no_registrasi.eq.' + k)
+        .limit(1)
+    );
+  },
 
   createPeserta: (row) => sbQuery(db.from('peserta_ukom').insert(row).select()),
   updatePeserta: (id, row) => sbQuery(db.from('peserta_ukom').update(row).eq('id', id).select()),
