@@ -41,16 +41,13 @@ async function loginAdmin(){
       showToast('Selamat datang, ' + admin.nama + '!', 'success');
       showAdminPanel(admin);
     }else{
-      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah. ' +
-        'Pastikan sama persis dengan baris tabel admin di Supabase (huruf besar/kecil dan spasi), ' +
-        'dan kebijakan RLS tabel admin mengizinkan SELECT untuk klien anonim.</span>';
-      /* Login gagal: kredensial tidak cocok ATAU query ke tabel admin
-         terblokir RLS / tabel kosong. Detail teknis dicetak ke console (F12). */
+      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, silahkan coba lagi.</span>';
+      /* Detail teknis HANYA di console (F12), tidak tampil di layar login. */
       console.warn('[admin] Login gagal untuk username:', JSON.stringify(user));
     }
   }catch(err){
     console.error('[admin] Error login:', err);
-    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px">Error: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</span>';
+    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, silahkan coba lagi.</span>';
   }
 }
 
