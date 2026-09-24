@@ -6,7 +6,7 @@
   <title>Uji Kompetensi Jabfung Kesehatan | CAT Style (30 Soal)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, sans-serif; }
@@ -145,12 +145,14 @@
         Mulai Ujian
       </button>
 
-      <p class="text-xs text-slate-400 mt-6">Supabase opsional — isi URL & Key di bawah jika ingin menyimpan hasil ke database.</p>
-      <details class="mt-3 text-left">
-        <summary class="text-xs text-indigo-600 cursor-pointer">Konfigurasi Supabase (opsional)</summary>
+      <p class="text-xs text-slate-400 mt-6">Supabase opsional — URL & Key sudah diisi. Pastikan tabel <code>jfk_sesi</code> sudah dibuat lewat schema.sql.</p>
+      <details class="mt-3 text-left" open>
+        <summary class="text-xs text-indigo-600 cursor-pointer">Konfigurasi Supabase</summary>
         <div class="mt-2 space-y-2">
-          <input id="sbUrl" type="text" placeholder="https://nawpbcksuomzqjynlapt.supabase.co" class="w-full px-3 py-2 text-xs rounded border" />
-          <input id="sbKey" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0" class="w-full px-3 py-2 text-xs rounded border" />
+          <input id="sbUrl" type="text" value="https://nawpbcksuomzqjynlapt.supabase.co" class="w-full px-3 py-2 text-xs rounded border" />
+          <input id="sbKey" type="text" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0" class="w-full px-3 py-2 text-xs rounded border" />
+          <button type="button" onclick="testSupabase()" class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium">Test Koneksi Supabase</button>
+          <p id="sbStatus" class="text-xs text-slate-500"></p>
         </div>
       </details>
     </div>
@@ -283,22 +285,82 @@
     let sesiId = null;
     let supabaseClient = null;
 
+    async function testSupabase() {
+      const url = document.getElementById('sbUrl').value.trim();
+      const key = document.getElementById('sbKey').value.trim();
+      const statusEl = document.getElementById('sbStatus');
+      if (!url || !key) {
+        statusEl.textContent = '❌ Isi URL dan anon key dulu';
+        statusEl.className = 'text-xs text-rose-600';
+        return;
+      }
+      statusEl.textContent = '⏳ Menguji koneksi...';
+      statusEl.className = 'text-xs text-slate-500';
+      try {
+        if (typeof supabase === 'undefined' || !supabase.createClient) {
+          throw new Error('Library Supabase belum termuat. Hard refresh (Ctrl+Shift+R).');
+        }
+        const client = supabase.createClient(url, key);
+        const { data, error } = await client.from('jfk_sesi').insert({
+          nama_peserta: 'Test Koneksi',
+          total_soal: 30,
+          status: 'berlangsung'
+        }).select('id').single();
+        if (error) throw error;
+        statusEl.textContent = '✅ Berhasil! Data masuk. ID: ' + data.id.substring(0, 8) + '...';
+        statusEl.className = 'text-xs text-emerald-600 font-medium';
+        // hapus data test biar tidak menumpuk
+        await client.from('jfk_sesi').delete().eq('id', data.id);
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = '❌ Gagal: ' + (e.message || e);
+        statusEl.className = 'text-xs text-rose-600';
+        alert('Gagal koneksi Supabase:\n' + (e.message || e));
+      }
+    }
+
     // ============================================================
     // INIT
     // ============================================================
-    function mulaiUjian() {
+    async function mulaiUjian() {
       const nama = document.getElementById('namaPeserta').value.trim() || 'Peserta';
       document.getElementById('startScreen').classList.add('hidden');
       document.getElementById('examArea').classList.remove('hidden');
 
       const url = document.getElementById('sbUrl').value.trim();
       const key = document.getElementById('sbKey').value.trim();
+      const statusEl = document.getElementById('sbStatus');
+
       if (url && key) {
         try {
           supabaseClient = supabase.createClient(url, key);
-          supabaseClient.from('jfk_sesi').insert({nama_peserta: nama, total_soal: TOTAL_SOAL, status: 'berlangsung'})
-            .select().single().then(({data}) => { if (data) sesiId = data.id; });
-        } catch(e) { console.warn('Supabase init failed', e); }
+
+          // Test koneksi + insert sesi
+          const { data, error } = await supabaseClient
+            .from('jfk_sesi')
+            .insert({
+              nama_peserta: nama,
+              total_soal: TOTAL_SOAL,
+              status: 'berlangsung'
+            })
+            .select('id')
+            .single();
+
+          if (error) {
+            console.error('Supabase insert error:', error);
+            alert('❌ Gagal simpan ke Supabase:\n' + error.message + '\n\nPastikan:\n1. schema.sql sudah di-run di SQL Editor\n2. Policy RLS sudah ada (Public all sesi)\n3. URL & anon key benar');
+            if (statusEl) statusEl.textContent = 'Error: ' + error.message;
+            supabaseClient = null;
+          } else if (data) {
+            sesiId = data.id;
+            console.log('✅ Sesi tersimpan, id:', sesiId);
+            if (statusEl) statusEl.textContent = '✅ Terhubung ke Supabase (sesi: ' + sesiId.substring(0,8) + '...)';
+          }
+        } catch (e) {
+          console.error('Supabase init failed', e);
+          alert('❌ Gagal koneksi Supabase: ' + e.message);
+          supabaseClient = null;
+        }
       }
 
       renderTabs();
@@ -601,7 +663,27 @@
           skor: skor,
           status: timeout ? 'timeout' : 'selesai',
           detail_json: {jawaban, ragu, review}
-        }).eq('id', sesiId).then();
+        }).eq('id', sesiId).then(({ error }) => {
+          if (error) {
+            console.error('Update sesi gagal:', error);
+            alert('⚠️ Hasil tidak tersimpan ke Supabase:\n' + error.message);
+          } else {
+            console.log('✅ Hasil ujian tersimpan ke Supabase');
+          }
+        });
+      } else if (supabaseClient && !sesiId) {
+        // Fallback: insert baru jika sesiId gagal di awal
+        supabaseClient.from('jfk_sesi').insert({
+          nama_peserta: document.getElementById('namaPeserta').value.trim() || 'Peserta',
+          total_soal: TOTAL_SOAL,
+          finished_at: new Date().toISOString(),
+          skor: skor,
+          status: timeout ? 'timeout' : 'selesai',
+          detail_json: {jawaban, ragu, review}
+        }).then(({ error }) => {
+          if (error) console.error('Fallback insert gagal:', error);
+          else console.log('✅ Hasil tersimpan (fallback insert)');
+        });
       }
     }
   </script>
