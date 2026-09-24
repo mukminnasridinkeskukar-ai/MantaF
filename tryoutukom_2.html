@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uji Kompetensi Jabfung Kesehatan | CAT Style</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .timer-blink { animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0.4; } }
+    .option-btn:hover { transform: translateY(-1px); }
+    .grid-btn { transition: all 0.15s ease; }
+    .grid-btn:hover { transform: scale(1.08); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- ========== HEADER ========== -->
+  <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-white/20 p-2 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Uji Kompetensi Jabfung Kesehatan</h1>
+          <p class="text-indigo-200 text-xs">Simulasi CAT • Berdasarkan Kisi-kisi Kemenkes</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Timer -->
+        <div id="timerBox" class="bg-indigo-900/60 px-4 py-2 rounded-xl flex items-center gap-2 font-mono text-xl font-bold tracking-wider">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="timerDisplay">02:00:00</span>
+        </div>
+
+        <!-- Progress -->
+        <div class="bg-indigo-900/60 px-4 py-2 rounded-xl text-sm">
+          <span class="text-indigo-200">Dijawab</span>
+          <span id="progressText" class="font-bold text-lg ml-1">0 / 100</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== MAIN EXAM AREA ========== -->
+  <main id="examArea" class="max-w-7xl mx-auto px-4 py-4 hidden">
+    <!-- Tab Kategori -->
+    <div class="mb-3 flex flex-wrap gap-2" id="kategoriTabs"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <!-- LEFT: Soal -->
+      <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div class="flex items-center gap-3">
+            <span id="badgeKategori" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700"></span>
+            <span class="text-slate-500 text-sm">Soal <span id="nomorSoal" class="font-bold text-slate-800">1</span> dari 100</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="toggleRagu()" id="btnRagu" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700 hover:bg-amber-50 transition">
+              ⚠ Tandai Ragu
+            </button>
+            <button onclick="kosongkan()" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition">
+              Kosongkan
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <p id="teksSoal" class="text-lg leading-relaxed mb-6 text-slate-800"></p>
+          <div id="opsiContainer" class="space-y-3"></div>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between">
+          <button onclick="prevSoal()" id="btnPrev" class="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-medium text-slate-700 transition disabled:opacity-40">
+            ← Sebelumnya
+          </button>
+          <button onclick="nextSoal()" id="btnNext" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition">
+            Selanjutnya →
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Grid Jawaban -->
+      <div class="lg:col-span-4 space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+          <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Lembar Jawaban
+          </h3>
+
+          <!-- Legend -->
+          <div class="flex flex-wrap gap-3 text-xs mb-4 text-slate-600">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-300"></span> Belum</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span> Dijawab</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-400"></span> Ragu</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span> Aktif</span>
+          </div>
+
+          <!-- Section labels -->
+          <div class="text-xs font-semibold text-slate-500 mb-1">1–70 TEKNIS</div>
+          <div id="gridTeknis" class="grid grid-cols-10 gap-1.5 mb-4"></div>
+
+          <div class="text-xs font-semibold text-slate-500 mb-1">71–100 MANAJERIAL & SOSIOKULTURAL</div>
+          <div id="gridManSos" class="grid grid-cols-10 gap-1.5"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
+          <button onclick="bukaCekJawaban()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold flex items-center justify-center gap-2 transition">
+            🔍 Cek Jawaban & Estimasi Nilai
+          </button>
+          <button onclick="konfirmasiAkhiri()" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition">
+            Akhiri Ujian
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== START SCREEN ========== -->
+  <div id="startScreen" class="max-w-2xl mx-auto px-4 py-16 text-center">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-10">
+      <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">Uji Kompetensi Jabatan Fungsional Kesehatan</h2>
+      <p class="text-slate-500 mb-6">Simulasi CAT berbasis kisi-kisi Kemenkes • 100 Soal • 120 Menit</p>
+
+      <div class="text-left bg-slate-50 rounded-xl p-5 mb-6 text-sm space-y-2">
+        <p><strong>Kategori Soal:</strong></p>
+        <ul class="list-disc list-inside text-slate-600 space-y-1">
+          <li>1–30 : Asuhan & Pelayanan Kesehatan</li>
+          <li>31–45 : Etika, Hukum & Patient Safety</li>
+          <li>46–60 : Manajemen Puskesmas & Kesmas</li>
+          <li>61–70 : PPI, K3 & Kesling</li>
+          <li>71–85 : Farmakologi, Lab, Gadar & Gizi</li>
+          <li>86–100 : Manajerial & Sosio Kultural (ASN BerAKHLAK)</li>
+        </ul>
+        <p class="mt-3"><strong>Passing Grade:</strong> ≥ 70</p>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peserta (opsional)</label>
+        <input id="namaPeserta" type="text" placeholder="Masukkan nama Anda" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+      </div>
+
+      <button onclick="mulaiUjian()" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg transition shadow-lg shadow-indigo-200">
+        Mulai Ujian
+      </button>
+
+      <p class="text-xs text-slate-400 mt-6">Supabase opsional — isi URL & Key di bawah jika ingin menyimpan hasil ke database.</p>
+      <details class="mt-3 text-left">
+        <summary class="text-xs text-indigo-600 cursor-pointer">Konfigurasi Supabase (opsional)</summary>
+        <div class="mt-2 space-y-2">
+          <input id="sbUrl" type="text" placeholder="https://nawpbcksuomzqjynlapt.supabase.co" class="w-full px-3 py-2 text-xs rounded border" />
+          <input id="sbKey" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0" class="w-full px-3 py-2 text-xs rounded border" />
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ========== CEK JAWABAN PANEL ========== -->
+  <div id="cekPanel" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-5 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white">
+        <h3 class="font-bold text-lg">🔍 Estimasi Nilai Sementara</h3>
+        <button onclick="tutupCek()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="p-5 space-y-4" id="cekContent"></div>
+      <div class="p-5 border-t border-slate-100 flex gap-3">
+        <button onclick="tutupCek()" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-medium">Lanjut Mengerjakan</button>
+        <button onclick="tutupCek(); konfirmasiAkhiri()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium">Akhiri Ujian</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== HASIL ========== -->
+  <div id="hasilArea" class="max-w-5xl mx-auto px-4 py-8 hidden">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-8 text-center">
+        <h2 class="text-2xl font-bold mb-1">Hasil Uji Kompetensi</h2>
+        <p id="hasilNama" class="text-indigo-200"></p>
+        <div class="mt-6 flex justify-center gap-8">
+          <div>
+            <div id="hasilSkor" class="text-5xl font-bold">0</div>
+            <div class="text-indigo-200 text-sm">dari 100</div>
+          </div>
+          <div class="border-l border-white/30 pl-8">
+            <div id="hasilStatus" class="text-3xl font-bold mt-2">-</div>
+            <div class="text-indigo-200 text-sm">Status</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <h3 class="font-semibold text-lg mb-4">Breakdown per Kategori</h3>
+        <div class="h-64 mb-8">
+          <canvas id="chartKategori"></canvas>
+        </div>
+
+        <h3 class="font-semibold text-lg mb-3">Review Lengkap Jawaban</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100 text-left">
+              <tr>
+                <th class="px-3 py-2 rounded-l-lg">No</th>
+                <th class="px-3 py-2">Kategori</th>
+                <th class="px-3 py-2">Jawabanmu</th>
+                <th class="px-3 py-2">Kunci</th>
+                <th class="px-3 py-2">Status</th>
+                <th class="px-3 py-2 rounded-r-lg">Pembahasan</th>
+              </tr>
+            </thead>
+            <tbody id="tabelReview"></tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 text-center">
+          <button onclick="location.reload()" class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
+            Ulangi Ujian
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // DATA 100 SOAL (original, sesuai kisi-kisi)
+    // ============================================================
+    const SOAL = [
+      // ===== 1-30: Asuhan & Pelayanan Kesehatan =====
+      {nomor:1, kategori:"Asuhan & Pelayanan", teks:"Seorang bayi lahir cukup bulan, menangis kuat, tonus baik. Tindakan IMD (Inisiasi Menyusu Dini) yang paling tepat dilakukan adalah…", opsi:{A:"Membersihkan bayi terlebih dahulu kemudian diletakkan di dada ibu", B:"Mengeringkan bayi, potong tali pusat, lalu letakkan di dada ibu dalam 1 jam pertama", C:"Segera meletakkan bayi di dada ibu kulit-ke-kulit dalam 1 jam pertama setelah lahir tanpa mengganggu proses menyusu", D:"Memberikan ASI perah terlebih dahulu", E:"Memandikan bayi baru lahir sebelum IMD"}, kunci:"C", pembahasan:"IMD dilakukan dengan meletakkan bayi kulit-ke-kulit di dada ibu segera setelah lahir (dalam 1 jam) tanpa mengganggu proses menyusu."},
+      {nomor:2, kategori:"Asuhan & Pelayanan", teks:"Dalam pengkajian tumbuh kembang anak usia 12 bulan, tanda bahaya yang perlu dirujuk segera adalah…", opsi:{A:"Belum bisa berjalan tanpa bantuan", B:"Belum bisa mengucapkan 2 kata bermakna", C:"Tidak ada respon terhadap suara keras", D:"Berat badan di bawah garis merah KMS", E:"Belum bisa berdiri dengan berpegangan"}, kunci:"C", pembahasan:"Tidak ada respon terhadap suara keras merupakan tanda bahaya gangguan pendengaran yang perlu dirujuk segera."},
+      {nomor:3, kategori:"Asuhan & Pelayanan", teks:"Jadwal imunisasi DPT-HB-Hib dosis pertama diberikan pada usia…", opsi:{A:"0 bulan", B:"1 bulan", C:"2 bulan", D:"3 bulan", E:"4 bulan"}, kunci:"C", pembahasan:"DPT-HB-Hib 1 diberikan pada usia 2 bulan, dilanjutkan 3 dan 4 bulan."},
+      {nomor:4, kategori:"Asuhan & Pelayanan", teks:"Seorang ibu datang ke Posyandu dengan anak usia 24 bulan. Hasil pengukuran BB/U di bawah -2 SD. Intervensi prioritas yang dilakukan adalah…", opsi:{A:"Memberikan suplementasi vitamin A saja", B:"Konseling gizi dan pemantauan ketat, serta rujuk jika perlu", C:"Langsung rawat inap", D:"Memberikan antibiotik profilaksis", E:"Menunda imunisasi sampai BB normal"}, kunci:"B", pembahasan:"Anak dengan BB/U < -2 SD memerlukan konseling gizi, pemantauan, dan rujukan sesuai indikasi (stunting/wasting)."},
+      {nomor:5, kategori:"Asuhan & Pelayanan", teks:"Sasaran utama program PIS-PK (Program Indonesia Sehat dengan Pendekatan Keluarga) adalah…", opsi:{A:"Individu di fasilitas kesehatan", B:"Keluarga sebagai unit terkecil", C:"Hanya ibu hamil dan balita", D:"Sekolah-sekolah", E:"Tempat kerja"}, kunci:"B", pembahasan:"PIS-PK berfokus pada pendekatan keluarga sebagai unit terkecil untuk mencapai Indonesia Sehat."},
+      {nomor:6, kategori:"Asuhan & Pelayanan", teks:"Dalam asuhan kehamilan, tanda bahaya yang harus segera dirujuk adalah…", opsi:{A:"Mual muntah di trimester 1", B:"Nyeri punggung ringan", C:"Perdarahan pervaginam", D:"Sering buang air kecil", E:"Kram kaki malam hari"}, kunci:"C", pembahasan:"Perdarahan pervaginam merupakan tanda bahaya kehamilan yang harus segera dirujuk."},
+      {nomor:7, kategori:"Asuhan & Pelayanan", teks:"Prinsip utama dalam penatalaksanaan diare pada balita di Puskesmas adalah…", opsi:{A:"Memberikan antibiotik pada semua kasus", B:"Rehidrasi oral dengan oralit dan zinc, serta ASI terus", C:"Puasa total 24 jam", D:"Infus rutin pada semua anak", E:"Memberikan obat anti-diare segera"}, kunci:"B", pembahasan:"Tata laksana diare fokus pada rehidrasi oralit + zinc, lanjutkan ASI/makanan."},
+      {nomor:8, kategori:"Asuhan & Pelayanan", teks:"Deteksi dini stunting dilakukan dengan mengukur…", opsi:{A:"Berat badan saja", B:"Tinggi/panjang badan menurut umur (TB/U atau PB/U)", C:"Lingkar lengan atas saja", D:"Indeks massa tubuh", E:"Tinggi duduk"}, kunci:"B", pembahasan:"Stunting ditentukan berdasarkan TB/U atau PB/U < -2 SD."},
+      {nomor:9, kategori:"Asuhan & Pelayanan", teks:"Imunisasi BCG diberikan untuk mencegah…", opsi:{A:"Campak", B:"Polio", C:"Tuberkulosis berat", D:"Hepatitis B", E:"Difteri"}, kunci:"C", pembahasan:"BCG mencegah bentuk TB berat (meningitis TB, milier) pada anak."},
+      {nomor:10, kategori:"Asuhan & Pelayanan", teks:"Pada pengkajian lansia di Posyandu Lansia, skrining yang wajib dilakukan meliputi…", opsi:{A:"Hanya tekanan darah", B:"Tekanan darah, gula darah, kolesterol, dan status gizi", C:"Hanya pemeriksaan mata", D:"Hanya tes kognitif", E:"Tidak perlu skrining rutin"}, kunci:"B", pembahasan:"Skrining PTM pada lansia minimal meliputi TD, GDS, kolesterol, dan status gizi."},
+      {nomor:11, kategori:"Asuhan & Pelayanan", teks:"Tindakan yang benar pada bayi baru lahir dengan asfiksia sedang (APGAR 4-6) adalah…", opsi:{A:"Langsung intubasi", B:"Rangsang taktil, bersihkan jalan napas, berikan oksigen jika perlu", C:"Observasi saja", D:"Berikan antibiotik", E:"Potong tali pusat dulu baru resusitasi"}, kunci:"B", pembahasan:"Asfiksia sedang ditangani dengan langkah awal resusitasi: posisi, hisap, rangsang taktil, oksigen."},
+      {nomor:12, kategori:"Asuhan & Pelayanan", teks:"Program pengendalian PTM di Puskesmas yang paling sesuai untuk deteksi dini hipertensi adalah…", opsi:{A:"Posbindu PTM", B:"Hanya rawat inap", C:"Imunisasi massal", D:"Pemberian vitamin", E:"Tidak ada program khusus"}, kunci:"A", pembahasan:"Posbindu PTM merupakan wadah deteksi dini dan monitoring faktor risiko PTM termasuk hipertensi."},
+      {nomor:13, kategori:"Asuhan & Pelayanan", teks:"Dalam asuhan persalinan normal, kala III ditandai dengan…", opsi:{A:"Pembukaan lengkap", B:"Lahirnya bayi sampai lahirnya plasenta", C:"Setelah plasenta lahir sampai 2 jam", D:"Kontraksi teratur", E:"Ketuban pecah"}, kunci:"B", pembahasan:"Kala III adalah kala pengeluaran plasenta (dari lahir bayi sampai plasenta lahir)."},
+      {nomor:14, kategori:"Asuhan & Pelayanan", teks:"Indikator keberhasilan ASI eksklusif diukur sampai usia…", opsi:{A:"3 bulan", B:"4 bulan", C:"6 bulan", D:"9 bulan", E:"12 bulan"}, kunci:"C", pembahasan:"ASI eksklusif diberikan sampai usia 6 bulan tanpa makanan/minuman lain."},
+      {nomor:15, kategori:"Asuhan & Pelayanan", teks:"Seorang anak usia 9 bulan belum bisa duduk tanpa bantuan. Tindakan yang tepat adalah…", opsi:{A:"Tunggu sampai 12 bulan", B:"Lakukan stimulasi dan rujuk ke tumbuh kembang", C:"Berikan vitamin saja", D:"Tidak perlu intervensi", E:"Paksa anak duduk"}, kunci:"B", pembahasan:"Keterlambatan milestone duduk perlu stimulasi dini dan rujukan."},
+      {nomor:16, kategori:"Asuhan & Pelayanan", teks:"Vaksin MR diberikan untuk mencegah…", opsi:{A:"Hanya campak", B:"Campak dan rubella", C:"Hanya polio", D:"Hepatitis", E:"Tetanus"}, kunci:"B", pembahasan:"MR (Measles-Rubella) mencegah campak dan rubella."},
+      {nomor:17, kategori:"Asuhan & Pelayanan", teks:"Dalam manajemen terpadu balita sakit (MTBS), klasifikasi batuk dengan napas cepat pada usia 2-12 bulan adalah…", opsi:{A:"Batuk pilek biasa", B:"Pneumonia", C:"Pneumonia berat", D:"Tidak ada klasifikasi", E:"Asma"}, kunci:"B", pembahasan:"Napas cepat pada usia tersebut mengarah pada klasifikasi pneumonia."},
+      {nomor:18, kategori:"Asuhan & Pelayanan", teks:"Tujuan utama pengkajian keluarga dalam keperawatan komunitas adalah…", opsi:{A:"Menemukan diagnosis medis", B:"Mengidentifikasi masalah kesehatan keluarga dan potensinya", C:"Memberikan obat", D:"Melakukan rujukan saja", E:"Mencatat data demografis"}, kunci:"B", pembahasan:"Pengkajian keluarga bertujuan mengidentifikasi masalah dan potensi kesehatan keluarga."},
+      {nomor:19, kategori:"Asuhan & Pelayanan", teks:"Pada ibu post partum hari ke-3, tanda bahaya yang harus diwaspadai adalah…", opsi:{A:"Lochea rubra", B:"Demam >38°C dan nyeri payudara hebat", C:"Kontraksi uterus", D:"Berkeringat malam", E:"Nafsu makan meningkat"}, kunci:"B", pembahasan:"Demam dan tanda infeksi (mastitis/endometritis) adalah tanda bahaya nifas."},
+      {nomor:20, kategori:"Asuhan & Pelayanan", teks:"Intervensi gizi spesifik untuk mencegah stunting pada 1000 hari pertama kehidupan meliputi…", opsi:{A:"Hanya pemberian makanan tambahan", B:"ASI eksklusif, MP-ASI tepat, imunisasi, dan suplementasi", C:"Hanya tablet tambah darah", D:"Olahraga intensif", E:"Diet ketat"}, kunci:"B", pembahasan:"Intervensi gizi spesifik mencakup ASI, MP-ASI, imunisasi, TTD, dll pada 1000 HPK."},
+      {nomor:21, kategori:"Asuhan & Pelayanan", teks:"Pemeriksaan antenatal care (ANC) minimal yang direkomendasikan Kemenkes adalah…", opsi:{A:"2 kali", B:"4 kali", C:"6 kali", D:"8 kali", E:"12 kali"}, kunci:"C", pembahasan:"Standar ANC saat ini minimal 6 kali kunjungan (termasuk 2 kali oleh dokter)."},
+      {nomor:22, kategori:"Asuhan & Pelayanan", teks:"Pada penatalaksanaan preeklamsia di Puskesmas, obat antihipertensi yang dapat diberikan sebelum rujukan adalah…", opsi:{A:"Nifedipin oral sesuai protokol", B:"Furosemid dosis tinggi", C:"Dopamin", D:"Tidak boleh diberikan obat", E:"Antibiotik"}, kunci:"A", pembahasan:"Nifedipin dapat digunakan sebagai antihipertensi pada preeklamsia sesuai pedoman sebelum rujukan."},
+      {nomor:23, kategori:"Asuhan & Pelayanan", teks:"Salah satu indikator kinerja Puskesmas dalam penurunan stunting adalah…", opsi:{A:"Jumlah imunisasi saja", B:"Cakupan balita ditimbang dan dipantau pertumbuhannya", C:"Jumlah rawat inap", D:"Jumlah resep obat", E:"Jumlah rujukan saja"}, kunci:"B", pembahasan:"Pemantauan pertumbuhan (D/S) merupakan indikator penting pencegahan stunting."},
+      {nomor:24, kategori:"Asuhan & Pelayanan", teks:"Tindakan pertama pada bayi dengan hipotermia sedang adalah…", opsi:{A:"Langsung rendam air hangat", B:"Kontak kulit-ke-kulit (kangaroo mother care) dan keringkan", C:"Berikan antibiotik", D:"Observasi saja", E:"Berikan infus dingin"}, kunci:"B", pembahasan:"Hipotermia sedang ditangani dengan metode kanguru dan penghangatan."},
+      {nomor:25, kategori:"Asuhan & Pelayanan", teks:"Dalam pelayanan KB, metode kontrasepsi yang paling sesuai untuk ibu menyusui <6 bulan adalah…", opsi:{A:"Pil kombinasi", B:"Suntik progestin / MAL / IUD", C:"Pil progestin saja", D:"Implant saja", E:"Semua boleh"}, kunci:"B", pembahasan:"Metode progestin (suntik, implant), MAL, dan IUD aman untuk ibu menyusui dini."},
+      {nomor:26, kategori:"Asuhan & Pelayanan", teks:"Tanda bahaya pada anak dengan demam yang harus segera dirujuk menurut MTBS adalah…", opsi:{A:"Demam 1 hari", B:"Kejang, letargi, atau kaku kuduk", C:"Nafsu makan berkurang sedikit", D:"Batuk ringan", E:"Pileh"}, kunci:"B", pembahasan:"Kejang, letargi, kaku kuduk merupakan tanda bahaya yang perlu rujukan segera."},
+      {nomor:27, kategori:"Asuhan & Pelayanan", teks:"Pengukuran antropometri yang paling akurat untuk menilai status gizi akut (wasting) adalah…", opsi:{A:"TB/U", B:"BB/TB atau BB/PB", C:"BB/U", D:"Lingkar kepala", E:"Tinggi duduk"}, kunci:"B", pembahasan:"BB/TB atau BB/PB digunakan untuk menilai wasting (gizi kurang akut)."},
+      {nomor:28, kategori:"Asuhan & Pelayanan", teks:"Pada program imunisasi, vaksin yang harus disimpan di freezer adalah…", opsi:{A:"DPT", B:"Hepatitis B", C:"Polio tetes (OPV) dan campak/MR", D:"TT", E:"Hib"}, kunci:"C", pembahasan:"OPV dan campak/MR sensitif panas dan disimpan di freezer."},
+      {nomor:29, kategori:"Asuhan & Pelayanan", teks:"Konseling menyusui yang efektif menggunakan pendekatan…", opsi:{A:"Memberi perintah", B:"Mendengarkan aktif, memuji, dan memberikan informasi praktis", C:"Menakut-nakuti", D:"Hanya memberikan leaflet", E:"Memaksa ibu"}, kunci:"B", pembahasan:"Konseling menyusui menekankan keterampilan mendengarkan dan dukungan positif."},
+      {nomor:30, kategori:"Asuhan & Pelayanan", teks:"Salah satu fokus utama dalam asuhan keperawatan komunitas di wilayah kerja Puskesmas adalah…", opsi:{A:"Hanya kuratif individu", B:"Promotif, preventif, dan pemberdayaan masyarakat", C:"Hanya rawat inap", D:"Hanya laboratorium", E:"Hanya farmasi"}, kunci:"B", pembahasan:"Keperawatan komunitas berorientasi promotif-preventif dan pemberdayaan."},
+
+      // ===== 31-45: Etika, Hukum & Patient Safety =====
+      {nomor:31, kategori:"Etika & Patient Safety", teks:"Informed consent yang sah harus memenuhi unsur…", opsi:{A:"Hanya tanda tangan", B:"Informasi yang cukup, pemahaman, kesukarelaan, dan kompetensi pasien", C:"Hanya persetujuan keluarga", D:"Tidak perlu penjelasan", E:"Hanya persetujuan dokter"}, kunci:"B", pembahasan:"Informed consent mensyaratkan informasi memadai, pemahaman, sukarela, dan kapasitas."},
+      {nomor:32, kategori:"Etika & Patient Safety", teks:"Enam sasaran keselamatan pasien menurut WHO/Kemenkes mencakup…", opsi:{A:"Hanya identifikasi pasien", B:"Identifikasi pasien, komunikasi efektif, keamanan obat, prosedur benar, infeksi, risiko jatuh", C:"Hanya cuci tangan", D:"Hanya rekam medis", E:"Hanya rujukan"}, kunci:"B", pembahasan:"6 sasaran: identifikasi, komunikasi, obat high-alert, lokasi/prosedur/pasien benar, infeksi, jatuh."},
+      {nomor:33, kategori:"Etika & Patient Safety", teks:"Prinsip etika beneficence dalam praktik kesehatan berarti…", opsi:{A:"Menghormati otonomi", B:"Berbuat baik dan memberikan manfaat maksimal bagi pasien", C:"Tidak merugikan", D:"Keadilan", E:"Kerahasiaan"}, kunci:"B", pembahasan:"Beneficence adalah kewajiban berbuat baik untuk kepentingan pasien."},
+      {nomor:34, kategori:"Etika & Patient Safety", teks:"Kesalahan pemberian obat yang paling sering terjadi dapat dicegah dengan prinsip…", opsi:{A:"5 benar (benar pasien, obat, dosis, cara, waktu)", B:"Hanya benar dosis", C:"Tidak perlu double check", D:"Memberikan obat cepat", E:"Mengabaikan alergi"}, kunci:"A", pembahasan:"Prinsip 5 benar (saat ini berkembang jadi 7-10 benar) adalah dasar keselamatan obat."},
+      {nomor:35, kategori:"Etika & Patient Safety", teks:"Jika pasien menolak tindakan medis yang dianjurkan, tenaga kesehatan harus…", opsi:{A:"Memaksa pasien", B:"Menghormati keputusan setelah memberikan penjelasan lengkap (informed refusal)", C:"Mengabaikan pasien", D:"Melaporkan ke polisi", E:"Memberikan obat sembunyi-sembunyi"}, kunci:"B", pembahasan:"Pasien berhak menolak setelah mendapat informasi lengkap (informed refusal)."},
+      {nomor:36, kategori:"Etika & Patient Safety", teks:"Komunikasi efektif SBAR digunakan untuk…", opsi:{A:"Hanya dokumentasi", B:"Handover dan komunikasi antar tenaga kesehatan yang terstruktur", C:"Konseling pasien saja", D:"Laporan keuangan", E:"Promosi kesehatan"}, kunci:"B", pembahasan:"SBAR (Situation-Background-Assessment-Recommendation) untuk komunikasi efektif."},
+      {nomor:37, kategori:"Etika & Patient Safety", teks:"Kerahasiaan rekam medis pasien dilindungi oleh…", opsi:{A:"Hanya etika", B:"Undang-undang dan kode etik profesi", C:"Tidak ada aturan", D:"Hanya kebijakan rumah sakit", E:"Keputusan dokter saja"}, kunci:"B", pembahasan:"Kerahasiaan dilindungi UU Kesehatan dan kode etik."},
+      {nomor:38, kategori:"Etika & Patient Safety", teks:"Tindakan yang termasuk pelanggaran patient safety adalah…", opsi:{A:"Melakukan identifikasi pasien dengan 2 identitas", B:"Memberikan obat tanpa konfirmasi alergi", C:"Mencuci tangan 5 momen", D:"Menggunakan checklist operasi", E:"Melaporkan insidensi"}, kunci:"B", pembahasan:"Memberikan obat tanpa cek alergi meningkatkan risiko kesalahan."},
+      {nomor:39, kategori:"Etika & Patient Safety", teks:"Prinsip non-maleficence berarti…", opsi:{A:"Berbuat baik", B:"Tidak merugikan / do no harm", C:"Keadilan", D:"Otonomi", E:"Kebenaran"}, kunci:"B", pembahasan:"Non-maleficence adalah kewajiban untuk tidak merugikan pasien."},
+      {nomor:40, kategori:"Etika & Patient Safety", teks:"Jika terjadi kesalahan medis (medical error), langkah pertama yang benar adalah…", opsi:{A:"Menyembunyikan", B:"Melaporkan, menganalisis, dan melakukan perbaikan sistem", C:"Menyalahkan individu saja", D:"Mengabaikan", E:"Mengganti pasien"}, kunci:"B", pembahasan:"Budaya keselamatan menekankan pelaporan dan sistem improvement, bukan menyalahkan."},
+      {nomor:41, kategori:"Etika & Patient Safety", teks:"Persetujuan tindakan pada pasien tidak sadar yang tidak memiliki keluarga dilakukan dengan…", opsi:{A:"Tidak perlu persetujuan", B:"Persetujuan dari ketua tim medis / komite etik sesuai prosedur", C:"Menunggu keluarga datang berhari-hari", D:"Memaksa", E:"Tidak melakukan tindakan"}, kunci:"B", pembahasan:"Pada kondisi darurat tanpa wali, keputusan diambil sesuai prosedur institusi dan etika."},
+      {nomor:42, kategori:"Etika & Patient Safety", teks:"Salah satu cara mencegah risiko jatuh pasien adalah…", opsi:{A:"Membiarkan pasien berjalan sendiri", B:"Pengkajian risiko jatuh dan intervensi sesuai skor", C:"Tidak memasang pagar tempat tidur", D:"Lantai licin", E:"Pencahayaan redup"}, kunci:"B", pembahasan:"Pengkajian risiko jatuh (misal Morse) + intervensi adalah standar."},
+      {nomor:43, kategori:"Etika & Patient Safety", teks:"Dalam etika profesi, konflik kepentingan harus…", opsi:{A:"Diabaikan", B:"Dinyatakan secara terbuka dan dikelola", C:"Disembunyikan", D:"Dimanfaatkan", E:"Tidak perlu diatur"}, kunci:"B", pembahasan:"Transparansi dan pengelolaan konflik kepentingan adalah kewajiban etis."},
+      {nomor:44, kategori:"Etika & Patient Safety", teks:"Dokumentasi yang baik dalam rekam medis harus memenuhi prinsip…", opsi:{A:"Singkat saja", B:"Akurat, lengkap, tepat waktu, dan dapat dibaca", C:"Hanya tanda tangan", D:"Boleh diubah bebas", E:"Tidak perlu tanggal"}, kunci:"B", pembahasan:"Dokumentasi harus akurat, lengkap, timely, legible."},
+      {nomor:45, kategori:"Etika & Patient Safety", teks:"Budaya keselamatan pasien (patient safety culture) menekankan…", opsi:{A:"Menyalahkan individu", B:"Sistem approach, pelaporan tanpa rasa takut, dan pembelajaran", C:"Hukuman berat", D:"Rahasia kesalahan", E:"Tidak perlu training"}, kunci:"B", pembahasan:"Budaya just culture fokus pada sistem dan pembelajaran, bukan menyalahkan."},
+
+      // ===== 46-60: Manajemen Puskesmas & Kesmas =====
+      {nomor:46, kategori:"Manajemen Puskesmas", teks:"SPM (Standar Pelayanan Minimal) bidang kesehatan ditetapkan untuk menjamin…", opsi:{A:"Hanya pelayanan kuratif", B:"Jenis dan mutu pelayanan dasar yang wajib dipenuhi pemerintah daerah", C:"Hanya fasilitas swasta", D:"Hanya rumah sakit", E:"Tidak ada standar"}, kunci:"B", pembahasan:"SPM menjamin pelayanan dasar wajib oleh Pemda."},
+      {nomor:47, kategori:"Manajemen Puskesmas", teks:"UKM (Upaya Kesehatan Masyarakat) di Puskesmas bersifat…", opsi:{A:"Hanya individu", B:"Populasi / masyarakat, promotif-preventif", C:"Hanya rawat inap", D:"Hanya laboratorium", E:"Hanya farmasi"}, kunci:"B", pembahasan:"UKM berorientasi populasi dan upaya promotif-preventif."},
+      {nomor:48, kategori:"Manajemen Puskesmas", teks:"Perencanaan obat di Puskesmas menggunakan metode…", opsi:{A:"Hanya intuisi", B:"Konsumsi, epidemiologi, dan kombinasi", C:"Hanya permintaan dokter", D:"Tidak perlu perencanaan", E:"Beli sebanyak mungkin"}, kunci:"B", pembahasan:"Perencanaan obat memakai metode konsumsi, morbiditas, dan kombinasi."},
+      {nomor:49, kategori:"Manajemen Puskesmas", teks:"Siklus manajemen Puskesmas meliputi…", opsi:{A:"Hanya pelaksanaan", B:"Perencanaan (P1), Penggerakan-Pelaksanaan (P2), Pengawasan-Pengendalian-Penilaian (P3)", C:"Hanya evaluasi", D:"Hanya anggaran", E:"Hanya laporan"}, kunci:"B", pembahasan:"Manajemen Puskesmas: P1-P2-P3."},
+      {nomor:50, kategori:"Manajemen Puskesmas", teks:"Indikator kinerja utama Puskesmas yang berkaitan dengan akses adalah…", opsi:{A:"Jumlah obat habis", B:"Cakupan kunjungan dan jangkauan wilayah", C:"Jumlah pegawai", D:"Luas bangunan", E:"Jumlah mobil"}, kunci:"B", pembahasan:"Akses diukur dari cakupan dan jangkauan pelayanan."},
+      {nomor:51, kategori:"Manajemen Puskesmas", teks:"Dalam PIS-PK, ada 12 indikator keluarga sehat. Salah satunya adalah…", opsi:{A:"Keluarga memiliki jamban sehat", B:"Keluarga memiliki mobil", C:"Keluarga memiliki AC", D:"Keluarga memiliki TV", E:"Keluarga memiliki motor mewah"}, kunci:"A", pembahasan:"Salah satu dari 12 indikator adalah jamban sehat, air bersih, dll."},
+      {nomor:52, kategori:"Manajemen Puskesmas", teks:"Lokmin (Lokalarea Mini) di Puskesmas bertujuan untuk…", opsi:{A:"Hanya rapat rutin", B:"Pemecahan masalah berbasis data di tingkat desa/kelurahan", C:"Hanya hiburan", D:"Tidak ada tujuan", E:"Membagi tugas saja"}, kunci:"B", pembahasan:"Lokmin adalah forum pemecahan masalah berbasis data di mikro area."},
+      {nomor:53, kategori:"Manajemen Puskesmas", teks:"Pelaporan program kesehatan menggunakan format…", opsi:{A:"Bebas", B:"SP2TP / SIMPUS dan laporan berjenjang", C:"Hanya lisan", D:"Tidak perlu laporan", E:"Hanya foto"}, kunci:"B", pembahasan:"Sistem Pencatatan dan Pelaporan Terpadu Puskesmas (SP2TP)."},
+      {nomor:54, kategori:"Manajemen Puskesmas", teks:"Analisis SWOT dalam perencanaan Puskesmas digunakan untuk…", opsi:{A:"Hanya mencatat kekuatan", B:"Mengidentifikasi kekuatan, kelemahan, peluang, ancaman", C:"Hanya ancaman", D:"Tidak berguna", E:"Hanya peluang"}, kunci:"B", pembahasan:"SWOT membantu perumusan strategi."},
+      {nomor:55, kategori:"Manajemen Puskesmas", teks:"Upaya Kesehatan Perorangan (UKP) di Puskesmas meliputi…", opsi:{A:"Hanya promosi", B:"Pelayanan rawat jalan, rawat inap terbatas, dan rujukan", C:"Hanya imunisasi", D:"Hanya surveilans", E:"Hanya penyuluhan"}, kunci:"B", pembahasan:"UKP adalah pelayanan individu (kuratif & rehabilitatif)."},
+      {nomor:56, kategori:"Manajemen Puskesmas", teks:"Salah satu fungsi manajemen yang paling krusial di Puskesmas adalah…", opsi:{A:"Hanya planning", B:"Fungsi pengawasan dan pengendalian (controlling)", C:"Hanya staffing", D:"Hanya directing", E:"Hanya budgeting"}, kunci:"B", pembahasan:"Controlling memastikan program berjalan sesuai rencana dan standar."},
+      {nomor:57, kategori:"Manajemen Puskesmas", teks:"Dalam pengelolaan logistik obat, prinsip FIFO dan FEFO berarti…", opsi:{A:"First In First Out dan First Expired First Out", B:"First In Last Out", C:"Tidak ada aturan", D:"Beli baru saja", E:"Buang semua"}, kunci:"A", pembahasan:"FIFO/FEFO mencegah obat kadaluarsa."},
+      {nomor:58, kategori:"Manajemen Puskesmas", teks:"Mini workshop di Puskesmas biasanya dilakukan untuk…", opsi:{A:"Hiburan staf", B:"Review kinerja dan perbaikan mutu secara berkala", C:"Hanya makan bersama", D:"Tidak perlu", E:"Membagi THR"}, kunci:"B", pembahasan:"Mini workshop adalah wahana peningkatan mutu dan review."},
+      {nomor:59, kategori:"Manajemen Puskesmas", teks:"Kemitraan Puskesmas dengan lintas sektor penting untuk…", opsi:{A:"Hanya mendapatkan dana", B:"Keberhasilan program yang membutuhkan dukungan multi-sektor (misal stunting)", C:"Tidak penting", D:"Hanya seremonial", E:"Mengurangi kerja"}, kunci:"B", pembahasan:"Masalah kesehatan kompleks membutuhkan pendekatan lintas sektor."},
+      {nomor:60, kategori:"Manajemen Puskesmas", teks:"Indikator output program imunisasi adalah…", opsi:{A:"Jumlah vaksin tersedia", B:"Cakupan imunisasi (misal % bayi mendapat imunisasi lengkap)", C:"Jumlah petugas", D:"Luas gedung", E:"Jumlah posyandu"}, kunci:"B", pembahasan:"Output diukur dari cakupan pelayanan."},
+
+      // ===== 61-70: PPI, K3 & Kesling =====
+      {nomor:61, kategori:"PPI, K3 & Kesling", teks:"5 momen cuci tangan menurut WHO adalah…", opsi:{A:"Sebelum makan saja", B:"Sebelum kontak pasien, sebelum tindakan aseptik, setelah risiko cairan tubuh, setelah kontak pasien, setelah kontak lingkungan pasien", C:"Hanya setelah kontak pasien", D:"Hanya 3 momen", E:"Tidak perlu cuci tangan"}, kunci:"B", pembahasan:"5 momen cuci tangan adalah standar WHO."},
+      {nomor:62, kategori:"PPI, K3 & Kesling", teks:"APD level yang diperlukan saat menangani pasien COVID-19 atau infeksi airborne adalah…", opsi:{A:"Hanya masker bedah", B:"Masker N95/respirator, gown, gloves, eye protection", C:"Hanya sarung tangan", D:"Tidak perlu APD", E:"Hanya celemek"}, kunci:"B", pembahasan:"Infeksi airborne memerlukan respirator (N95) + APD lengkap."},
+      {nomor:63, kategori:"PPI, K3 & Kesling", teks:"Limbah medis padat infeksius harus diperlakukan dengan…", opsi:{A:"Dibuang ke sampah biasa", B:"Pemisahan, pewadahan kuning, dan pengolahan sesuai standar (insinerasi/autoclave)", C:"Dikubur sembarangan", D:"Dijual", E:"Dibiarkan"}, kunci:"B", pembahasan:"Limbah infeksius dikelola sesuai Permenkes tentang limbah fasyankes."},
+      {nomor:64, kategori:"PPI, K3 & Kesling", teks:"Kewaspadaan standar (standard precautions) harus diterapkan pada…", opsi:{A:"Hanya pasien infeksius", B:"Semua pasien, setiap saat", C:"Hanya saat wabah", D:"Hanya di ICU", E:"Tidak perlu"}, kunci:"B", pembahasan:"Standard precautions berlaku untuk semua pasien."},
+      {nomor:65, kategori:"PPI, K3 & Kesling", teks:"Salah satu indikator K3 di fasyankes adalah…", opsi:{A:"Jumlah kecelakaan kerja dan near miss", B:"Jumlah pasien", C:"Luas ruangan", D:"Jumlah kursi", E:"Warna cat"}, kunci:"A", pembahasan:"Insiden K3 dan near miss dipantau sebagai indikator."},
+      {nomor:66, kategori:"PPI, K3 & Kesling", teks:"Pengelolaan air limbah fasyankes harus memenuhi…", opsi:{A:"Tidak ada baku mutu", B:"Baku mutu sesuai peraturan (pH, BOD, COD, dll)", C:"Boleh dibuang ke sungai langsung", D:"Tidak perlu diolah", E:"Hanya disaring"}, kunci:"B", pembahasan:"Air limbah harus diolah memenuhi baku mutu."},
+      {nomor:67, kategori:"PPI, K3 & Kesling", teks:"Hand hygiene dengan handsrub berbasis alkohol efektif jika…", opsi:{A:"Tangan terlihat kotor", B:"Tangan tidak terlihat kotor dan digunakan sesuai 5 momen", C:"Setelah memegang kotoran", D:"Tidak pernah efektif", E:"Hanya air saja"}, kunci:"B", pembahasan:"Alcohol-based handrub untuk tangan tidak terlihat kotor."},
+      {nomor:68, kategori:"PPI, K3 & Kesling", teks:"Sharp waste (limbah tajam) harus dibuang ke…", opsi:{A:"Kantong plastik biasa", B:"Safety box yang tahan tusuk dan tidak penuh berlebih", C:"Tong sampah terbuka", D:"Lantai", E:"Kantong kuning biasa"}, kunci:"B", pembahasan:"Limbah tajam masuk safety box."},
+      {nomor:69, kategori:"PPI, K3 & Kesling", teks:"Salah satu upaya pencegahan infeksi nosokomial adalah…", opsi:{A:"Tidak mencuci tangan", B:"Kepatuhan hand hygiene, APD, dan sterilisasi alat", C:"Menggunakan alat bekas tanpa steril", D:"Tidak membersihkan permukaan", E:"Mengabaikan isolasi"}, kunci:"B", pembahasan:"Bundle pencegahan infeksi meliputi hand hygiene, APD, sterilisasi."},
+      {nomor:70, kategori:"PPI, K3 & Kesling", teks:"Dalam K3, yang dimaksud dengan near miss adalah…", opsi:{A:"Kecelakaan yang sudah terjadi", B:"Kejadian yang hampir menyebabkan cedera/kecelakaan tetapi tidak terjadi", C:"Kematian", D:"Tidak ada arti", E:"Kecelakaan ringan"}, kunci:"B", pembahasan:"Near miss penting dilaporkan untuk pencegahan."},
+
+      // ===== 71-85: Farmakologi, Lab, Gadar & Gizi =====
+      {nomor:71, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Obat high-alert yang memerlukan kewaspadaan ekstra adalah…", opsi:{A:"Vitamin C", B:"Insulin, antikoagulan, opioid, elektrolit konsentrat", C:"Paracetamol biasa", D:"Antasida", E:"Obat batuk"}, kunci:"B", pembahasan:"High-alert medications memiliki risiko tinggi jika terjadi kesalahan."},
+      {nomor:72, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Dalam gawat darurat, prioritas primer (primary survey) menggunakan pendekatan…", opsi:{A:"ABCDE", B:"Hanya tekanan darah", C:"Hanya laboratorium", D:"Hanya riwayat", E:"Hanya foto"}, kunci:"A", pembahasan:"Primary survey: Airway, Breathing, Circulation, Disability, Exposure."},
+      {nomor:73, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Hasil lab hemoglobin 7 g/dL pada ibu hamil menunjukkan…", opsi:{A:"Normal", B:"Anemia yang perlu intervensi", C:"Terlalu tinggi", D:"Tidak perlu tindakan", E:"Hanya dehidrasi"}, kunci:"B", pembahasan:"Hb <11 g/dL pada hamil adalah anemia."},
+      {nomor:74, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Pemberian oksigen pada pasien sesak napas prioritasnya adalah…", opsi:{A:"Menunggu hasil lab", B:"Amankan airway dan berikan O2 sesuai kebutuhan", C:"Langsung intubasi semua pasien", D:"Tidak perlu O2", E:"Hanya posisi duduk"}, kunci:"B", pembahasan:"Airway & breathing adalah prioritas."},
+      {nomor:75, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Suplementasi zat besi pada ibu hamil diberikan untuk mencegah…", opsi:{A:"Hipertensi", B:"Anemia defisiensi besi", C:"Diabetes", D:"Infeksi", E:"Preterm saja"}, kunci:"B", pembahasan:"TTD mencegah anemia defisiensi besi."},
+      {nomor:76, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Dalam interpretasi hasil lab, leukositosis dengan shift to the left menunjukkan…", opsi:{A:"Infeksi virus", B:"Infeksi bakteri akut", C:"Normal", D:"Alergi saja", E:"Dehidrasi murni"}, kunci:"B", pembahasan:"Leukositosis + left shift tipikal infeksi bakteri."},
+      {nomor:77, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Obat yang harus dihindari pada trimester pertama kehamilan karena teratogenik adalah…", opsi:{A:"Paracetamol dosis terapeutik", B:"Isotretinoin, warfarin, ACE inhibitor tertentu", C:"Vitamin B6", D:"Asam folat", E:"Kalsium"}, kunci:"B", pembahasan:"Beberapa obat kategori X sangat teratogenik."},
+      {nomor:78, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Pada syok hipovolemik, cairan resusitasi awal yang dipilih adalah…", opsi:{A:"Dextrose 5%", B:"Kristaloid isotonik (RL/NS)", C:"Koloid saja", D:"Darah langsung tanpa indikasi", E:"Tidak perlu cairan"}, kunci:"B", pembahasan:"Resusitasi awal syok hipovolemik dengan kristaloid."},
+      {nomor:79, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Status gizi anak ditentukan dengan membandingkan hasil ukur dengan…", opsi:{A:"Standar WHO / baku antropometri", B:"Anak lain di kampung", C:"Berat badan orang tua", D:"Tidak ada standar", E:"Hanya visual"}, kunci:"A", pembahasan:"Menggunakan baku antropometri WHO."},
+      {nomor:80, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Pemberian oralit pada diare bertujuan untuk…", opsi:{A:"Menghentikan diare total", B:"Mengganti cairan dan elektrolit yang hilang", C:"Membunuh kuman", D:"Mengurangi nafsu makan", E:"Menyebabkan konstipasi"}, kunci:"B", pembahasan:"Oralit untuk rehidrasi."},
+      {nomor:81, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Tanda hipoglikemia pada pasien diabetes yang harus segera ditangani adalah…", opsi:{A:"Haus dan sering kencing", B:"Keringat dingin, gemetar, kesadaran menurun", C:"Luka sulit sembuh", D:"Penglihatan kabur kronis", E:"Berat badan naik"}, kunci:"B", pembahasan:"Hipoglikemia akut: gejala adrenergik + neuroglikopenik."},
+      {nomor:82, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Dalam farmasi Puskesmas, obat generik berlogo (OGB) lebih diutamakan karena…", opsi:{A:"Lebih mahal", B:"Mutu terjamin, harga lebih terjangkau, dan kebijakan pemerintah", C:"Tidak efektif", D:"Sulit didapat", E:"Hanya untuk orang kaya"}, kunci:"B", pembahasan:"OGB adalah kebijakan untuk ketersediaan obat bermutu terjangkau."},
+      {nomor:83, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Pemeriksaan lab yang paling cepat untuk skrining diabetes di Posbindu adalah…", opsi:{A:"HbA1c", B:"Gula darah sewaktu / puasa dengan glucometer", C:"Tes toleransi glukosa lengkap", D:"Insulin level", E:"C-peptide"}, kunci:"B", pembahasan:"GDS/GDP dengan strip adalah skrining praktis."},
+      {nomor:84, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Posisi recovery pada pasien tidak sadar yang masih bernapas bertujuan untuk…", opsi:{A:"Memperlancar sirkulasi saja", B:"Menjaga patensi airway dan mencegah aspirasi", C:"Menyebabkan trauma", D:"Tidak ada manfaat", E:"Hanya kenyamanan"}, kunci:"B", pembahasan:"Recovery position menjaga jalan napas."},
+      {nomor:85, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Zat gizi yang paling penting untuk mencegah Neural Tube Defect adalah…", opsi:{A:"Vitamin C", B:"Asam folat", C:"Vitamin D", D:"Zat besi saja", E:"Kalsium saja"}, kunci:"B", pembahasan:"Asam folat prekonsepsi mencegah NTD."},
+
+      // ===== 86-100: Manajerial & Sosio Kultural ASN BerAKHLAK =====
+      {nomor:86, kategori:"Manajerial & Sosio Kultural", teks:"Nilai dasar ASN BerAKHLAK yang berarti berorientasi pada pelayanan adalah…", opsi:{A:"Berorientasi Pelayanan", B:"Akuntabel", C:"Kompeten", D:"Harmonis", E:"Loyal"}, kunci:"A", pembahasan:"BerAKHLAK: Berorientasi Pelayanan, Akuntabel, Kompeten, Harmonis, Loyal, Adaptif, Kolaboratif."},
+      {nomor:87, kategori:"Manajerial & Sosio Kultural", teks:"Sikap adaptif seorang ASN di Puskesmas saat menghadapi pandemi adalah…", opsi:{A:"Menolak perubahan", B:"Siap belajar cara baru, fleksibel, dan inovatif dalam pelayanan", C:"Hanya menunggu perintah", D:"Mengeluh terus", E:"Menghindari tugas"}, kunci:"B", pembahasan:"Adaptif = mampu menyesuaikan diri dengan perubahan."},
+      {nomor:88, kategori:"Manajerial & Sosio Kultural", teks:"Kolaboratif dalam ASN BerAKHLAK berarti…", opsi:{A:"Bekerja sendiri", B:"Membangun kerja sama yang produktif dengan berbagai pihak", C:"Kompetisi tidak sehat", D:"Menutup informasi", E:"Mengabaikan tim"}, kunci:"B", pembahasan:"Kolaboratif = bekerja sama untuk tujuan bersama."},
+      {nomor:89, kategori:"Manajerial & Sosio Kultural", teks:"Seorang petugas Puskesmas menemukan rekan kerjanya melakukan praktik tidak etis. Sikap yang sesuai nilai akuntabel adalah…", opsi:{A:"Ikut-ikutan", B:"Mengingatkan secara konstruktif dan melaporkan sesuai prosedur jika perlu", C:"Menutup mata", D:"Menyebarkan gossip", E:"Langsung menghukum sendiri"}, kunci:"B", pembahasan:"Akuntabel = bertanggung jawab dan dapat dipertanggungjawabkan."},
+      {nomor:90, kategori:"Manajerial & Sosio Kultural", teks:"Dalam menghadapi masyarakat dengan latar budaya berbeda, ASN harus…", opsi:{A:"Memaksakan budaya sendiri", B:"Menghormati keberagaman dan memberikan pelayanan setara (harmonis & berorientasi pelayanan)", C:"Membedakan pelayanan", D:"Menghindari komunikasi", E:"Menolak pasien"}, kunci:"B", pembahasan:"Nilai Harmonis dan Berorientasi Pelayanan menghormati keberagaman."},
+      {nomor:91, kategori:"Manajerial & Sosio Kultural", teks:"Kompeten sebagai nilai ASN berarti…", opsi:{A:"Puas dengan kemampuan lama", B:"Terus meningkatkan kemampuan diri sesuai tuntutan tugas", C:"Tidak perlu belajar", D:"Mengandalkan orang lain", E:"Menolak pelatihan"}, kunci:"B", pembahasan:"Kompeten = terus berkembang dan ahli di bidangnya."},
+      {nomor:92, kategori:"Manajerial & Sosio Kultural", teks:"Loyalitas ASN ditujukan kepada…", opsi:{A:"Atasan pribadi saja", B:"Pancasila, UUD 1945, NKRI, dan pemerintahan yang sah", C:"Partai politik", D:"Kepentingan pribadi", E:"Kelompok tertentu"}, kunci:"B", pembahasan:"Loyal kepada negara dan konstitusi."},
+      {nomor:93, kategori:"Manajerial & Sosio Kultural", teks:"Contoh perilaku berorientasi pelayanan di Puskesmas adalah…", opsi:{A:"Melayani dengan ramah, cepat, dan solutif tanpa memandang status", B:"Memilih-milih pasien", C:"Menunda pelayanan", D:"Bersikap kasar", E:"Hanya melayani yang dikenal"}, kunci:"A", pembahasan:"Berorientasi pelayanan = mengutamakan kepuasan dan kebutuhan masyarakat."},
+      {nomor:94, kategori:"Manajerial & Sosio Kultural", teks:"Dalam pengambilan keputusan manajerial di Puskesmas, pendekatan yang baik adalah…", opsi:{A:"Berdasarkan data dan partisipatif", B:"Berdasarkan perasaan saja", C:"Berdasarkan tekanan", D:"Tanpa data", E:"Otoriter murni"}, kunci:"A", pembahasan:"Keputusan berbasis data + melibatkan pemangku kepentingan lebih baik."},
+      {nomor:95, kategori:"Manajerial & Sosio Kultural", teks:"Sikap saat menerima kritik dari masyarakat yang membangun adalah…", opsi:{A:"Marah dan membela diri", B:"Menerima, menganalisis, dan melakukan perbaikan (adaptif & akuntabel)", C:"Mengabaikan", D:"Membalas dengan kritik", E:"Menutup pelayanan"}, kunci:"B", pembahasan:"Kritik membangun adalah kesempatan perbaikan."},
+      {nomor:96, kategori:"Manajerial & Sosio Kultural", teks:"Integritas dalam pelayanan publik ditunjukkan dengan…", opsi:{A:"Menerima gratifikasi", B:"Menolak gratifikasi dan menjalankan tugas secara jujur", C:"Menggunakan fasilitas untuk kepentingan pribadi", D:"Nepotisme", E:"Mark-up anggaran"}, kunci:"B", pembahasan:"Integritas = jujur, tidak korupsi, menolak gratifikasi."},
+      {nomor:97, kategori:"Manajerial & Sosio Kultural", teks:"Dalam situasi konflik antar staf, kepala Puskesmas yang baik akan…", opsi:{A:"Membiarkan berlarut", B:"Memfasilitasi dialog dan mencari solusi win-win (kolaboratif & harmonis)", C:"Memihak salah satu", D:"Menghukum keduanya tanpa dengar", E:"Mengabaikan"}, kunci:"B", pembahasan:"Pemimpin memfasilitasi resolusi konflik secara adil."},
+      {nomor:98, kategori:"Manajerial & Sosio Kultural", teks:"Nilai 'Harmonis' dalam BerAKHLAK menekankan…", opsi:{A:"Persaingan", B:"Saling peduli, menghargai perbedaan, dan menjaga hubungan baik", C:"Isolasi", D:"Konflik", E:"Diskriminasi"}, kunci:"B", pembahasan:"Harmonis = peduli dan menghargai perbedaan."},
+      {nomor:99, kategori:"Manajerial & Sosio Kultural", teks:"Seorang ASN diminta melakukan tindakan yang bertentangan dengan aturan. Sikap yang benar adalah…", opsi:{A:"Melakukan karena perintah atasan", B:"Menolak dengan sopan dan menjelaskan dasar aturannya (akuntabel & loyal pada aturan)", C:"Langsung melapor media", D:"Mengundurkan diri tanpa bicara", E:"Ikut saja"}, kunci:"B", pembahasan:"ASN wajib menolak perintah yang melanggar hukum."},
+      {nomor:100, kategori:"Manajerial & Sosio Kultural", teks:"Untuk meningkatkan kinerja tim, seorang supervisor Puskesmas sebaiknya…", opsi:{A:"Hanya memerintah", B:"Memberikan umpan balik konstruktif, apresiasi, dan kesempatan berkembang (kompeten & kolaboratif)", C:"Hanya menghukum", D:"Tidak pernah evaluasi", E:"Membanding-bandingkan secara negatif"}, kunci:"B", pembahasan:"Umpan balik positif dan pengembangan adalah ciri kepemimpinan yang baik."}
+    ];
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let current = 0;
+    let jawaban = {};      // {nomor: 'A'}
+    let ragu = {};         // {nomor: true}
+    let timerInterval = null;
+    let sisaDetik = 120 * 60; // 120 menit
+    let sesiId = null;
+    let supabaseClient = null;
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    function mulaiUjian() {
+      const nama = document.getElementById('namaPeserta').value.trim() || 'Peserta';
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('examArea').classList.remove('hidden');
+
+      // Supabase optional
+      const url = document.getElementById('sbUrl').value.trim();
+      const key = document.getElementById('sbKey').value.trim();
+      if (url && key) {
+        try {
+          supabaseClient = supabase.createClient(url, key);
+          // insert sesi
+          supabaseClient.from('jfk_sesi').insert({nama_peserta: nama, total_soal: 100, status: 'berlangsung'})
+            .select().single().then(({data}) => { if (data) sesiId = data.id; });
+        } catch(e) { console.warn('Supabase init failed', e); }
+      }
+
+      renderTabs();
+      renderGrid();
+      tampilkanSoal(0);
+      mulaiTimer();
+    }
+
+    function renderTabs() {
+      const cats = [
+        {label: '1-30 Asuhan', start:0, end:29},
+        {label: '31-45 Etika', start:30, end:44},
+        {label: '46-60 Manajemen', start:45, end:59},
+        {label: '61-70 PPI/K3', start:60, end:69},
+        {label: '71-85 Farm/Lab/Gadar', start:70, end:84},
+        {label: '86-100 Man-Soskul', start:85, end:99}
+      ];
+      const cont = document.getElementById('kategoriTabs');
+      cont.innerHTML = cats.map((c,i) =>
+        `<button onclick="lompatKe(${c.start})" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition">${c.label}</button>`
+      ).join('');
+    }
+
+    function renderGrid() {
+      const teknis = document.getElementById('gridTeknis');
+      const mansos = document.getElementById('gridManSos');
+      teknis.innerHTML = '';
+      mansos.innerHTML = '';
+      for (let i = 1; i <= 100; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'grid-btn w-8 h-8 rounded-lg text-xs font-semibold border transition';
+        btn.textContent = i;
+        btn.onclick = () => lompatKe(i-1);
+        btn.id = `grid-${i}`;
+        updateGridBtn(i);
+        if (i <= 70) teknis.appendChild(btn);
+        else mansos.appendChild(btn);
+      }
+    }
+
+    function updateGridBtn(nomor) {
+      const btn = document.getElementById(`grid-${nomor}`);
+      if (!btn) return;
+      btn.className = 'grid-btn w-8 h-8 rounded-lg text-xs font-semibold border transition ';
+      if (nomor === current + 1) {
+        btn.className += 'bg-blue-500 text-white border-blue-600 shadow';
+      } else if (ragu[nomor]) {
+        btn.className += 'bg-amber-400 text-white border-amber-500';
+      } else if (jawaban[nomor]) {
+        btn.className += 'bg-emerald-500 text-white border-emerald-600';
+      } else {
+        btn.className += 'bg-slate-200 text-slate-600 border-slate-300';
+      }
+    }
+
+    function updateAllGrid() {
+      for (let i = 1; i <= 100; i++) updateGridBtn(i);
+    }
+
+    // ============================================================
+    // SOAL
+    // ============================================================
+    function tampilkanSoal(idx) {
+      current = idx;
+      const s = SOAL[idx];
+      document.getElementById('nomorSoal').textContent = s.nomor;
+      document.getElementById('badgeKategori').textContent = s.kategori;
+      document.getElementById('teksSoal').textContent = s.teks;
+
+      const cont = document.getElementById('opsiContainer');
+      cont.innerHTML = '';
+      ['A','B','C','D','E'].forEach(huruf => {
+        const selected = jawaban[s.nomor] === huruf;
+        const div = document.createElement('button');
+        div.className = `option-btn w-full text-left px-4 py-3 rounded-xl border-2 transition flex gap-3 items-start ${selected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`;
+        div.onclick = () => pilihOpsi(huruf);
+        div.innerHTML = `<span class="flex-shrink-0 w-8 h-8 rounded-full ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'} flex items-center justify-center font-bold text-sm">${huruf}</span><span class="pt-1">${s.opsi[huruf]}</span>`;
+        cont.appendChild(div);
+      });
+
+      document.getElementById('btnPrev').disabled = idx === 0;
+      document.getElementById('btnNext').textContent = idx === 99 ? 'Selesai →' : 'Selanjutnya →';
+      document.getElementById('btnRagu').className = ragu[s.nomor]
+        ? 'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-500 bg-amber-100 text-amber-800'
+        : 'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700 hover:bg-amber-50 transition';
+
+      updateProgress();
+      updateAllGrid();
+    }
+
+    function pilihOpsi(huruf) {
+      const nomor = SOAL[current].nomor;
+      jawaban[nomor] = huruf;
+      delete ragu[nomor];
+      tampilkanSoal(current);
+    }
+
+    function toggleRagu() {
+      const nomor = SOAL[current].nomor;
+      if (ragu[nomor]) delete ragu[nomor];
+      else ragu[nomor] = true;
+      tampilkanSoal(current);
+    }
+
+    function kosongkan() {
+      const nomor = SOAL[current].nomor;
+      delete jawaban[nomor];
+      delete ragu[nomor];
+      tampilkanSoal(current);
+    }
+
+    function prevSoal() { if (current > 0) tampilkanSoal(current - 1); }
+    function nextSoal() {
+      if (current < 99) tampilkanSoal(current + 1);
+      else konfirmasiAkhiri();
+    }
+    function lompatKe(idx) { tampilkanSoal(idx); }
+
+    function updateProgress() {
+      const dijawab = Object.keys(jawaban).length;
+      document.getElementById('progressText').textContent = `${dijawab} / 100`;
+    }
+
+    // ============================================================
+    // TIMER
+    // ============================================================
+    function mulaiTimer() {
+      timerInterval = setInterval(() => {
+        sisaDetik--;
+        if (sisaDetik <= 0) {
+          clearInterval(timerInterval);
+          akhiriUjian(true);
+          return;
+        }
+        const h = Math.floor(sisaDetik / 3600);
+        const m = Math.floor((sisaDetik % 3600) / 60);
+        const s = sisaDetik % 60;
+        const display = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        document.getElementById('timerDisplay').textContent = display;
+
+        const box = document.getElementById('timerBox');
+        if (sisaDetik < 600) {
+          box.classList.add('bg-rose-700', 'timer-blink');
+          box.classList.remove('bg-indigo-900/60');
+        }
+      }, 1000);
+    }
+
+    // ============================================================
+    // CEK JAWABAN
+    // ============================================================
+    function bukaCekJawaban() {
+      const dijawab = Object.keys(jawaban).length;
+      const belum = 100 - dijawab;
+      const jmlRagu = Object.keys(ragu).length;
+
+      // hitung skor sementara (hanya yang dijawab)
+      let benar = 0;
+      Object.entries(jawaban).forEach(([nomor, jwb]) => {
+        const s = SOAL.find(x => x.nomor == nomor);
+        if (s && s.kunci === jwb) benar++;
+      });
+      const skorSementara = benar;
+      const sisa = 100 - dijawab;
+      const maxMungkin = skorSementara + sisa;
+      const prediksi = maxMungkin >= 70 ? 'BERPOTENSI LULUS' : 'BERPOTENSI TIDAK LULUS';
+
+      // skor per bagian
+      const bagian = {
+        'Teknis (1-70)': {benar:0, total:0},
+        'Man-Soskul (71-100)': {benar:0, total:0}
+      };
+      Object.entries(jawaban).forEach(([nomor, jwb]) => {
+        const s = SOAL.find(x => x.nomor == nomor);
+        if (!s) return;
+        const key = nomor <= 70 ? 'Teknis (1-70)' : 'Man-Soskul (71-100)';
+        bagian[key].total++;
+        if (s.kunci === jwb) bagian[key].benar++;
+      });
+
+      let html = `
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="bg-emerald-50 rounded-xl p-3"><div class="text-2xl font-bold text-emerald-700">${dijawab}</div><div class="text-xs text-emerald-600">Dijawab</div></div>
+          <div class="bg-slate-100 rounded-xl p-3"><div class="text-2xl font-bold text-slate-700">${belum}</div><div class="text-xs text-slate-500">Belum</div></div>
+          <div class="bg-amber-50 rounded-xl p-3"><div class="text-2xl font-bold text-amber-700">${jmlRagu}</div><div class="text-xs text-amber-600">Ragu</div></div>
+        </div>
+        <div class="bg-indigo-50 rounded-xl p-4 text-center">
+          <div class="text-sm text-indigo-600">Estimasi Skor Sementara</div>
+          <div class="text-4xl font-bold text-indigo-700">${skorSementara} <span class="text-lg font-normal">/ 100</span></div>
+          <div class="text-sm mt-1 ${maxMungkin>=70 ? 'text-emerald-600' : 'text-rose-600'} font-semibold">${prediksi}</div>
+          <div class="text-xs text-slate-500 mt-1">Skor maksimal jika sisa benar semua: ${maxMungkin}</div>
+        </div>
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm"><span>Teknis (1-70)</span><span class="font-semibold">${bagian['Teknis (1-70)'].benar} benar dari ${bagian['Teknis (1-70)'].total} dijawab</span></div>
+          <div class="flex justify-between text-sm"><span>Man-Soskul (71-100)</span><span class="font-semibold">${bagian['Man-Soskul (71-100)'].benar} benar dari ${bagian['Man-Soskul (71-100)'].total} dijawab</span></div>
+        </div>
+      `;
+
+      // list belum & ragu
+      const belumList = [];
+      const raguList = [];
+      for (let i=1; i<=100; i++) {
+        if (!jawaban[i]) belumList.push(i);
+        if (ragu[i]) raguList.push(i);
+      }
+      if (belumList.length) {
+        html += `<div><div class="text-sm font-semibold text-slate-600 mb-1">Belum dijawab (${belumList.length})</div><div class="flex flex-wrap gap-1">${belumList.map(n => `<button onclick="lompatKe(${n-1}); tutupCek()" class="w-8 h-8 rounded bg-slate-200 text-xs font-medium hover:bg-indigo-200">${n}</button>`).join('')}</div></div>`;
+      }
+      if (raguList.length) {
+        html += `<div><div class="text-sm font-semibold text-amber-700 mb-1">Ragu-ragu (${raguList.length})</div><div class="flex flex-wrap gap-1">${raguList.map(n => `<button onclick="lompatKe(${n-1}); tutupCek()" class="w-8 h-8 rounded bg-amber-200 text-xs font-medium hover:bg-amber-300">${n}</button>`).join('')}</div></div>`;
+      }
+
+      document.getElementById('cekContent').innerHTML = html;
+      document.getElementById('cekPanel').classList.remove('hidden');
+    }
+
+    function tutupCek() {
+      document.getElementById('cekPanel').classList.add('hidden');
+    }
+
+    // ============================================================
+    // AKHIRI
+    // ============================================================
+    function konfirmasiAkhiri() {
+      const belum = 100 - Object.keys(jawaban).length;
+      const msg = belum > 0
+        ? `Masih ada ${belum} soal belum dijawab.\nYakin ingin mengakhiri ujian?`
+        : 'Yakin ingin mengakhiri ujian?';
+      if (confirm(msg)) akhiriUjian(false);
+    }
+
+    function akhiriUjian(timeout = false) {
+      clearInterval(timerInterval);
+      document.getElementById('examArea').classList.add('hidden');
+      document.getElementById('hasilArea').classList.remove('hidden');
+
+      let benar = 0;
+      const review = [];
+      const skorKategori = {};
+
+      SOAL.forEach(s => {
+        const jwb = jawaban[s.nomor] || '-';
+        const isBenar = jwb === s.kunci;
+        if (isBenar) benar++;
+        if (!skorKategori[s.kategori]) skorKategori[s.kategori] = {benar:0, total:0};
+        skorKategori[s.kategori].total++;
+        if (isBenar) skorKategori[s.kategori].benar++;
+
+        review.push({
+          nomor: s.nomor,
+          kategori: s.kategori,
+          jawaban: jwb,
+          kunci: s.kunci,
+          status: isBenar ? 'Benar' : (jwb === '-' ? 'Kosong' : 'Salah'),
+          pembahasan: s.pembahasan
+        });
+      });
+
+      const skor = benar;
+      const lulus = skor >= 70;
+
+      document.getElementById('hasilNama').textContent = document.getElementById('namaPeserta').value.trim() || 'Peserta';
+      document.getElementById('hasilSkor').textContent = skor;
+      document.getElementById('hasilStatus').textContent = lulus ? 'LULUS' : 'TIDAK LULUS';
+      document.getElementById('hasilStatus').className = `text-3xl font-bold mt-2 ${lulus ? 'text-emerald-300' : 'text-rose-300'}`;
+
+      // chart
+      const labels = Object.keys(skorKategori);
+      const dataBenar = labels.map(k => skorKategori[k].benar);
+      const dataTotal = labels.map(k => skorKategori[k].total);
+
+      new Chart(document.getElementById('chartKategori'), {
+        type: 'bar',
+        data: {
+          labels: labels.map(l => l.length > 20 ? l.substring(0,18)+'…' : l),
+          datasets: [
+            {label: 'Benar', data: dataBenar, backgroundColor: '#10b981'},
+            {label: 'Total Soal', data: dataTotal, backgroundColor: '#e2e8f0'}
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {y: {beginAtZero: true, max: 30}},
+          plugins: {legend: {position: 'bottom'}}
+        }
+      });
+
+      // tabel
+      const tbody = document.getElementById('tabelReview');
+      tbody.innerHTML = review.map(r => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="px-3 py-2 font-medium">${r.nomor}</td>
+          <td class="px-3 py-2 text-xs">${r.kategori}</td>
+          <td class="px-3 py-2 font-mono ${r.status==='Benar'?'text-emerald-600':r.status==='Kosong'?'text-slate-400':'text-rose-600'}">${r.jawaban}</td>
+          <td class="px-3 py-2 font-mono font-semibold">${r.kunci}</td>
+          <td class="px-3 py-2"><span class="px-2 py-0.5 rounded text-xs font-medium ${r.status==='Benar'?'bg-emerald-100 text-emerald-700':r.status==='Kosong'?'bg-slate-100 text-slate-500':'bg-rose-100 text-rose-700'}">${r.status}</span></td>
+          <td class="px-3 py-2 text-xs text-slate-600 max-w-xs">${r.pembahasan}</td>
+        </tr>
+      `).join('');
+
+      // save to supabase if available
+      if (supabaseClient && sesiId) {
+        supabaseClient.from('jfk_sesi').update({
+          finished_at: new Date().toISOString(),
+          skor: skor,
+          status: timeout ? 'timeout' : 'selesai',
+          detail_json: {jawaban, ragu, review}
+        }).eq('id', sesiId).then();
+      }
+    }
+  </script>
+</body>
+</html>
