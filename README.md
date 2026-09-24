@@ -13,7 +13,7 @@ Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat h
 ```
 mantaf/
 ├── index.html              ← Entry utama (shell + sidebar 3 bagian + router)
-├── tryoutukom.html         ← Halaman Try Out CAT BKN (standalone, menu "Try Out CAT BKN")
+├── tryoutukom.html         ← Halaman Try Out CAT BKN (standalone, menu sidebar + integrasi Supabase)
 ├── partials/               ← Potongan HTML per halaman (lazy-load)
 │   ├── landing.html          Halaman depan (splash → landing)
 │   ├── dashboard.html        Statistik + donut chart
@@ -52,7 +52,8 @@ mantaf/
 │   ├── template-peserta-ukom.csv
 │   └── template-petunjuk.csv
 └── supabase/
-    └── schema.sql            ← SQL lengkap untuk Supabase
+    ├── schema.sql            ← SQL skema utama (tabel lama)
+    └── tryout-schema.sql     ← SQL tambahan Try Out (tabel baru saja, additive-only)
 ```
 
 ---
@@ -67,7 +68,10 @@ mantaf/
    - Membuat tabel: `admin_users`, `pengumuman`, `bezetting`, `peserta_ukom`, `petunjuk`
    - Membuat bucket Storage: `foto`, `dokumen`, `petunjuk`
    - Membuat RPC login admin + trigger `updated_at` + RLS
-4. Login admin default → username: `admin` · password: `admin123`
+4. Salin **seluruh isi** `supabase/tryout-schema.sql` → klik **Run** (untuk Try Out CAT BKN).
+   - Tabel baru: `tryout_categories`, `tryout_questions`, `tryout_attempts` + seed 150 soal
+   - **Additive-only**: tidak mengubah/menghapus tabel & data yang sudah ada; idempotent (aman di-run ulang)
+5. Login admin default → username: `admin` · password: `admin123`
    ⚠️ **Segera ganti** lewat Panel Admin → tombol **Ganti Password**.
 
 ### 2️⃣ Hubungkan Frontend

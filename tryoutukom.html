@@ -21,6 +21,11 @@ tailwind.config = {
   },
 };
 </script>
+
+<!-- [Supabase] client JS + konfigurasi (dipakai TryoutSync di bawah) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -116,8 +121,10 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
 (function() {
   'use strict';
 
-  const QUESTIONS = window.__QUESTIONS__;
-  const CATEGORIES = window.__CATEGORIES__;
+  let QUESTIONS = window.__QUESTIONS__;
+  let CATEGORIES = window.__CATEGORIES__;
+  /* [Supabase] helper escape atribut untuk nilai input identitas */
+  const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const EXAM_DURATION_SEC = 150 * 60;
   const PASSING_GRADE = 70;
   const STORAGE_KEY = 'manta-f-tryout-state-v1';
@@ -139,6 +146,7 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
       activeCategory: null,
     },
     filter: 'all',
+    peserta: { nama: '', nip: '', unit_kerja: '' }, // [Supabase] identitas opsional (sukarela)
     timer: { remaining: EXAM_DURATION_SEC, intervalId: null },
   };
 
@@ -158,6 +166,7 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
       if (saved.page) state.page = saved.page;
       if (saved.sidebarExpanded) state.sidebarExpanded = saved.sidebarExpanded;
       if (saved.activeMenu) state.activeMenu = saved.activeMenu;
+      if (saved.peserta) state.peserta = Object.assign(state.peserta, saved.peserta);
     } catch (e) {
       console.warn('Failed to load state', e);
     }
@@ -169,6 +178,7 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
         page: state.page,
         sidebarExpanded: state.sidebarExpanded,
         activeMenu: state.activeMenu,
+        peserta: state.peserta,
         exam: state.exam,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
@@ -702,6 +712,30 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
             </div>
           </div>
 
+          <div class="rounded-lg border border-slate-200 shadow-sm bg-white mb-6">
+            <div class="px-6 py-4 border-b border-slate-100">
+              <h3 class="text-base font-semibold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Data Peserta <span class="text-xs font-normal text-slate-400">(opsional — boleh dikosongkan)</span>
+              </h3>
+            </div>
+            <div class="p-6 pb-4 grid sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1" for="id-nama">Nama Lengkap</label>
+                <input id="id-nama" type="text" value="${escAttr(state.peserta.nama)}" placeholder="cth: Ahmad Yusuf" class="w-full h-10 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1" for="id-nip">NIP</label>
+                <input id="id-nip" type="text" value="${escAttr(state.peserta.nip)}" placeholder="18 digit" class="w-full h-10 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1" for="id-unit">Unit Kerja / Instansi</label>
+                <input id="id-unit" type="text" value="${escAttr(state.peserta.unit_kerja)}" placeholder="cth: Puskesmas Tenggarong" class="w-full h-10 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+              </div>
+            </div>
+            <div class="px-6 pb-4 -mt-1 text-xs text-slate-400">Data hanya dipakai untuk rekap hasil try out oleh admin Dinkes; kosongkan bila ingin anonim.</div>
+          </div>
+
           <div class="rounded-lg border border-amber-200 bg-amber-50/40 mb-6">
             <div class="px-6 py-4 border-b border-amber-100">
               <h3 class="text-base font-semibold text-amber-900 flex items-center gap-2">
@@ -739,6 +773,17 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
     if (btn) btn.addEventListener('click', () => {
       startExam();
     });
+    /* [Supabase] simpan identitas opsional saat diketik */
+    const bind = (sel, key) => {
+      const el = $(sel);
+      if (el) el.addEventListener('input', () => {
+        state.peserta[key] = el.value.slice(0, 120);
+        saveState();
+      });
+    };
+    bind('#id-nama', 'nama');
+    bind('#id-nip', 'nip');
+    bind('#id-unit', 'unit_kerja');
   }
 
   // ============ EXAM ============
@@ -778,6 +823,15 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
     state.exam.result = calcResult();
     state.page = 'results';
     render();
+    /* [Supabase] kirim hasil ke tabel tryout_attempts (gagal = abaikan) */
+    if (window.TryoutSync) {
+      TryoutSync.submitAttempt(state.exam.result, {
+        exam: state.exam,
+        peserta: state.peserta,
+        passingGrade: PASSING_GRADE,
+        source: window.__serverQuestionsLoaded ? 'server' : 'lokal',
+      });
+    }
   }
 
   function renderExamPage() {
@@ -1596,8 +1650,138 @@ window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan
 
   // Expose state for debugging
   window.__state = state;
+  /* [Supabase] ganti bank soal dari database (dipanggil TryoutSync).
+     Ditolak bila ujian sedang berjalan agar jawaban tidak kacau. */
+  window.__applyServerQuestions = function (qs, cs) {
+    if (!Array.isArray(qs) || !qs.length || !Array.isArray(cs) || !cs.length) return false;
+    if (state.exam.started && !state.exam.finished) return false;
+    QUESTIONS = qs;
+    CATEGORIES = cs;
+    window.__QUESTIONS__ = qs;
+    window.__CATEGORIES__ = cs;
+    window.__serverQuestionsLoaded = true;
+    if (state.page === 'dashboard' || state.page === 'intro') render();
+    return true;
+  };
 })();
 
+</script>
+
+<!-- ============ [SUPABASE] SINKRONISASI TRY OUT ============ -->
+<script>
+(function () {
+  'use strict';
+  const TAG = '[TryoutSync]';
+  let tdb = null;
+
+  try {
+    if (typeof supabase === 'undefined') throw new Error('Supabase JS tidak termuat (CDN diblokir?)');
+    if (typeof SUPABASE_CONFIG === 'undefined') throw new Error('assets/js/config.js tidak termuat');
+    if (SUPABASE_CONFIG.url.includes('SUPABASE-PROJECT-URL') || SUPABASE_CONFIG.anonKey.includes('SUPABASE_ANON')) {
+      throw new Error('konfigurasi Supabase belum diisi');
+    }
+    tdb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+  } catch (e) {
+    console.warn(TAG, 'nonaktif —', e.message);
+  }
+
+  /* badge status kecil di kanan-bawah (di atas tombol Kembali ke MantaF) */
+  function badge(text, kind) {
+    let el = document.getElementById('tryoutSyncBadge');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'tryoutSyncBadge';
+      el.className = 'fixed bottom-16 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg';
+      el.style.transition = 'opacity .4s';
+      document.body.appendChild(el);
+    }
+    el.style.backgroundColor = kind === 'ok' ? '#059669' : (kind === 'warn' ? '#d97706' : '#64748b');
+    el.style.color = '#fff';
+    el.textContent = text;
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.style.opacity = '0'; }, 6000);
+  }
+
+  const TryoutSync = {
+    status: tdb ? 'ready' : 'off',
+
+    /* Muat bank soal dari Supabase; return null bila gagal/kosong
+       (halaman otomatis fallback ke soal bawaan HTML) */
+    async loadQuestions() {
+      if (!tdb) return null;
+      try {
+        const [catQ, soalQ] = await Promise.all([
+          tdb.from('tryout_categories').select('*').eq('aktif', true).order('urutan'),
+          tdb.from('tryout_questions').select('*').eq('aktif', true).order('id', { ascending: true }),
+        ]);
+        if (catQ.error) throw catQ.error;
+        if (soalQ.error) throw soalQ.error;
+        if (!catQ.data || !catQ.data.length) throw new Error('tabel tryout_categories kosong');
+        if (!soalQ.data || !soalQ.data.length) throw new Error('tabel tryout_questions kosong (jalankan supabase/tryout-schema.sql)');
+
+        const cs = catQ.data.map(function (r) {
+          return { id: r.id, label: r.label, shortLabel: r.short_label, range: r.range_label, section: r.section, color: r.color, hex: r.hex };
+        });
+        const qs = soalQ.data.map(function (r) {
+          return { id: r.id, category: r.kategori_id, section: r.section, text: r.pertanyaan, options: r.opsi, correctAnswer: r.jawaban, explanation: r.pembahasan || '' };
+        });
+        return { qs: qs, cs: cs };
+      } catch (e) {
+        const msg = e && e.message ? e.message : String(e);
+        console.warn(TAG, 'muat soal dari server gagal — pakai soal bawaan HTML:', msg);
+        return null;
+      }
+    },
+
+    /* Kirim hasil pengerjaan ke tabel tryout_attempts (fire-and-forget) */
+    async submitAttempt(result, ctx) {
+      if (!tdb || !result || !ctx || !ctx.exam) return;
+      const exam = ctx.exam;
+      const durasi = (exam.startTime && exam.endTime) ? Math.max(0, Math.round((exam.endTime - exam.startTime) / 1000)) : 0;
+      const row = {
+        nama: ((ctx.peserta && ctx.peserta.nama) || '').trim(),
+        nip: ((ctx.peserta && ctx.peserta.nip) || '').trim(),
+        unit_kerja: ((ctx.peserta && ctx.peserta.unit_kerja) || '').trim(),
+        jumlah_soal: result.totalQuestions || 0,
+        jumlah_dijawab: result.answered || 0,
+        jumlah_benar: result.correct || 0,
+        jumlah_salah: result.wrong || 0,
+        tidak_dijawab: result.unanswered || 0,
+        nilai: result.score || 0,
+        lulus: !!result.passed,
+        passing_grade: ctx.passingGrade || 70,
+        durasi_detik: durasi,
+        sumber_soal: ctx.source === 'server' ? 'server' : 'lokal',
+        rincian_kategori: result.perCategory || [],
+        jawaban: exam.answers || {},
+        user_agent: (navigator.userAgent || '').slice(0, 300),
+      };
+      try {
+        const { error } = await tdb.from('tryout_attempts').insert(row);
+        if (error) throw error;
+        console.info(TAG, 'hasil tersimpan ke Supabase (nilai ' + row.nilai + ')');
+        badge('Hasil tersimpan ke server', 'ok');
+      } catch (e) {
+        const msg = e && e.message ? e.message : String(e);
+        console.warn(TAG, 'gagal simpan hasil:', msg);
+        badge('Hasil gagal ke server — tersimpan di perangkat ini', 'warn');
+      }
+    },
+  };
+
+  window.TryoutSync = TryoutSync;
+
+  /* Ganti bank soal bawaan dengan data dari database (bila tersedia & aman) */
+  (async function () {
+    const data = await TryoutSync.loadQuestions();
+    if (!data) return;
+    if (window.__applyServerQuestions && window.__applyServerQuestions(data.qs, data.cs)) {
+      TryoutSync.status = 'db';
+      console.info(TAG, 'bank soal dimuat dari Supabase: ' + data.qs.length + ' soal, ' + data.cs.length + ' kategori');
+    }
+  })();
+})();
 </script>
 
 </body>
