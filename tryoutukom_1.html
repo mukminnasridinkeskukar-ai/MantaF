@@ -1,391 +1,202 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Uji Kompetensi Jabfung Kesehatan | CAT Style (30 Soal)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', system-ui, sans-serif; }
-    .timer-blink { animation: blink 1s infinite; }
-    @keyframes blink { 50% { opacity: 0.4; } }
-    .option-btn:hover { transform: translateY(-1px); }
-    .grid-btn { transition: all 0.15s ease; }
-    .grid-btn:hover { transform: scale(1.08); }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
-  </style>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Uji Kompetensi Jabfung Kesehatan | Model 6 • 30 Soal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body{font-family:Inter,system-ui,sans-serif}
+.timer-blink{animation:blink 1s infinite}@keyframes blink{50%{opacity:.4}}
+.option-btn:hover{transform:translateY(-1px)}.grid-btn{transition:all .15s}.grid-btn:hover{transform:scale(1.08)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:3px}
+</style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
+<header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="bg-white/20 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+<div><h1 class="font-bold text-lg leading-tight">Uji Kompetensi Jabfung Kesehatan</h1>
+<p class="text-indigo-200 text-xs">Model 6 • 30 Soal (Sedang–Sulit) • 30 Menit</p></div></div>
+<div class="flex items-center gap-4">
+<div id="timerBox" class="bg-indigo-900/60 px-4 py-2 rounded-xl flex items-center gap-2 font-mono text-xl font-bold tracking-wider">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+<span id="timerDisplay">00:30:00</span></div>
+<div class="bg-indigo-900/60 px-4 py-2 rounded-xl text-sm"><span class="text-indigo-200">Dijawab</span>
+<span id="progressText" class="font-bold text-lg ml-1">0 / 30</span></div>
+</div></div></header>
 
-  <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="bg-white/20 p-2 rounded-lg">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg leading-tight">Uji Kompetensi Jabfung Kesehatan</h1>
-          <p class="text-indigo-200 text-xs">Simulasi CAT • 30 Soal Baru • 30 Menit</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <div id="timerBox" class="bg-indigo-900/60 px-4 py-2 rounded-xl flex items-center gap-2 font-mono text-xl font-bold tracking-wider">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span id="timerDisplay">00:30:00</span>
-        </div>
-        <div class="bg-indigo-900/60 px-4 py-2 rounded-xl text-sm">
-          <span class="text-indigo-200">Dijawab</span>
-          <span id="progressText" class="font-bold text-lg ml-1">0 / 30</span>
-        </div>
-      </div>
-    </div>
-  </header>
+<main id="examArea" class="max-w-7xl mx-auto px-4 py-4 hidden">
+<div class="mb-3 flex flex-wrap gap-2" id="kategoriTabs"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+<div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border overflow-hidden">
+<div class="p-5 border-b flex items-center justify-between bg-slate-50">
+<div class="flex items-center gap-3">
+<span id="badgeKategori" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700"></span>
+<span class="text-slate-500 text-sm">Soal <span id="nomorSoal" class="font-bold text-slate-800">1</span> dari 30</span></div>
+<div class="flex gap-2">
+<button onclick="toggleRagu()" id="btnRagu" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700">⚠ Tandai Ragu</button>
+<button onclick="kosongkan()" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-600">Kosongkan</button>
+</div></div>
+<div class="p-6"><p id="teksSoal" class="text-lg leading-relaxed mb-6"></p><div id="opsiContainer" class="space-y-3"></div></div>
+<div class="px-6 py-4 bg-slate-50 border-t flex justify-between">
+<button onclick="prevSoal()" id="btnPrev" class="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-medium disabled:opacity-40">← Sebelumnya</button>
+<button onclick="nextSoal()" id="btnNext" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Selanjutnya →</button>
+</div></div>
+<div class="lg:col-span-4 space-y-4">
+<div class="bg-white rounded-2xl shadow-sm border p-4">
+<h3 class="font-semibold mb-3 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Lembar Jawaban</h3>
+<div class="flex flex-wrap gap-2 text-xs mb-3 text-slate-600">
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-300"></span>Belum</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span>Dijawab</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-400"></span>Ragu</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span>Aktif</span></div>
+<div class="text-xs font-semibold text-slate-500 mb-1">1–20 TEKNIS</div>
+<div id="gridTeknis" class="grid grid-cols-10 gap-1.5 mb-3"></div>
+<div class="text-xs font-semibold text-slate-500 mb-1">21–30 MAN-SOSKUL</div>
+<div id="gridManSos" class="grid grid-cols-10 gap-1.5"></div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border p-4 space-y-3">
+<button onclick="bukaCekJawaban()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold">🔍 Cek Jawaban & Estimasi Nilai</button>
+<button onclick="konfirmasiAkhiri()" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold">Akhiri Ujian</button>
+</div></div></div></main>
 
-  <main id="examArea" class="max-w-7xl mx-auto px-4 py-4 hidden">
-    <div class="mb-3 flex flex-wrap gap-2" id="kategoriTabs"></div>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-          <div class="flex items-center gap-3">
-            <span id="badgeKategori" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700"></span>
-            <span class="text-slate-500 text-sm">Soal <span id="nomorSoal" class="font-bold text-slate-800">1</span> dari 30</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="toggleRagu()" id="btnRagu" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700 hover:bg-amber-50 transition">⚠ Tandai Ragu</button>
-            <button onclick="kosongkan()" class="px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition">Kosongkan</button>
-          </div>
-        </div>
-        <div class="p-6">
-          <p id="teksSoal" class="text-lg leading-relaxed mb-6 text-slate-800"></p>
-          <div id="opsiContainer" class="space-y-3"></div>
-        </div>
-        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between">
-          <button onclick="prevSoal()" id="btnPrev" class="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-medium text-slate-700 transition disabled:opacity-40">← Sebelumnya</button>
-          <button onclick="nextSoal()" id="btnNext" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition">Selanjutnya →</button>
-        </div>
-      </div>
+<div id="startScreen" class="max-w-2xl mx-auto px-4 py-16 text-center">
+<div class="bg-white rounded-3xl shadow-xl border p-10">
+<div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+<svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+<h2 class="text-2xl font-bold mb-2">Uji Kompetensi Jabatan Fungsional Kesehatan</h2>
+<p class="text-slate-500 mb-6">Model 6 • <strong>30 Soal Sedang–Sulit</strong> • <strong>30 Menit</strong></p>
+<div class="text-left bg-slate-50 rounded-xl p-5 mb-6 text-sm space-y-2">
+<p><strong>Kategori:</strong></p>
+<ul class="list-disc list-inside text-slate-600 space-y-1">
+<li>1–8 Asuhan & Pelayanan (analisis kasus)</li>
+<li>9–13 Etika & Patient Safety</li>
+<li>14–17 Manajemen Puskesmas</li>
+<li>18–20 PPI, K3 & Kesling</li>
+<li>21–25 Farmakologi, Lab, Gadar & Gizi</li>
+<li>26–30 Manajerial & Sosio Kultural</li>
+</ul>
+<p class="mt-3"><strong>Passing Grade:</strong> ≥ 21 benar (70%)</p>
+<p class="text-amber-700 text-xs mt-2">Tingkat kesulitan: sedang hingga sulit • Kunci jawaban tersebar A–E</p>
+</div>
+<div class="mb-4"><label class="block text-sm font-medium mb-1">Nama Peserta (opsional)</label>
+<input id="namaPeserta" type="text" placeholder="Masukkan nama Anda" class="w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500 outline-none"/></div>
+<button onclick="mulaiUjian()" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg">Mulai Ujian</button>
+<input id="sbUrl" type="hidden" value="https://nawpbcksuomzqjynlapt.supabase.co"/>
+<input id="sbKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0"/>
+</div></div>
 
-      <div class="lg:col-span-4 space-y-4">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-          <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Lembar Jawaban</h3>
-          <div class="flex flex-wrap gap-3 text-xs mb-4 text-slate-600">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-300"></span> Belum</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span> Dijawab</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-400"></span> Ragu</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span> Aktif</span>
-          </div>
-          <div class="text-xs font-semibold text-slate-500 mb-1">1–20 TEKNIS</div>
-          <div id="gridTeknis" class="grid grid-cols-10 gap-1.5 mb-4"></div>
-          <div class="text-xs font-semibold text-slate-500 mb-1">21–30 MANAJERIAL & SOSIOKULTURAL</div>
-          <div id="gridManSos" class="grid grid-cols-10 gap-1.5"></div>
-        </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
-          <button onclick="bukaCekJawaban()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold flex items-center justify-center gap-2 transition">🔍 Cek Jawaban & Estimasi Nilai</button>
-          <button onclick="konfirmasiAkhiri()" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition">Akhiri Ujian</button>
-        </div>
-      </div>
-    </div>
-  </main>
+<div id="cekPanel" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+<div class="p-5 border-b flex justify-between sticky top-0 bg-white">
+<h3 class="font-bold text-lg">🔍 Estimasi Nilai Sementara</h3>
+<button onclick="tutupCek()" class="text-2xl text-slate-400">&times;</button></div>
+<div class="p-5 space-y-4" id="cekContent"></div>
+<div class="p-5 border-t flex gap-3">
+<button onclick="tutupCek()" class="flex-1 py-2.5 rounded-xl bg-slate-200 font-medium">Lanjut Mengerjakan</button>
+<button onclick="tutupCek();konfirmasiAkhiri()" class="flex-1 py-2.5 rounded-xl bg-rose-600 text-white font-medium">Akhiri Ujian</button>
+</div></div></div>
 
-  <div id="startScreen" class="max-w-2xl mx-auto px-4 py-16 text-center">
-    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-10">
-      <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      </div>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">Uji Kompetensi Jabatan Fungsional Kesehatan</h2>
-      <p class="text-slate-500 mb-6">Simulasi CAT • <strong>30 Soal Baru</strong> • <strong>30 Menit</strong></p>
-      <div class="text-left bg-slate-50 rounded-xl p-5 mb-6 text-sm space-y-2">
-        <p><strong>Kategori Soal:</strong></p>
-        <ul class="list-disc list-inside text-slate-600 space-y-1">
-          <li>1–8 : Asuhan & Pelayanan Kesehatan</li>
-          <li>9–13 : Etika, Hukum & Patient Safety</li>
-          <li>14–17 : Manajemen Puskesmas & Kesmas</li>
-          <li>18–20 : PPI, K3 & Kesling</li>
-          <li>21–25 : Farmakologi, Lab, Gadar & Gizi</li>
-          <li>26–30 : Manajerial & Sosio Kultural (ASN BerAKHLAK)</li>
-        </ul>
-        <p class="mt-3"><strong>Passing Grade:</strong> ≥ 70 (minimal 21 benar)</p>
-      </div>
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Peserta (opsional)</label>
-        <input id="namaPeserta" type="text" placeholder="Masukkan nama Anda" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
-      </div>
-      <button onclick="mulaiUjian()" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg transition shadow-lg shadow-indigo-200">Mulai Ujian</button>
-      <!-- Supabase config (hidden, auto-connect) -->
-      <input id="sbUrl" type="hidden" value="https://nawpbcksuomzqjynlapt.supabase.co" />
-      <input id="sbKey" type="hidden" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hd3BiY2tzdW9tenFqeW5sYXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDQzMjksImV4cCI6MjEwMjA4MDMyOX0.gr5FZrEZUPAnvdzY_6gDq7wTllYsE0SbSohChTyfcO0" />
-    </div>
-  </div>
+<div id="hasilArea" class="max-w-5xl mx-auto px-4 py-8 hidden">
+<div class="bg-white rounded-3xl shadow-xl border overflow-hidden">
+<div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-8 text-center">
+<h2 class="text-2xl font-bold mb-1">Hasil Uji Kompetensi</h2>
+<p id="hasilNama" class="text-indigo-200"></p>
+<div class="mt-6 flex justify-center gap-8">
+<div><div id="hasilSkor" class="text-5xl font-bold">0</div><div class="text-indigo-200 text-sm">dari 30</div></div>
+<div class="border-l border-white/30 pl-8"><div id="hasilStatus" class="text-3xl font-bold mt-2">-</div><div class="text-indigo-200 text-sm">Status</div></div>
+</div></div>
+<div class="p-6">
+<h3 class="font-semibold text-lg mb-4">Breakdown per Kategori</h3>
+<div class="h-64 mb-8"><canvas id="chartKategori"></canvas></div>
+<h3 class="font-semibold text-lg mb-3">Review Lengkap</h3>
+<div class="overflow-x-auto"><table class="w-full text-sm">
+<thead class="bg-slate-100 text-left"><tr>
+<th class="px-3 py-2">No</th><th class="px-3 py-2">Kategori</th><th class="px-3 py-2">Jawaban</th>
+<th class="px-3 py-2">Kunci</th><th class="px-3 py-2">Status</th><th class="px-3 py-2">Pembahasan</th>
+</tr></thead><tbody id="tabelReview"></tbody></table></div>
+<div class="mt-8 text-center"><button onclick="location.reload()" class="px-8 py-3 rounded-xl bg-indigo-600 text-white font-semibold">Ulangi Ujian</button></div>
+</div></div></div>
 
-  <div id="cekPanel" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-5 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white">
-        <h3 class="font-bold text-lg">🔍 Estimasi Nilai Sementara</h3>
-        <button onclick="tutupCek()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
-      </div>
-      <div class="p-5 space-y-4" id="cekContent"></div>
-      <div class="p-5 border-t border-slate-100 flex gap-3">
-        <button onclick="tutupCek()" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 font-medium">Lanjut Mengerjakan</button>
-        <button onclick="tutupCek(); konfirmasiAkhiri()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium">Akhiri Ujian</button>
-      </div>
-    </div>
-  </div>
+<script>
+const TOTAL_SOAL=30,WAKTU_MENIT=30,PASSING=21;
+const SOAL=[{"nomor": 1, "kategori": "Asuhan & Pelayanan", "teks": "Seorang bayi usia 4 bulan datang dengan BB/U di bawah -2 SD dan riwayat ASI tidak optimal. Setelah konseling, ibu tetap memberi susu formula encer. Intervensi paling tepat berikutnya di tingkat Puskesmas adalah…", "opsi": {"A": "Lakukan home visit, evaluasi teknik pemberian, dan libatkan keluarga dalam rencana asuhan gizi", "B": "Hentikan semua formula dan paksa ASI saja tanpa dukungan", "C": "Berikan antibiotik profilaksis", "D": "Tunda imunisasi sampai BB normal", "E": "Rujuk langsung ke RS tanpa asesmen komunitas"}, "kunci": "A", "pembahasan": "Gagal tumbuh perlu pendekatan keluarga, home visit, dan rencana asuhan terpadu di tingkat primer."}, {"nomor": 2, "kategori": "Asuhan & Pelayanan", "teks": "Dalam MTBS, anak 8 bulan batuk 5 hari, napas 55x/menit, tidak ada tarikan dinding dada, sadar baik, bisa minum. Klasifikasi dan tindakan yang paling sesuai…", "opsi": {"A": "Batuk pilek → hanya obat batuk", "B": "Pneumonia berat → rujuk segera tanpa pengobatan awal", "C": "Pneumonia → beri antibiotik sesuai pedoman, nasihati, kontrol", "D": "Tidak ada pneumonia → tanpa antibiotik", "E": "TB paru → mulai OAT di Puskesmas"}, "kunci": "C", "pembahasan": "Napas cepat tanpa tanda bahaya = pneumonia; antibiotik + nasehat + kontrol."}, {"nomor": 3, "kategori": "Asuhan & Pelayanan", "teks": "Ibu G3P2A0 UK 34 minggu, TD 160/110, proteinuria protein ++, nyeri kepala dan penglihatan kabur. Langkah paling tepat di Puskesmas…", "opsi": {"A": "Observasi rawat jalan 3 hari", "B": "Berikan diuretik dosis tinggi lalu pulangkan", "C": "Induksi persalinan di Puskesmas", "D": "Hanya istirahat tanpa rujukan", "E": "Stabilisasi sesuai protokol dan rujuk segera ke fasilitas PONED/PONEK"}, "kunci": "E", "pembahasan": "Preeklamsia berat → stabilisasi + rujuk emergensi."}, {"nomor": 4, "kategori": "Asuhan & Pelayanan", "teks": "Bayi baru lahir cukup bulan, APGAR 1 menit = 3. Setelah langkah awal resusitasi, HR tetap <60. Tindakan berikutnya yang paling tepat…", "opsi": {"A": "Observasi saja 5 menit", "B": "Mulai kompresi dada dan ventilasi terkoordinasi sesuai rasio pedoman", "C": "Langsung berikan antibiotik", "D": "Potong tali pusat dulu baru lanjut", "E": "Hentikan resusitasi"}, "kunci": "B", "pembahasan": "HR <60 setelah ventilasi adekuat → kompresi dada + ventilasi."}, {"nomor": 5, "kategori": "Asuhan & Pelayanan", "teks": "Dalam program imunisasi, vaksin mana yang paling sensitif terhadap pembekuan dan tidak boleh dibekukan…", "opsi": {"A": "OPV", "B": "Campak/MR", "C": "BCG", "D": "DPT / Hepatitis B (vaksin yang mengandung adsorban)", "E": "Semua vaksin aman dibekukan"}, "kunci": "D", "pembahasan": "Vaksin adsorban (DPT, Hep B, dll) rusak jika beku; OPV/MR biasanya di freezer."}, {"nomor": 6, "kategori": "Asuhan & Pelayanan", "teks": "Anak 18 bulan dengan KPSP mencurigakan pada 2 aspek. Tindakan paling tepat…", "opsi": {"A": "Stimulasi sesuai usia, jadwalkan evaluasi ulang, rujuk bila perlu", "B": "Langsung diagnosis retardasi mental", "C": "Tidak perlu tindak lanjut", "D": "Hanya beri vitamin", "E": "Paksa latihan 8 jam sehari"}, "kunci": "A", "pembahasan": "KPSP mencurigakan → stimulasi + pantau/rujuk, bukan label diagnosis."}, {"nomor": 7, "kategori": "Asuhan & Pelayanan", "teks": "Ibu post partum hari ke-5, payudara merah, nyeri hebat, demam 38,8°C. Perbedaan utama penanganan dibanding bendungan ASI biasa…", "opsi": {"A": "Hanya kompres, sama dengan bendungan", "B": "Hentikan menyusui total", "C": "Curiga mastitis: evaluasi, antibiotik bila indikasi, lanjut ASI dari sisi sehat, rujuk bila perlu", "D": "Abses pasti → insisi di rumah", "E": "Tidak perlu asesmen"}, "kunci": "C", "pembahasan": "Demam + inflamasi lokal → mastitis; beda dengan bendungan murni."}, {"nomor": 8, "kategori": "Asuhan & Pelayanan", "teks": "Dalam PIS-PK, keluarga dengan skor rendah pada indikator jamban dan air bersih. Prioritas intervensi komunitas…", "opsi": {"A": "Hanya bagi leaflet", "B": "Paksa bangun jamban dalam 1 hari", "C": "Abaikan karena bukan urusan kesehatan", "D": "Hanya lapor ke camat tanpa pendampingan", "E": "Pendampingan keluarga, libatkan sanitasi & lintas sektor, pantau perubahan perilaku"}, "kunci": "E", "pembahasan": "PIS-PK butuh pendampingan perilaku + lintas sektor."}, {"nomor": 9, "kategori": "Etika & Patient Safety", "teks": "Seorang pasien menolak transfusi atas dasar keyakinan setelah penjelasan risiko. Dokumen yang harus dilengkapi…", "opsi": {"A": "Tidak perlu dokumen", "B": "Informed refusal yang ditandatangani setelah penjelasan lengkap", "C": "Hanya persetujuan keluarga tanpa pasien", "D": "Laporan polisi wajib", "E": "Persetujuan operasi kosong"}, "kunci": "B", "pembahasan": "Penolakan informed harus didokumentasikan (informed refusal)."}, {"nomor": 10, "kategori": "Etika & Patient Safety", "teks": "Near miss pemberian obat (hampir salah dosis, tertahan di double check). Respons organisasi yang paling sesuai budaya just culture…", "opsi": {"A": "Hukum perawat tanpa investigasi", "B": "Sembunyikan agar tidak ada laporan", "C": "Abaikan karena pasien tidak cedera", "D": "Laporkan, analisis akar masalah (mis. proses/label/beban kerja), perbaiki sistem", "E": "Pecat semua staf shift tersebut"}, "kunci": "D", "pembahasan": "Just culture: lapor + system improvement, bukan menyalahkan semata."}, {"nomor": 11, "kategori": "Etika & Patient Safety", "teks": "Komunikasi SBAR yang lemah saat rujukan paling berisiko menyebabkan…", "opsi": {"A": "Kehilangan informasi kritis dan keterlambatan penanganan di fasilitas penerima", "B": "Hanya masalah administrasi tanpa dampak klinis", "C": "Peningkatan kepuasan pasien otomatis", "D": "Tidak relevan di Puskesmas", "E": "Hanya mempengaruhi laporan keuangan"}, "kunci": "A", "pembahasan": "SBAR buruk → handoff gagal → risiko klinis."}, {"nomor": 12, "kategori": "Etika & Patient Safety", "teks": "Prinsip etik yang paling relevan ketika sumber daya oksigen terbatas dan harus memprioritaskan pasien…", "opsi": {"A": "Hanya beneficence tanpa batas", "B": "Non-maleficence saja", "C": "Justice (keadilan alokasi) disertai transparansi kriteria", "D": "Autonomy mutlak setiap individu tanpa kompromi", "E": "Veracity tanpa pertimbangan lain"}, "kunci": "C", "pembahasan": "Alokasi scarce resource → justice + kriteria adil."}, {"nomor": 13, "kategori": "Etika & Patient Safety", "teks": "Identifikasi pasien hanya memakai nomor tempat tidur. Risiko utama…", "opsi": {"A": "Tidak ada risiko", "B": "Hanya masalah kenyamanan", "C": "Mempercepat pelayanan selalu", "D": "Sesuai standar 6 sasaran", "E": "Salah orang saat pemberian obat/prosedur (melanggar sasaran keselamatan)"}, "kunci": "E", "pembahasan": "Minimal 2 identitas unik, bukan bed number saja."}, {"nomor": 14, "kategori": "Manajemen Puskesmas", "teks": "Cakupan imunisasi tinggi tetapi KLB campak tetap muncul di satu desa. Analisis yang paling tepat…", "opsi": {"A": "Cakupan sudah cukup, abaikan KLB", "B": "Evaluasi kualitas data, pocket of low coverage, cold chain, dan imunitas komunitas", "C": "Hanya tambah stok vaksin tanpa analisis", "D": "Tutup Posyandu", "E": "Salahkan kader saja"}, "kunci": "B", "pembahasan": "KLB meski cakupan tinggi → cek data, cluster, cold chain, imunitas."}, {"nomor": 15, "kategori": "Manajemen Puskesmas", "teks": "Perencanaan obat hanya memakai metode konsumsi sementara pola penyakit berubah tajam (mis. lonjakan DBD). Kelemahan utama…", "opsi": {"A": "Metode konsumsi selalu sempurna", "B": "Tidak ada kelemahan", "C": "Terlalu mahal selalu", "D": "Kurang responsif terhadap perubahan morbiditas; perlu dilengkapi metode epidemiologi", "E": "Tidak boleh pakai data sama sekali"}, "kunci": "D", "pembahasan": "Konsumsi historis lemah bila pola penyakit berubah; kombinasikan epidemiologi."}, {"nomor": 16, "kategori": "Manajemen Puskesmas", "teks": "Lokmin desa menunjukkan stunting tinggi, air bersih rendah, dan cakupan KB rendah. Prioritas strategi…", "opsi": {"A": "Rencana terpadu berbasis data: gizi, sanitasi, KB, dengan target & monitoring", "B": "Hanya bagi susu formula", "C": "Abaikan data Lokmin", "D": "Fokus hanya kuratif individu", "E": "Tunggu anggaran pusat tanpa aksi lokal"}, "kunci": "A", "pembahasan": "Lokmin → rencana multi-intervensi berbasis masalah lokal."}, {"nomor": 17, "kategori": "Manajemen Puskesmas", "teks": "Vaksin Hep B di lemari es tercampur dengan makanan petugas dan termometer rusak. Tindakan manajemen yang benar…", "opsi": {"A": "Tetap pakai semua vaksin", "B": "Abaikan cold chain", "C": "Isolasi vaksin, evaluasi potensi kerusakan, perbaiki cold chain & SOP, laporkan sesuai prosedur", "D": "Buang semua tanpa dokumentasi", "E": "Pindahkan ke freezer tanpa asesmen"}, "kunci": "C", "pembahasan": "Cold chain breach → evaluasi, dokumentasi, perbaiki sistem."}, {"nomor": 18, "kategori": "PPI, K3 & Kesling", "teks": "Petugas menangani pasien terduga TB tanpa N95, hanya masker bedah. Risiko utama dan koreksi…", "opsi": {"A": "Tidak ada risiko", "B": "Masker bedah cukup untuk airborne", "C": "Hanya risiko droplet biasa", "D": "Tidak perlu APD", "E": "Risiko penularan airborne; wajib respirator (N95/setara) + kewaspadaan airborne"}, "kunci": "E", "pembahasan": "TB = airborne → N95, bukan hanya surgical mask."}, {"nomor": 19, "kategori": "PPI, K3 & Kesling", "teks": "Safety box jarum sudah >3/4 penuh tetapi masih dipaksa diisi. Bahaya utama…", "opsi": {"A": "Tidak berbahaya", "B": "Risiko tertusuk jarum (needle stick) saat memasukkan/menutup", "C": "Hanya masalah estetika", "D": "Mempercepat sterilisasi", "E": "Mengurangi volume limbah"}, "kunci": "B", "pembahasan": "Overfill safety box → risiko sharp injury."}, {"nomor": 20, "kategori": "PPI, K3 & Kesling", "teks": "Hand hygiene paling sering terlewat pada momen… yang justru kritis untuk cegah transmisi ke pasien…", "opsi": {"A": "Setelah kontak lingkungan saja", "B": "Setelah makan petugas", "C": "Setelah pulang kerja", "D": "Sebelum kontak pasien / sebelum tindakan aseptik", "E": "Tidak ada momen kritis"}, "kunci": "D", "pembahasan": "Momen sebelum kontak & sebelum aseptik melindungi pasien."}, {"nomor": 21, "kategori": "Farmakologi, Lab, Gadar & Gizi", "teks": "Pasien syok: TD 70/40, nadi 130, akral dingin, riwayat diare berat. Urutan prioritas paling tepat…", "opsi": {"A": "ABC, akses IV, resusitasi kristaloid isotonik, atasi penyebab", "B": "Lab lengkap dulu baru cairan", "C": "Diuretik segera", "D": "Puasa total tanpa cairan", "E": "Hanya posisi duduk tanpa akses IV"}, "kunci": "A", "pembahasan": "Syok hipovolemik: ABC + cairan kristaloid + kausal."}, {"nomor": 22, "kategori": "Farmakologi, Lab, Gadar & Gizi", "teks": "Ibu hamil Hb 8,2 g/dL, sudah dapat TTD tetapi kepatuhan rendah. Pendekatan paling efektif…", "opsi": {"A": "Hentikan TTD", "B": "Paksakan suntik Fe tanpa konseling", "C": "Konseling kepatuhan, cek efek samping, pantau, pertimbangkan jalur lain bila indikasi", "D": "Abaikan anemia", "E": "Hanya beri vitamin C tanpa Fe"}, "kunci": "C", "pembahasan": "Anemia + non-adherence → konseling, pantau, opsi terapi sesuai indikasi."}, {"nomor": 23, "kategori": "Farmakologi, Lab, Gadar & Gizi", "teks": "Pasien diabetes gemetar, berkeringat, GDS 45 mg/dL, masih sadar. Tindakan pertama…", "opsi": {"A": "Insulin dosis tinggi", "B": "Observasi tanpa glukosa", "C": "Infus insulin drip", "D": "Abaikan", "E": "Berikan glukosa oral (karbohidrat cepat) sesuai protokol hipoglikemia"}, "kunci": "E", "pembahasan": "Hipoglikemia sadar → glukosa oral segera."}, {"nomor": 24, "kategori": "Farmakologi, Lab, Gadar & Gizi", "teks": "Obat high-alert disimpan campur dengan obat rutin tanpa label khusus. Risiko dan perbaikan…", "opsi": {"A": "Tidak ada risiko", "B": "Risiko salah ambil/salah dosis; pisahkan, label jelas, double check", "C": "Mempercepat pelayanan selalu", "D": "Tidak perlu kebijakan", "E": "Hanya masalah gudang tanpa dampak klinis"}, "kunci": "B", "pembahasan": "High-alert butuh pemisahan, label, independent double check."}, {"nomor": 25, "kategori": "Farmakologi, Lab, Gadar & Gizi", "teks": "Anak diare, dehidrasi sedang, masih bisa minum. Pilihan rehidrasi di Puskesmas…", "opsi": {"A": "Infus wajib semua kasus", "B": "Puasa 24 jam", "C": "Antibiotik semua diare", "D": "Rencana terapi cairan oral (oralit) sesuai status, pantau, rujuk jika memburuk", "E": "Hanya air putih tanpa oralit"}, "kunci": "D", "pembahasan": "Dehidrasi sedang yang masih minum: oralit terencana + pantau."}, {"nomor": 26, "kategori": "Manajerial & Sosio Kultural", "teks": "Atasan meminta memalsukan data cakupan imunisasi agar 'target tercapai'. Respons paling sesuai BerAKHLAK…", "opsi": {"A": "Menolak dengan sopan, jelaskan risiko & aturan, tawarkan cara pencapaian target yang sah", "B": "Ikut memalsukan demi hubungan baik", "C": "Langsung sebar ke media tanpa prosedur internal", "D": "Diam saja dan kerjakan", "E": "Mundur tanpa komunikasi"}, "kunci": "A", "pembahasan": "Akuntabel & integritas: tolak pemalsuan, tawarkan solusi legal."}, {"nomor": 27, "kategori": "Manajerial & Sosio Kultural", "teks": "Masyarakat adat menolak imunisasi karena kepercayaan lokal. Pendekatan paling tepat…", "opsi": {"A": "Paksa dan ancam sanksi tanpa dialog", "B": "Abaikan desa tersebut", "C": "Dialog hormat, libatkan tokoh, edukasi berbasis budaya, cari titik temu tanpa mengorbankan prinsip ilmiah", "D": "Hanya bagi leaflet bahasa Indonesia formal", "E": "Tutup Posyandu di desa itu"}, "kunci": "C", "pembahasan": "Harmonis + berorientasi pelayanan: pendekatan kultural, tetap ilmiah."}, {"nomor": 28, "kategori": "Manajerial & Sosio Kultural", "teks": "Sistem informasi baru error sering; sebagian staf menolak pakai. Sikap adaptif-kolaboratif supervisor…", "opsi": {"A": "Paksa tanpa pelatihan", "B": "Kembali total ke manual selamanya", "C": "Salahkan staf di depan umum", "D": "Abaikan error", "E": "Fasilitasi pelatihan, kumpulkan feedback, perbaiki alur bersama, dampingi yang kesulitan"}, "kunci": "E", "pembahasan": "Adaptif + kolaboratif: latih, feedback, dampingi."}, {"nomor": 29, "kategori": "Manajerial & Sosio Kultural", "teks": "Konflik antara bidan dan perawat soal pembagian tugas jaga. Langkah manajerial terbaik…", "opsi": {"A": "Biarkan berlarut", "B": "Mediasi, perjelas SOP/peran, sepakati jadwal adil, evaluasi", "C": "Pihak salah satu tanpa dengar", "D": "Hukum keduanya tanpa investigasi", "E": "Pindahkan keduanya diam-diam"}, "kunci": "B", "pembahasan": "Konflik interpersonal → mediasi + kejelasan peran."}, {"nomor": 30, "kategori": "Manajerial & Sosio Kultural", "teks": "Petugas menerima 'uang terima kasih' dari pasien setelah pelayanan. Tindakan sesuai integritas…", "opsi": {"A": "Terima diam-diam", "B": "Terima lalu bagi ke tim", "C": "Minta jumlah lebih besar", "D": "Tolak dengan sopan, jelaskan kebijakan gratifikasi, laporkan jika perlu sesuai prosedur", "E": "Tidak ada aturan gratifikasi"}, "kunci": "D", "pembahasan": "Integritas ASN: tolak gratifikasi, ikuti prosedur."}];
+let current=0,jawaban={},ragu={},timerInterval=null,sisaDetik=WAKTU_MENIT*60,sesiId=null,supabaseClient=null;
 
-  <div id="hasilArea" class="max-w-5xl mx-auto px-4 py-8 hidden">
-    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-      <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-8 text-center">
-        <h2 class="text-2xl font-bold mb-1">Hasil Uji Kompetensi</h2>
-        <p id="hasilNama" class="text-indigo-200"></p>
-        <div class="mt-6 flex justify-center gap-8">
-          <div>
-            <div id="hasilSkor" class="text-5xl font-bold">0</div>
-            <div class="text-indigo-200 text-sm">dari 30</div>
-          </div>
-          <div class="border-l border-white/30 pl-8">
-            <div id="hasilStatus" class="text-3xl font-bold mt-2">-</div>
-            <div class="text-indigo-200 text-sm">Status</div>
-          </div>
-        </div>
-      </div>
-      <div class="p-6">
-        <h3 class="font-semibold text-lg mb-4">Breakdown per Kategori</h3>
-        <div class="h-64 mb-8"><canvas id="chartKategori"></canvas></div>
-        <h3 class="font-semibold text-lg mb-3">Review Lengkap Jawaban</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-100 text-left">
-              <tr>
-                <th class="px-3 py-2 rounded-l-lg">No</th>
-                <th class="px-3 py-2">Kategori</th>
-                <th class="px-3 py-2">Jawabanmu</th>
-                <th class="px-3 py-2">Kunci</th>
-                <th class="px-3 py-2">Status</th>
-                <th class="px-3 py-2 rounded-r-lg">Pembahasan</th>
-              </tr>
-            </thead>
-            <tbody id="tabelReview"></tbody>
-          </table>
-        </div>
-        <div class="mt-8 text-center">
-          <button onclick="location.reload()" class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Ulangi Ujian</button>
-        </div>
-      </div>
-    </div>
-  </div>
+async function mulaiUjian(){
+const nama=document.getElementById('namaPeserta').value.trim()||'Peserta';
+document.getElementById('startScreen').classList.add('hidden');
+document.getElementById('examArea').classList.remove('hidden');
+const url=document.getElementById('sbUrl').value.trim(),key=document.getElementById('sbKey').value.trim();
+if(url&&key){try{supabaseClient=supabase.createClient(url,key);
+const{data,error}=await supabaseClient.from('jfk_sesi').insert({nama_peserta:nama,total_soal:TOTAL_SOAL,status:'berlangsung'}).select('id').single();
+if(error){console.warn(error.message);supabaseClient=null}else if(data)sesiId=data.id}catch(e){console.warn(e.message);supabaseClient=null}}
+renderTabs();renderGrid();tampilkanSoal(0);mulaiTimer()}
 
-  <script>
-    const TOTAL_SOAL = 30;
-    const WAKTU_MENIT = 30;
+function renderTabs(){
+const cats=[{l:'1-8 Asuhan',s:0},{l:'9-13 Etika',s:8},{l:'14-17 Manajemen',s:13},{l:'18-20 PPI/K3',s:17},{l:'21-25 Farm/Gadar',s:20},{l:'26-30 Man-Soskul',s:25}];
+document.getElementById('kategoriTabs').innerHTML=cats.map(c=>`<button onclick="lompatKe(${c.s})" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white border hover:bg-indigo-50">${c.l}</button>`).join('')}
 
-    const SOAL = [
-      {nomor:1, kategori:"Asuhan & Pelayanan", teks:"Seorang ibu post partum hari ke-2 mengeluh payudara bengkak, nyeri, dan ASI belum lancar. Tindakan prioritas yang tepat adalah…", opsi:{A:"Memberikan antibiotik segera", B:"Mengajari teknik menyusui yang benar dan kompres hangat/dingin bergantian", C:"Menyarankan berhenti menyusui", D:"Memberikan obat pelancar ASI tanpa edukasi", E:"Merujuk ke rumah sakit tanpa asesmen"}, kunci:"B", pembahasan:"Bendungan ASI ditangani dengan teknik menyusui yang benar dan kompres, bukan antibiotik kecuali ada tanda mastitis infeksi."},
-      {nomor:2, kategori:"Asuhan & Pelayanan", teks:"Dalam MTBS, anak usia 2 bulan–5 tahun dengan batuk dan napas cepat diklasifikasikan sebagai…", opsi:{A:"Batuk pilek biasa", B:"Pneumonia", C:"Asma berat", D:"TB paru", E:"Tidak ada klasifikasi"}, kunci:"B", pembahasan:"Napas cepat sesuai batas usia adalah tanda pneumonia pada MTBS."},
-      {nomor:3, kategori:"Asuhan & Pelayanan", teks:"Vaksin Hepatitis B dosis 0 (lahir) idealnya diberikan dalam waktu…", opsi:{A:"72 jam setelah lahir", B:"7 hari setelah lahir", C:"≤24 jam setelah lahir", D:"1 bulan setelah lahir", E:"Saat bayi sehat saja kapan saja"}, kunci:"C", pembahasan:"Hep B 0 diberikan sesegera mungkin, ideal ≤24 jam setelah lahir."},
-      {nomor:4, kategori:"Asuhan & Pelayanan", teks:"Indikator utama keberhasilan program ASI eksklusif di wilayah kerja Puskesmas adalah…", opsi:{A:"Jumlah ibu yang datang ke Posyandu", B:"Persentase bayi 0–6 bulan yang hanya mendapat ASI", C:"Jumlah botol susu yang dibagikan", D:"Jumlah konselor ASI", E:"Jumlah kelas ibu hamil"}, kunci:"B", pembahasan:"Indikator output ASI eksklusif adalah % bayi 0–6 bulan yang hanya mendapat ASI."},
-      {nomor:5, kategori:"Asuhan & Pelayanan", teks:"Pada pengkajian tumbuh kembang, anak usia 18 bulan yang belum bisa berjalan tanpa bantuan perlu…", opsi:{A:"Diobservasi sampai usia 2 tahun tanpa intervensi", B:"Dilakukan stimulasi dan rujuk ke pelayanan tumbuh kembang", C:"Diberi vitamin saja", D:"Dipaksa berjalan setiap hari", E:"Diabaikan karena masih normal"}, kunci:"B", pembahasan:"Keterlambatan berjalan perlu stimulasi dini dan rujukan sesuai indikasi."},
-      {nomor:6, kategori:"Asuhan & Pelayanan", teks:"Tanda bahaya pada ibu hamil yang harus segera dirujuk adalah…", opsi:{A:"Mual ringan trimester 1", B:"Sakit kepala hebat disertai penglihatan kabur", C:"Sering kencing malam", D:"Nyeri pinggang ringan", E:"Ngidam makanan tertentu"}, kunci:"B", pembahasan:"Sakit kepala hebat + gangguan penglihatan adalah tanda bahaya preeklamsia."},
-      {nomor:7, kategori:"Asuhan & Pelayanan", teks:"Dalam PIS-PK, salah satu dari 12 indikator keluarga sehat adalah…", opsi:{A:"Keluarga memiliki kendaraan pribadi", B:"Keluarga mengikuti KB dan memiliki akses air bersih", C:"Keluarga memiliki AC", D:"Keluarga makan di restoran", E:"Keluarga memiliki smartphone"}, kunci:"B", pembahasan:"Indikator keluarga sehat meliputi KB, air bersih, jamban, dll."},
-      {nomor:8, kategori:"Asuhan & Pelayanan", teks:"Penatalaksanaan awal bayi dengan hipotermia ringan–sedang di fasilitas primer adalah…", opsi:{A:"Langsung rendam air hangat 40°C", B:"Kontak kulit ke kulit (metode kanguru) dan pastikan bayi kering", C:"Berikan antibiotik profilaksis", D:"Observasi saja tanpa tindakan", E:"Berikan infus cairan dingin"}, kunci:"B", pembahasan:"Hipotermia ditangani dengan penghangatan, terutama metode kanguru."},
-      {nomor:9, kategori:"Etika & Patient Safety", teks:"Prinsip etika yang menekankan kewajiban tidak merugikan pasien disebut…", opsi:{A:"Beneficence", B:"Non-maleficence", C:"Autonomy", D:"Justice", E:"Veracity"}, kunci:"B", pembahasan:"Non-maleficence = do no harm."},
-      {nomor:10, kategori:"Etika & Patient Safety", teks:"Komunikasi SBAR digunakan terutama untuk…", opsi:{A:"Konseling gizi ke pasien", B:"Handover dan komunikasi antar tenaga kesehatan yang terstruktur", C:"Laporan keuangan bulanan", D:"Promosi kesehatan di Posyandu", E:"Pendaftaran pasien baru"}, kunci:"B", pembahasan:"SBAR (Situation-Background-Assessment-Recommendation) untuk komunikasi efektif antar profesional."},
-      {nomor:11, kategori:"Etika & Patient Safety", teks:"Salah satu dari 6 sasaran keselamatan pasien adalah…", opsi:{A:"Meningkatkan jumlah tempat tidur", B:"Mengurangi risiko infeksi terkait pelayanan kesehatan", C:"Mempercepat waktu tunggu administrasi", D:"Menambah jumlah staf nonmedis", E:"Mengurangi biaya obat"}, kunci:"B", pembahasan:"Sasaran ke-5: mengurangi risiko infeksi terkait pelayanan kesehatan."},
-      {nomor:12, kategori:"Etika & Patient Safety", teks:"Jika terjadi near miss (hampir terjadi kesalahan), tindakan yang paling tepat adalah…", opsi:{A:"Menutupi kejadian agar tidak dilaporkan", B:"Melaporkan, menganalisis akar masalah, dan memperbaiki sistem", C:"Menyalahkan individu yang terlibat", D:"Mengabaikan karena pasien tidak cedera", E:"Memberikan sanksi langsung tanpa investigasi"}, kunci:"B", pembahasan:"Budaya keselamatan menekankan pelaporan near miss untuk perbaikan sistem."},
-      {nomor:13, kategori:"Etika & Patient Safety", teks:"Informed refusal berarti…", opsi:{A:"Pasien menandatangani persetujuan tanpa penjelasan", B:"Pasien menolak tindakan setelah mendapat informasi lengkap dan dipahami", C:"Keluarga memutuskan tanpa melibatkan pasien", D:"Dokter memaksa tindakan demi kebaikan pasien", E:"Tidak perlu dokumentasi penolakan"}, kunci:"B", pembahasan:"Informed refusal adalah penolakan yang informed dan terdokumentasi."},
-      {nomor:14, kategori:"Manajemen Puskesmas", teks:"Fungsi manajemen P3 di Puskesmas meliputi…", opsi:{A:"Hanya perencanaan tahunan", B:"Pengawasan, pengendalian, dan penilaian", C:"Hanya pengadaan obat", D:"Hanya pembuatan laporan keuangan", E:"Hanya pembagian tugas harian"}, kunci:"B", pembahasan:"P3 = Pengawasan, Pengendalian, dan Penilaian."},
-      {nomor:15, kategori:"Manajemen Puskesmas", teks:"Metode perencanaan kebutuhan obat yang mempertimbangkan pola penyakit disebut metode…", opsi:{A:"Konsumsi murni", B:"Epidemiologi / morbiditas", C:"Intuitif", D:"Request only", E:"Last in first out"}, kunci:"B", pembahasan:"Metode epidemiologi/morbiditas berdasarkan pola kesakitan."},
-      {nomor:16, kategori:"Manajemen Puskesmas", teks:"UKP di Puskesmas berfokus pada…", opsi:{A:"Hanya penyuluhan massal", B:"Pelayanan kesehatan perorangan (rawat jalan, rawat inap terbatas, rujukan)", C:"Hanya surveilans penyakit", D:"Hanya pembangunan sanitasi", E:"Hanya pelatihan kader"}, kunci:"B", pembahasan:"UKP = Upaya Kesehatan Perorangan."},
-      {nomor:17, kategori:"Manajemen Puskesmas", teks:"Prinsip FEFO dalam pengelolaan obat berarti…", opsi:{A:"First Expired First Out", B:"First Entry Free Out", C:"Fast Export First Order", D:"Final Evaluation For Output", E:"Full Exclusive For Outpatient"}, kunci:"A", pembahasan:"FEFO = obat yang lebih dulu kadaluarsa dikeluarkan lebih dulu."},
-      {nomor:18, kategori:"PPI, K3 & Kesling", teks:"Momen cuci tangan yang termasuk 'sebelum tindakan aseptik' adalah contoh dari…", opsi:{A:"Hanya anjuran lokal", B:"5 momen hand hygiene WHO", C:"Prosedur khusus ICU saja", D:"Tidak wajib di Puskesmas", E:"Hanya untuk operasi besar"}, kunci:"B", pembahasan:"Sebelum tindakan aseptik adalah salah satu dari 5 momen WHO."},
-      {nomor:19, kategori:"PPI, K3 & Kesling", teks:"Limbah jarum suntik bekas harus dibuang ke…", opsi:{A:"Kantong plastik hitam", B:"Safety box / kontainer tahan tusuk", C:"Tong sampah terbuka", D:"Saluran air", E:"Kantong kuning biasa tanpa tutup"}, kunci:"B", pembahasan:"Sharp waste masuk safety box yang tahan tusuk."},
-      {nomor:20, kategori:"PPI, K3 & Kesling", teks:"Standard precautions diterapkan pada…", opsi:{A:"Hanya pasien dengan diagnosis infeksi", B:"Semua pasien tanpa memandang status infeksi", C:"Hanya saat ada wabah", D:"Hanya di ruang isolasi", E:"Hanya petugas laboratorium"}, kunci:"B", pembahasan:"Kewaspadaan standar berlaku untuk semua pasien."},
-      {nomor:21, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Dalam primary survey gawat darurat, huruf 'C' pada ABCDE merujuk pada…", opsi:{A:"Consciousness", B:"Circulation", C:"Cervical spine", D:"Chest pain", E:"Creatinine"}, kunci:"B", pembahasan:"C = Circulation (sirkulasi)."},
-      {nomor:22, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Obat yang termasuk high-alert medication adalah…", opsi:{A:"Vitamin B kompleks", B:"Insulin dan kalium klorida konsentrat", C:"Paracetamol sirup", D:"Antasida", E:"Obat batuk herbal"}, kunci:"B", pembahasan:"Insulin dan KCl konsentrat adalah high-alert drugs."},
-      {nomor:23, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Hasil pemeriksaan GDS 250 mg/dL pada pasien tidak puasa menunjukkan…", opsi:{A:"Normal mutlak", B:"Hiperglikemia yang perlu evaluasi lebih lanjut", C:"Hipoglikemia", D:"Tidak bermakna", E:"Hanya dehidrasi"}, kunci:"B", pembahasan:"GDS ≥200 mg/dL mengarah ke hiperglikemia / kemungkinan DM."},
-      {nomor:24, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Pemberian tablet tambah darah (TTD) pada ibu hamil terutama untuk mencegah…", opsi:{A:"Hipertensi gestasional", B:"Anemia defisiensi besi", C:"Diabetes gestasional", D:"Infeksi saluran kemih", E:"Persalinan prematur saja"}, kunci:"B", pembahasan:"TTD mencegah dan menangani anemia defisiensi besi."},
-      {nomor:25, kategori:"Farmakologi, Lab, Gadar & Gizi", teks:"Posisi recovery pada pasien tidak sadar yang masih bernapas bertujuan utama untuk…", opsi:{A:"Mempercepat sadar", B:"Menjaga patensi jalan napas dan mencegah aspirasi", C:"Mengurangi nyeri", D:"Memperbaiki sirkulasi perifer", E:"Memudahkan pemasangan infus"}, kunci:"B", pembahasan:"Recovery position menjaga airway dan mengurangi risiko aspirasi."},
-      {nomor:26, kategori:"Manajerial & Sosio Kultural", teks:"Nilai 'Akuntabel' dalam ASN BerAKHLAK berarti…", opsi:{A:"Bekerja tanpa tanggung jawab", B:"Dapat bertanggung jawab dan mempertanggungjawabkan tugas serta wewenang", C:"Hanya patuh pada atasan pribadi", D:"Menghindari laporan", E:"Menutupi kesalahan"}, kunci:"B", pembahasan:"Akuntabel = accountable, dapat dipertanggungjawabkan."},
-      {nomor:27, kategori:"Manajerial & Sosio Kultural", teks:"Contoh perilaku 'Harmonis' di lingkungan Puskesmas adalah…", opsi:{A:"Membedakan pelayanan berdasarkan status sosial", B:"Menghargai perbedaan budaya pasien dan menjaga hubungan baik antar staf", C:"Menghindari komunikasi dengan masyarakat", D:"Memaksakan satu cara pandang", E:"Menolak pasien dari daerah lain"}, kunci:"B", pembahasan:"Harmonis = saling menghargai perbedaan dan menjaga hubungan."},
-      {nomor:28, kategori:"Manajerial & Sosio Kultural", teks:"Sikap 'Adaptif' saat ada perubahan sistem informasi Puskesmas ditunjukkan dengan…", opsi:{A:"Menolak belajar sistem baru", B:"Mau belajar, menyesuaikan diri, dan membantu rekan yang kesulitan", C:"Mengeluh terus tanpa solusi", D:"Kembali ke cara manual sepenuhnya", E:"Menyerahkan semua ke orang lain"}, kunci:"B", pembahasan:"Adaptif = mampu menyesuaikan diri dengan perubahan."},
-      {nomor:29, kategori:"Manajerial & Sosio Kultural", teks:"Kolaborasi lintas sektor untuk penurunan stunting mencerminkan nilai…", opsi:{A:"Kompetisi", B:"Kolaboratif", C:"Individualisme", D:"Isolasi", E:"Hierarki ketat saja"}, kunci:"B", pembahasan:"Kolaboratif = membangun kerja sama produktif dengan berbagai pihak."},
-      {nomor:30, kategori:"Manajerial & Sosio Kultural", teks:"Seorang ASN diminta atasan melakukan tindakan yang melanggar aturan. Sikap yang sesuai nilai BerAKHLAK adalah…", opsi:{A:"Melakukan karena perintah atasan", B:"Menolak dengan sopan sambil menjelaskan dasar aturan yang berlaku", C:"Langsung menyebarkan ke media sosial", D:"Mengundurkan diri tanpa komunikasi", E:"Ikut saja demi hubungan baik"}, kunci:"B", pembahasan:"ASN wajib menolak perintah yang melanggar hukum/aturan (akuntabel & loyal pada aturan)."}
-    ];
+function renderGrid(){
+const t=document.getElementById('gridTeknis'),m=document.getElementById('gridManSos');t.innerHTML='';m.innerHTML='';
+for(let i=1;i<=TOTAL_SOAL;i++){const b=document.createElement('button');b.className='grid-btn w-8 h-8 rounded-lg text-xs font-semibold border';b.textContent=i;b.onclick=()=>lompatKe(i-1);b.id='grid-'+i;updateGridBtn(i);(i<=20?t:m).appendChild(b)}}
 
-    let current = 0, jawaban = {}, ragu = {}, timerInterval = null, sisaDetik = WAKTU_MENIT * 60, sesiId = null, supabaseClient = null;
+function updateGridBtn(n){const b=document.getElementById('grid-'+n);if(!b)return;b.className='grid-btn w-8 h-8 rounded-lg text-xs font-semibold border ';
+if(n===current+1)b.className+='bg-blue-500 text-white border-blue-600';
+else if(ragu[n])b.className+='bg-amber-400 text-white border-amber-500';
+else if(jawaban[n])b.className+='bg-emerald-500 text-white border-emerald-600';
+else b.className+='bg-slate-200 text-slate-600 border-slate-300'}
+function updateAllGrid(){for(let i=1;i<=TOTAL_SOAL;i++)updateGridBtn(i)}
 
-    async function testSupabase() {
-      const url = document.getElementById('sbUrl').value.trim();
-      const key = document.getElementById('sbKey').value.trim();
-      const statusEl = document.getElementById('sbStatus');
-      if (!url || !key) { statusEl.textContent = '❌ Isi URL dan anon key dulu'; statusEl.className = 'text-xs text-rose-600'; return; }
-      statusEl.textContent = '⏳ Menguji koneksi...'; statusEl.className = 'text-xs text-slate-500';
-      try {
-        if (typeof supabase === 'undefined' || !supabase.createClient) throw new Error('Library Supabase belum termuat. Hard refresh (Ctrl+Shift+R).');
-        const client = supabase.createClient(url, key);
-        const { data, error } = await client.from('jfk_sesi').insert({ nama_peserta: 'Test Koneksi', total_soal: 30, status: 'berlangsung' }).select('id').single();
-        if (error) throw error;
-        statusEl.textContent = '✅ Berhasil! Data masuk. ID: ' + data.id.substring(0, 8) + '...';
-        statusEl.className = 'text-xs text-emerald-600 font-medium';
-        await client.from('jfk_sesi').delete().eq('id', data.id);
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = '❌ Gagal: ' + (e.message || e);
-        statusEl.className = 'text-xs text-rose-600';
-        alert('Gagal koneksi Supabase:\\n' + (e.message || e));
-      }
-    }
+function tampilkanSoal(idx){current=idx;const s=SOAL[idx];
+document.getElementById('nomorSoal').textContent=s.nomor;document.getElementById('badgeKategori').textContent=s.kategori;document.getElementById('teksSoal').textContent=s.teks;
+const c=document.getElementById('opsiContainer');c.innerHTML='';
+['A','B','C','D','E'].forEach(h=>{const sel=jawaban[s.nomor]===h;const d=document.createElement('button');
+d.className='option-btn w-full text-left px-4 py-3 rounded-xl border-2 flex gap-3 items-start '+(sel?'border-indigo-500 bg-indigo-50':'border-slate-200 hover:border-indigo-300');
+d.onclick=()=>pilihOpsi(h);d.innerHTML='<span class="flex-shrink-0 w-8 h-8 rounded-full '+(sel?'bg-indigo-600 text-white':'bg-slate-200')+' flex items-center justify-center font-bold text-sm">'+h+'</span><span class="pt-1">'+s.opsi[h]+'</span>';c.appendChild(d)});
+document.getElementById('btnPrev').disabled=idx===0;document.getElementById('btnNext').textContent=idx===TOTAL_SOAL-1?'Selesai →':'Selanjutnya →';
+document.getElementById('btnRagu').className=ragu[s.nomor]?'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-500 bg-amber-100 text-amber-800':'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700';
+updateProgress();updateAllGrid()}
 
-    async function mulaiUjian() {
-      const nama = document.getElementById('namaPeserta').value.trim() || 'Peserta';
-      document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('examArea').classList.remove('hidden');
-      const url = document.getElementById('sbUrl').value.trim();
-      const key = document.getElementById('sbKey').value.trim();
-      if (url && key) {
-        try {
-          supabaseClient = supabase.createClient(url, key);
-          const { data, error } = await supabaseClient.from('jfk_sesi').insert({ nama_peserta: nama, total_soal: TOTAL_SOAL, status: 'berlangsung' }).select('id').single();
-          if (error) {
-            console.error('Supabase insert error:', error);
-            console.warn('Supabase insert gagal:', error.message);
-            supabaseClient = null;
-          } else if (data) { sesiId = data.id; console.log('✅ Sesi tersimpan, id:', sesiId); }
-        } catch (e) { console.error(e); console.warn('Supabase koneksi gagal:', e.message); supabaseClient = null; }
-      }
-      renderTabs(); renderGrid(); tampilkanSoal(0); mulaiTimer();
-    }
+function pilihOpsi(h){jawaban[SOAL[current].nomor]=h;delete ragu[SOAL[current].nomor];tampilkanSoal(current)}
+function toggleRagu(){const n=SOAL[current].nomor;if(ragu[n])delete ragu[n];else ragu[n]=true;tampilkanSoal(current)}
+function kosongkan(){delete jawaban[SOAL[current].nomor];delete ragu[SOAL[current].nomor];tampilkanSoal(current)}
+function prevSoal(){if(current>0)tampilkanSoal(current-1)}
+function nextSoal(){if(current<TOTAL_SOAL-1)tampilkanSoal(current+1);else konfirmasiAkhiri()}
+function lompatKe(i){tampilkanSoal(i)}
+function updateProgress(){document.getElementById('progressText').textContent=Object.keys(jawaban).length+' / '+TOTAL_SOAL}
 
-    function renderTabs() {
-      const cats = [{label:'1-8 Asuhan',start:0},{label:'9-13 Etika',start:8},{label:'14-17 Manajemen',start:13},{label:'18-20 PPI/K3',start:17},{label:'21-25 Farm/Lab/Gadar',start:20},{label:'26-30 Man-Soskul',start:25}];
-      document.getElementById('kategoriTabs').innerHTML = cats.map(c => `<button onclick="lompatKe(${c.start})" class="px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 transition">${c.label}</button>`).join('');
-    }
+function mulaiTimer(){timerInterval=setInterval(()=>{sisaDetik--;if(sisaDetik<=0){clearInterval(timerInterval);akhiriUjian(true);return}
+const h=Math.floor(sisaDetik/3600),m=Math.floor((sisaDetik%3600)/60),s=sisaDetik%60;
+document.getElementById('timerDisplay').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+if(sisaDetik<300){document.getElementById('timerBox').classList.add('bg-rose-700','timer-blink');document.getElementById('timerBox').classList.remove('bg-indigo-900/60')}},1000)}
 
-    function renderGrid() {
-      const teknis = document.getElementById('gridTeknis'), mansos = document.getElementById('gridManSos');
-      teknis.innerHTML = ''; mansos.innerHTML = '';
-      for (let i = 1; i <= TOTAL_SOAL; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'grid-btn w-8 h-8 rounded-lg text-xs font-semibold border transition';
-        btn.textContent = i; btn.onclick = () => lompatKe(i-1); btn.id = 'grid-'+i;
-        updateGridBtn(i);
-        if (i <= 20) teknis.appendChild(btn); else mansos.appendChild(btn);
-      }
-    }
+function bukaCekJawaban(){const dj=Object.keys(jawaban).length,bl=TOTAL_SOAL-dj,jr=Object.keys(ragu).length;let bn=0;
+Object.entries(jawaban).forEach(([n,j])=>{const s=SOAL.find(x=>x.nomor==n);if(s&&s.kunci===j)bn++});
+const max=bn+bl,pred=max>=PASSING?'BERPOTENSI LULUS':'BERPOTENSI TIDAK LULUS';
+const bag={'Teknis (1-20)':{b:0,t:0},'Man-Soskul (21-30)':{b:0,t:0}};
+Object.entries(jawaban).forEach(([n,j])=>{const s=SOAL.find(x=>x.nomor==n);if(!s)return;const k=n<=20?'Teknis (1-20)':'Man-Soskul (21-30)';bag[k].t++;if(s.kunci===j)bag[k].b++});
+let html='<div class="grid grid-cols-3 gap-3 text-center"><div class="bg-emerald-50 rounded-xl p-3"><div class="text-2xl font-bold text-emerald-700">'+dj+'</div><div class="text-xs">Dijawab</div></div><div class="bg-slate-100 rounded-xl p-3"><div class="text-2xl font-bold">'+bl+'</div><div class="text-xs">Belum</div></div><div class="bg-amber-50 rounded-xl p-3"><div class="text-2xl font-bold text-amber-700">'+jr+'</div><div class="text-xs">Ragu</div></div></div><div class="bg-indigo-50 rounded-xl p-4 text-center"><div class="text-sm text-indigo-600">Estimasi Skor</div><div class="text-4xl font-bold text-indigo-700">'+bn+' / 30</div><div class="text-sm mt-1 '+(max>=PASSING?'text-emerald-600':'text-rose-600')+' font-semibold">'+pred+'</div><div class="text-xs text-slate-500">Maks jika sisa benar: '+max+'</div></div><div class="text-sm space-y-1"><div class="flex justify-between"><span>Teknis</span><span>'+bag['Teknis (1-20)'].b+'/'+bag['Teknis (1-20)'].t+'</span></div><div class="flex justify-between"><span>Man-Soskul</span><span>'+bag['Man-Soskul (21-30)'].b+'/'+bag['Man-Soskul (21-30)'].t+'</span></div></div>';
+const belum=[],rg=[];for(let i=1;i<=30;i++){if(!jawaban[i])belum.push(i);if(ragu[i])rg.push(i)}
+if(belum.length)html+='<div><div class="text-sm font-semibold mb-1">Belum ('+belum.length+')</div><div class="flex flex-wrap gap-1">'+belum.map(n=>'<button onclick="lompatKe('+(n-1)+');tutupCek()" class="w-8 h-8 rounded bg-slate-200 text-xs hover:bg-indigo-200">'+n+'</button>').join('')+'</div></div>';
+if(rg.length)html+='<div><div class="text-sm font-semibold text-amber-700 mb-1">Ragu ('+rg.length+')</div><div class="flex flex-wrap gap-1">'+rg.map(n=>'<button onclick="lompatKe('+(n-1)+');tutupCek()" class="w-8 h-8 rounded bg-amber-200 text-xs">'+n+'</button>').join('')+'</div></div>';
+document.getElementById('cekContent').innerHTML=html;document.getElementById('cekPanel').classList.remove('hidden')}
+function tutupCek(){document.getElementById('cekPanel').classList.add('hidden')}
 
-    function updateGridBtn(nomor) {
-      const btn = document.getElementById('grid-'+nomor); if (!btn) return;
-      btn.className = 'grid-btn w-8 h-8 rounded-lg text-xs font-semibold border transition ';
-      if (nomor === current+1) btn.className += 'bg-blue-500 text-white border-blue-600 shadow';
-      else if (ragu[nomor]) btn.className += 'bg-amber-400 text-white border-amber-500';
-      else if (jawaban[nomor]) btn.className += 'bg-emerald-500 text-white border-emerald-600';
-      else btn.className += 'bg-slate-200 text-slate-600 border-slate-300';
-    }
-    function updateAllGrid() { for (let i=1;i<=TOTAL_SOAL;i++) updateGridBtn(i); }
+function konfirmasiAkhiri(){const bl=TOTAL_SOAL-Object.keys(jawaban).length;if(confirm(bl>0?'Masih ada '+bl+' soal belum dijawab.\nYakin akhiri?':'Yakin akhiri ujian?'))akhiriUjian(false)}
 
-    function tampilkanSoal(idx) {
-      current = idx; const s = SOAL[idx];
-      document.getElementById('nomorSoal').textContent = s.nomor;
-      document.getElementById('badgeKategori').textContent = s.kategori;
-      document.getElementById('teksSoal').textContent = s.teks;
-      const cont = document.getElementById('opsiContainer'); cont.innerHTML = '';
-      ['A','B','C','D','E'].forEach(huruf => {
-        const selected = jawaban[s.nomor] === huruf;
-        const div = document.createElement('button');
-        div.className = 'option-btn w-full text-left px-4 py-3 rounded-xl border-2 transition flex gap-3 items-start ' + (selected ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50');
-        div.onclick = () => pilihOpsi(huruf);
-        div.innerHTML = '<span class="flex-shrink-0 w-8 h-8 rounded-full '+(selected?'bg-indigo-600 text-white':'bg-slate-200 text-slate-700')+' flex items-center justify-center font-bold text-sm">'+huruf+'</span><span class="pt-1">'+s.opsi[huruf]+'</span>';
-        cont.appendChild(div);
-      });
-      document.getElementById('btnPrev').disabled = idx === 0;
-      document.getElementById('btnNext').textContent = idx === TOTAL_SOAL-1 ? 'Selesai →' : 'Selanjutnya →';
-      document.getElementById('btnRagu').className = ragu[s.nomor] ? 'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-500 bg-amber-100 text-amber-800' : 'px-3 py-1.5 rounded-lg text-sm font-medium border border-amber-300 text-amber-700 hover:bg-amber-50 transition';
-      updateProgress(); updateAllGrid();
-    }
-
-    function pilihOpsi(huruf) { jawaban[SOAL[current].nomor] = huruf; delete ragu[SOAL[current].nomor]; tampilkanSoal(current); }
-    function toggleRagu() { const n = SOAL[current].nomor; if (ragu[n]) delete ragu[n]; else ragu[n]=true; tampilkanSoal(current); }
-    function kosongkan() { delete jawaban[SOAL[current].nomor]; delete ragu[SOAL[current].nomor]; tampilkanSoal(current); }
-    function prevSoal() { if (current>0) tampilkanSoal(current-1); }
-    function nextSoal() { if (current < TOTAL_SOAL-1) tampilkanSoal(current+1); else konfirmasiAkhiri(); }
-    function lompatKe(idx) { tampilkanSoal(idx); }
-    function updateProgress() { document.getElementById('progressText').textContent = Object.keys(jawaban).length + ' / ' + TOTAL_SOAL; }
-
-    function mulaiTimer() {
-      timerInterval = setInterval(() => {
-        sisaDetik--;
-        if (sisaDetik <= 0) { clearInterval(timerInterval); akhiriUjian(true); return; }
-        const h = Math.floor(sisaDetik/3600), m = Math.floor((sisaDetik%3600)/60), s = sisaDetik%60;
-        document.getElementById('timerDisplay').textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-        if (sisaDetik < 300) { document.getElementById('timerBox').classList.add('bg-rose-700','timer-blink'); document.getElementById('timerBox').classList.remove('bg-indigo-900/60'); }
-      }, 1000);
-    }
-
-    function bukaCekJawaban() {
-      const dijawab = Object.keys(jawaban).length, belum = TOTAL_SOAL - dijawab, jmlRagu = Object.keys(ragu).length;
-      let benar = 0;
-      Object.entries(jawaban).forEach(([nomor,jwb]) => { const s = SOAL.find(x=>x.nomor==nomor); if (s && s.kunci===jwb) benar++; });
-      const maxMungkin = benar + belum;
-      const prediksi = maxMungkin >= 21 ? 'BERPOTENSI LULUS' : 'BERPOTENSI TIDAK LULUS';
-      const bagian = {'Teknis (1-20)':{benar:0,total:0},'Man-Soskul (21-30)':{benar:0,total:0}};
-      Object.entries(jawaban).forEach(([nomor,jwb]) => {
-        const s = SOAL.find(x=>x.nomor==nomor); if (!s) return;
-        const key = nomor <= 20 ? 'Teknis (1-20)' : 'Man-Soskul (21-30)';
-        bagian[key].total++; if (s.kunci===jwb) bagian[key].benar++;
-      });
-      let html = '<div class="grid grid-cols-3 gap-3 text-center"><div class="bg-emerald-50 rounded-xl p-3"><div class="text-2xl font-bold text-emerald-700">'+dijawab+'</div><div class="text-xs text-emerald-600">Dijawab</div></div><div class="bg-slate-100 rounded-xl p-3"><div class="text-2xl font-bold text-slate-700">'+belum+'</div><div class="text-xs text-slate-500">Belum</div></div><div class="bg-amber-50 rounded-xl p-3"><div class="text-2xl font-bold text-amber-700">'+jmlRagu+'</div><div class="text-xs text-amber-600">Ragu</div></div></div><div class="bg-indigo-50 rounded-xl p-4 text-center"><div class="text-sm text-indigo-600">Estimasi Skor Sementara</div><div class="text-4xl font-bold text-indigo-700">'+benar+' <span class="text-lg font-normal">/ '+TOTAL_SOAL+'</span></div><div class="text-sm mt-1 '+(maxMungkin>=21?'text-emerald-600':'text-rose-600')+' font-semibold">'+prediksi+'</div><div class="text-xs text-slate-500 mt-1">Skor maksimal jika sisa benar semua: '+maxMungkin+'</div></div><div class="space-y-2"><div class="flex justify-between text-sm"><span>Teknis (1-20)</span><span class="font-semibold">'+bagian['Teknis (1-20)'].benar+' benar dari '+bagian['Teknis (1-20)'].total+' dijawab</span></div><div class="flex justify-between text-sm"><span>Man-Soskul (21-30)</span><span class="font-semibold">'+bagian['Man-Soskul (21-30)'].benar+' benar dari '+bagian['Man-Soskul (21-30)'].total+' dijawab</span></div></div>';
-      const belumList=[], raguList=[];
-      for (let i=1;i<=TOTAL_SOAL;i++) { if (!jawaban[i]) belumList.push(i); if (ragu[i]) raguList.push(i); }
-      if (belumList.length) html += '<div><div class="text-sm font-semibold text-slate-600 mb-1">Belum dijawab ('+belumList.length+')</div><div class="flex flex-wrap gap-1">'+belumList.map(n=>'<button onclick="lompatKe('+(n-1)+'); tutupCek()" class="w-8 h-8 rounded bg-slate-200 text-xs font-medium hover:bg-indigo-200">'+n+'</button>').join('')+'</div></div>';
-      if (raguList.length) html += '<div><div class="text-sm font-semibold text-amber-700 mb-1">Ragu-ragu ('+raguList.length+')</div><div class="flex flex-wrap gap-1">'+raguList.map(n=>'<button onclick="lompatKe('+(n-1)+'); tutupCek()" class="w-8 h-8 rounded bg-amber-200 text-xs font-medium hover:bg-amber-300">'+n+'</button>').join('')+'</div></div>';
-      document.getElementById('cekContent').innerHTML = html;
-      document.getElementById('cekPanel').classList.remove('hidden');
-    }
-    function tutupCek() { document.getElementById('cekPanel').classList.add('hidden'); }
-
-    function konfirmasiAkhiri() {
-      const belum = TOTAL_SOAL - Object.keys(jawaban).length;
-      if (confirm(belum > 0 ? 'Masih ada '+belum+' soal belum dijawab.\\nYakin ingin mengakhiri ujian?' : 'Yakin ingin mengakhiri ujian?')) akhiriUjian(false);
-    }
-
-    function akhiriUjian(timeout) {
-      clearInterval(timerInterval);
-      document.getElementById('examArea').classList.add('hidden');
-      document.getElementById('hasilArea').classList.remove('hidden');
-      let benar = 0; const review = [], skorKategori = {};
-      SOAL.forEach(s => {
-        const jwb = jawaban[s.nomor] || '-'; const isBenar = jwb === s.kunci;
-        if (isBenar) benar++;
-        if (!skorKategori[s.kategori]) skorKategori[s.kategori] = {benar:0,total:0};
-        skorKategori[s.kategori].total++; if (isBenar) skorKategori[s.kategori].benar++;
-        review.push({nomor:s.nomor, kategori:s.kategori, jawaban:jwb, kunci:s.kunci, status:isBenar?'Benar':(jwb==='-'?'Kosong':'Salah'), pembahasan:s.pembahasan});
-      });
-      const skor = benar, lulus = skor >= 21;
-      document.getElementById('hasilNama').textContent = document.getElementById('namaPeserta').value.trim() || 'Peserta';
-      document.getElementById('hasilSkor').textContent = skor;
-      document.getElementById('hasilStatus').textContent = lulus ? 'LULUS' : 'TIDAK LULUS';
-      document.getElementById('hasilStatus').className = 'text-3xl font-bold mt-2 ' + (lulus ? 'text-emerald-300' : 'text-rose-300');
-      const labels = Object.keys(skorKategori);
-      new Chart(document.getElementById('chartKategori'), {
-        type: 'bar',
-        data: { labels: labels.map(l => l.length>18 ? l.substring(0,16)+'…' : l), datasets: [{label:'Benar', data:labels.map(k=>skorKategori[k].benar), backgroundColor:'#10b981'}, {label:'Total Soal', data:labels.map(k=>skorKategori[k].total), backgroundColor:'#e2e8f0'}] },
-        options: { responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:10}}, plugins:{legend:{position:'bottom'}} }
-      });
-      document.getElementById('tabelReview').innerHTML = review.map(r => '<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="px-3 py-2 font-medium">'+r.nomor+'</td><td class="px-3 py-2 text-xs">'+r.kategori+'</td><td class="px-3 py-2 font-mono '+(r.status==='Benar'?'text-emerald-600':r.status==='Kosong'?'text-slate-400':'text-rose-600')+'">'+r.jawaban+'</td><td class="px-3 py-2 font-mono font-semibold">'+r.kunci+'</td><td class="px-3 py-2"><span class="px-2 py-0.5 rounded text-xs font-medium '+(r.status==='Benar'?'bg-emerald-100 text-emerald-700':r.status==='Kosong'?'bg-slate-100 text-slate-500':'bg-rose-100 text-rose-700')+'">'+r.status+'</span></td><td class="px-3 py-2 text-xs text-slate-600 max-w-xs">'+r.pembahasan+'</td></tr>').join('');
-
-      if (supabaseClient && sesiId) {
-        supabaseClient.from('jfk_sesi').update({ finished_at: new Date().toISOString(), skor: skor, status: timeout?'timeout':'selesai', detail_json: {jawaban,ragu,review} }).eq('id', sesiId).then(({error}) => {
-          if (error) { console.error(error); alert('⚠️ Hasil tidak tersimpan:\\n'+error.message); }
-          else console.log('✅ Hasil tersimpan');
-        });
-      } else if (supabaseClient && !sesiId) {
-        supabaseClient.from('jfk_sesi').insert({ nama_peserta: document.getElementById('namaPeserta').value.trim()||'Peserta', total_soal: TOTAL_SOAL, finished_at: new Date().toISOString(), skor: skor, status: timeout?'timeout':'selesai', detail_json: {jawaban,ragu,review} }).then(({error}) => {
-          if (error) console.error(error); else console.log('✅ Fallback insert OK');
-        });
-      }
-    }
-  </script>
-</body>
-</html>
+function akhiriUjian(timeout){clearInterval(timerInterval);document.getElementById('examArea').classList.add('hidden');document.getElementById('hasilArea').classList.remove('hidden');
+let benar=0;const review=[],sk={};SOAL.forEach(s=>{const j=jawaban[s.nomor]||'-';const ok=j===s.kunci;if(ok)benar++;if(!sk[s.kategori])sk[s.kategori]={benar:0,total:0};sk[s.kategori].total++;if(ok)sk[s.kategori].benar++;
+review.push({nomor:s.nomor,kategori:s.kategori,jawaban:j,kunci:s.kunci,status:ok?'Benar':(j==='-'?'Kosong':'Salah'),pembahasan:s.pembahasan})});
+const lulus=benar>=PASSING;document.getElementById('hasilNama').textContent=document.getElementById('namaPeserta').value.trim()||'Peserta';
+document.getElementById('hasilSkor').textContent=benar;document.getElementById('hasilStatus').textContent=lulus?'LULUS':'TIDAK LULUS';
+document.getElementById('hasilStatus').className='text-3xl font-bold mt-2 '+(lulus?'text-emerald-300':'text-rose-300');
+const labels=Object.keys(sk);new Chart(document.getElementById('chartKategori'),{type:'bar',data:{labels:labels.map(l=>l.length>16?l.slice(0,14)+'…':l),datasets:[{label:'Benar',data:labels.map(k=>sk[k].benar),backgroundColor:'#10b981'},{label:'Total',data:labels.map(k=>sk[k].total),backgroundColor:'#e2e8f0'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:10}},plugins:{legend:{position:'bottom'}}}});
+document.getElementById('tabelReview').innerHTML=review.map(r=>'<tr class="border-b hover:bg-slate-50"><td class="px-3 py-2 font-medium">'+r.nomor+'</td><td class="px-3 py-2 text-xs">'+r.kategori+'</td><td class="px-3 py-2 font-mono '+(r.status==='Benar'?'text-emerald-600':r.status==='Kosong'?'text-slate-400':'text-rose-600')+'">'+r.jawaban+'</td><td class="px-3 py-2 font-mono font-semibold">'+r.kunci+'</td><td class="px-3 py-2"><span class="px-2 py-0.5 rounded text-xs '+(r.status==='Benar'?'bg-emerald-100 text-emerald-700':r.status==='Kosong'?'bg-slate-100':'bg-rose-100 text-rose-700')+'">'+r.status+'</span></td><td class="px-3 py-2 text-xs text-slate-600 max-w-xs">'+r.pembahasan+'</td></tr>').join('');
+if(supabaseClient&&sesiId)supabaseClient.from('jfk_sesi').update({finished_at:new Date().toISOString(),skor:benar,status:timeout?'timeout':'selesai',detail_json:{jawaban,ragu,review}}).eq('id',sesiId);
+else if(supabaseClient)supabaseClient.from('jfk_sesi').insert({nama_peserta:document.getElementById('namaPeserta').value.trim()||'Peserta',total_soal:30,finished_at:new Date().toISOString(),skor:benar,status:timeout?'timeout':'selesai',detail_json:{jawaban,ragu,review}})}
+</script></body></html>
