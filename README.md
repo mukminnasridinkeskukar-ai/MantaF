@@ -13,6 +13,7 @@ Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat h
 ```
 mantaf/
 ├── index.html              ← Entry utama (shell + sidebar 3 bagian + router)
+├── tryoutukom.html         ← Halaman Try Out CAT BKN (standalone, menu "Try Out CAT BKN")
 ├── partials/               ← Potongan HTML per halaman (lazy-load)
 │   ├── landing.html          Halaman depan (splash → landing)
 │   ├── dashboard.html        Statistik + donut chart

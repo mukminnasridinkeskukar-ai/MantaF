@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MantaF Health — Try Out CAT BKN Jabfungkes</title>
+<meta name="description" content="Simulasi CAT BKN untuk Uji Kompetensi Jabatan Fungsional Kesehatan. 150 soal, 150 menit, passing grade 70." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
+      },
+      animation: {
+        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  html, body { font-family: 'Inter', system-ui, sans-serif; }
+  body { background-color: #f8fafc; color: #0f172a; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  .cell-btn { transition: transform .12s ease; }
+  .cell-btn:hover { transform: scale(1.12); z-index: 10; }
+
+  kbd { font-family: ui-monospace, SFMono-Regular, monospace; }
+
+  .tab-active { background-color: #059669; color: white; }
+  .tab-active .badge-range { background-color: rgba(255,255,255,.2); }
+  .tab-inactive { color: #475569; }
+  .tab-inactive:hover { background-color: #f1f5f9; }
+  .tab-inactive .badge-range { background-color: #f1f5f9; }
+
+  .opt-btn.selected { border-color: #10b981; background-color: #ecfdf5; box-shadow: 0 0 0 1px rgba(16,185,129,.4) inset; }
+  .opt-btn:not(.selected):hover { border-color: #34d399; background-color: rgba(16,185,129,.06); }
+
+  .grid-cell.answered { background-color: #10b981; color: white; border-color: #059669; }
+  .grid-cell.unanswered { background-color: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+  .grid-cell.doubt { background-color: #fde68a; color: #92400e; border-color: #fbbf24; }
+  .grid-cell.answered-doubt { background-color: #fbbf24; color: #78350f; border-color: #d97706; }
+  .grid-cell.active { background-color: #0ea5e9; color: white; border-color: #0284c7; box-shadow: 0 0 0 2px rgba(14,165,233,.4); }
+
+  .pulse-warning { animation: pulse-warn 1s ease-in-out infinite; }
+  @keyframes pulse-warn {
+    0%, 100% { background-color: #fef3c7; }
+    50% { background-color: #fde68a; }
+  }
+  .pulse-critical { animation: pulse-crit .8s ease-in-out infinite; }
+  @keyframes pulse-crit {
+    0%, 100% { background-color: #fee2e2; }
+    50% { background-color: #fecaca; }
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .review-row .options-list { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
+  .review-row.open .options-list { max-height: 600px; }
+  .review-row .chevron { transition: transform .2s ease; }
+  .review-row.open .chevron { transform: rotate(180deg); }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; font-weight: 500; border-radius: .375rem; transition: all .15s; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background-color: #059669; color: white; }
+  .btn-primary:hover:not(:disabled) { background-color: #047857; }
+  .btn-secondary { background-color: white; border: 1px solid #cbd5e1; color: #334155; }
+  .btn-secondary:hover:not(:disabled) { background-color: #f8fafc; }
+  .btn-danger { background-color: #dc2626; color: white; }
+  .btn-danger:hover:not(:disabled) { background-color: #b91c1c; }
+  .btn-warning { background-color: #f59e0b; color: white; }
+  .btn-warning:hover:not(:disabled) { background-color: #d97706; }
+  .btn-outline-warning { background-color: white; border: 1px solid #fcd34d; color: #92400e; }
+  .btn-outline-warning:hover:not(:disabled) { background-color: #fffbeb; }
+  .btn-outline-danger { background-color: white; border: 1px solid #fca5a5; color: #b91c1c; }
+  .btn-outline-danger:hover:not(:disabled) { background-color: #fef2f2; }
+  .btn-outline-info { background-color: white; border: 1px solid #7dd3fc; color: #0369a1; }
+  .btn-outline-info:hover:not(:disabled) { background-color: #f0f9ff; }
+  .btn-ghost { background-color: transparent; color: #475569; }
+  .btn-ghost:hover { background-color: #f1f5f9; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ APP ROOT ============ -->
+<div id="app"></div>
+
+<!-- ============ BACK TO MANTAF APP ============ -->
+<a href="index.html" title="Kembali ke aplikasi MantaF"
+   class="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800">
+  <span aria-hidden="true">&larr;</span> Kembali ke MantaF
+</a>
+
+<!-- ============ QUESTIONS DATA ============ -->
+<script>
+window.__QUESTIONS__ = [{"id": 1, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda vital bayi baru lahir normal menunjukkan frekuensi nadi dalam rentang...", "options": {"A": "60-100 kali per menit", "B": "100-160 kali per menit", "C": "120-180 kali per menit", "D": "80-120 kali per menit", "E": "160-200 kali per menit"}, "correctAnswer": "B", "explanation": "Frekuensi nadi normal bayi baru lahir adalah 100-160 kali per menit, lebih cepat dari dewasa."}, {"id": 2, "category": "asuhan-pelayanan", "section": "teknis", "text": "Inisiasi Menyusu Dini (IMD) sebaiknya dilakukan segera setelah bayi lahir selama minimal...", "options": {"A": "15 menit", "B": "30 menit", "C": "45 menit", "D": "60 menit", "E": "90 menit"}, "correctAnswer": "D", "explanation": "IMD dilakukan minimal 60 menit (1 jam) pertama setelah lahir agar bayi mendapat kolostrum dan bonding terbentuk."}, {"id": 3, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada pemeriksaan tumbuh kembang balita menggunakan KMS, garis pertumbuhan yang berada di papan kuning (T) menunjukkan...", "options": {"A": "Status gizi baik", "B": "Status gizi kurang", "C": "Status gizi buruk", "D": "Status gizi lebih", "E": "Status gizi normal"}, "correctAnswer": "B", "explanation": "Garis pertumbuhan di papan kuning (T) pada KMS menunjukkan status gizi kurang yang perlu diintervensi."}, {"id": 4, "category": "asuhan-pelayanan", "section": "teknis", "text": "Imunisasi BCG diberikan untuk mencegah penyakit...", "options": {"A": "Polio", "B": "Campak", "C": "Tuberkulosis", "D": "Hepatitis B", "E": "Difteri"}, "correctAnswer": "C", "explanation": "Vaksin BCG (Bacillus Calmette-Guérin) diberikan untuk proteksi terhadap Tuberkulosis berat pada anak."}, {"id": 5, "category": "asuhan-pelayanan", "section": "teknis", "text": "Imunisasi polio pada bayi usia 0-11 bulan dilakukan sebanyak...", "options": {"A": "1 kali", "B": "2 kali", "C": "3 kali", "D": "4 kali", "E": "5 kali"}, "correctAnswer": "D", "explanation": "Imunisasi polio diberikan 4 kali pada bayi: saat lahir (IPV-0), usia 2, 3, dan 4 bulan."}, {"id": 6, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pengobatan Tuberkulosis (TB) menggunakan strategi DOTS yang mencakup periode pengobatan standar selama...", "options": {"A": "2 bulan", "B": "4 bulan", "C": "6 bulan", "D": "8 bulan", "E": "12 bulan"}, "correctAnswer": "C", "explanation": "Strategi DOTS untuk TB standar berdurasi 6 bulan (2 bulan fase intensif + 4 bulan fase lanjutan)."}, {"id": 7, "category": "asuhan-pelayanan", "section": "teknis", "text": "Saat melakukan pengkajian keperawatan, langkah pertama dalam proses keperawatan adalah...", "options": {"A": "Diagnosa keperawatan", "B": "Perencanaan", "C": "Pengkajian", "D": "Implementasi", "E": "Evaluasi"}, "correctAnswer": "C", "explanation": "Proses keperawatan dimulai dengan pengkajian untuk mengumpulkan data subjektif dan objektif pasien."}, {"id": 8, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda bahaya pada anak balita yang memerlukan rujukan segera ke fasilitas kesehatan adalah...", "options": {"A": "Nafsu makan menurun", "B": "Batuk pilek ringan", "C": "Tidak bisa minum/menyusu", "D": "Berak warna hijau", "E": "Suhu 37.5°C"}, "correctAnswer": "C", "explanation": "Tidak bisa minum/menyusu merupakan tanda bahaya umum pada Balita Sakit (MTBS) yang mengindikasikan kondisi serius."}, {"id": 9, "category": "asuhan-pelayanan", "section": "teknis", "text": "Deteksi dini tumbuh kembang balita menggunakan KPSP dilakukan pada usia...", "options": {"A": "3-72 bulan", "B": "6-60 bulan", "C": "12-48 bulan", "D": "0-24 bulan", "E": "24-72 bulan"}, "correctAnswer": "B", "explanation": "KPSP (Kuesioner Pra-Skrining Perkembangan) digunakan untuk skrining tumbuh kembang anak usia 6-60 bulan."}, {"id": 10, "category": "asuhan-pelayanan", "section": "teknis", "text": "Penyakit Tidak Menular (PTM) yang menjadi prioritas program Pengelolaan PTM di Puskesmas antara lain...", "options": {"A": "Tifus, kolera, diare", "B": "Hipertensi, DM, kanker", "C": "TB, HIV, malaria", "D": "ISPA, pneumonia, asma", "E": "Hepatitis, chikungunya"}, "correctAnswer": "B", "explanation": "Prioritas PTM meliputi hipertensi, diabetes mellitus, kanker, dan penyakit jantung sesuai program Pengelolaan PTM."}, {"id": 11, "category": "asuhan-pelayanan", "section": "teknis", "text": "Klasifikasi stunting berdasarkan panjang badan menurut umur (PB/U) menggunakan z-score. Anak dikategorikan stunting jika z-score...", "options": {"A": "> +2 SD", "B": "Antara -2 SD hingga +2 SD", "C": "< -2 SD", "D": "< -3 SD", "E": "< -1 SD"}, "correctAnswer": "C", "explanation": "Stunting (sangat pendek) didefinisikan sebagai PB/U atau TB/U dengan z-score < -2 SD; sangat pendek jika < -3 SD."}, {"id": 12, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada ibu hamil, pemberian tablet tambah darah (TTD) minimal selama...", "options": {"A": "30 hari", "B": "60 hari", "C": "90 hari", "D": "120 hari", "E": "180 hari"}, "correctAnswer": "C", "explanation": "Ibu hamil dianjurkan mengonsumsi TTD minimal 90 hari selama kehamilan untuk mencegah anemia."}, {"id": 13, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda/gejala K4 (Kunjungan ke-4) pada ibu hamil dilakukan pada trimester...", "options": {"A": "Trimester I (usia kehamilan < 12 minggu)", "B": "Trimester II (usia kehamilan 12-24 minggu)", "C": "Trimester III (usia kehamilan 24-36 minggu)", "D": "Trimester IV (usia kehamilan > 36 minggu)", "E": "Setiap trimester"}, "correctAnswer": "C", "explanation": "K4 adalah kunjungan ke-4 ibu hamil yang dilakukan pada trimester III (usia kehamilan 24-36 minggu)."}, {"id": 14, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada pemeriksaan tekanan darah, hipertensi pada dewasa didefinisikan sebagai tekanan sistolik dan diastolik berturut-turut...", "options": {"A": "> 110/70 mmHg", "B": "> 120/80 mmHg", "C": "> 130/85 mmHg", "D": "> 140/90 mmHg", "E": "> 160/100 mmHg"}, "correctAnswer": "D", "explanation": "Hipertensi pada dewasa didefinisikan sebagai tekanan darah ≥ 140/90 mmHg berdasarkan Pedoman PTM Kemenkes."}, {"id": 15, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pemberian ASI eksklusif dianjurkan selama minimal...", "options": {"A": "2 bulan", "B": "4 bulan", "C": "6 bulan", "D": "12 bulan", "E": "24 bulan"}, "correctAnswer": "C", "explanation": "ASI eksklusif diberikan tanpa makanan/minuman lain selama 6 bulan pertama kehidupan bayi."}, {"id": 16, "category": "asuhan-pelayanan", "section": "teknis", "text": "Jenis imunisasi yang diberikan saat bayi lahir di fasilitas kesehatan adalah...", "options": {"A": "BCG dan polio", "B": "Hepatitis B-0 dan polio-0", "C": "Campak dan BCG", "D": "DPT-HB-Hib", "E": "IPV dan rotavirus"}, "correctAnswer": "B", "explanation": "Saat lahir, bayi mendapat imunisasi Hepatitis B-0 (dalam 24 jam pertama) dan polio-0."}, {"id": 17, "category": "asuhan-pelayanan", "section": "teknis", "text": "Prinsip penanganan diare akut pada balita dengan rencana terapi B (diare tanpa dehidrasi) adalah...", "options": {"A": "Pemberian cairan IV dan rujukan segera", "B": "Pemberian oralit, zinc, dan teruskan ASI/makanan", "C": "Pemberian antibiotik spektrum luas", "D": "Pemberian antidiare dan antiemetik", "E": "Puasa 24 jam lalu reintroduksi cairan"}, "correctAnswer": "B", "explanation": "Pada diare tanpa dehidrasi (rencana B), berikan oralit, zinc selama 10 hari, dan teruskan ASI/makanan."}, {"id": 18, "category": "asuhan-pelayanan", "section": "teknis", "text": "Penatalaksanaan awal penderita stroke iskemik akut yang datang < 4,5 jam sejak onset gejala adalah...", "options": {"A": "Pemberian aspirin oral", "B": "Trombolisis dengan rt-PA", "C": "Antikoagulan heparin IV", "D": "Dekstran IV bolus", "E": "Manitol IV"}, "correctAnswer": "B", "explanation": "Pada stroke iskemik akut dalam window terapi < 4,5 jam, trombolisis dengan rt-PA (alteplase) adalah standar bila tidak ada kontraindikasi."}, {"id": 19, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda klinis syok hipovolemik pada dewasa yang paling sensitif adalah...", "options": {"A": "Hipotensi", "B": "Takikardia", "C": "Penurunan kesadaran", "D": "Ekstremitas dingin", "E": "Oliguria"}, "correctAnswer": "B", "explanation": "Takikardia adalah tanda paling awal dan sensitif syok hipovolemik, muncul sebelum hipotensi terjadi."}, {"id": 20, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada MTBS, klasifikasi pneumonia berat ditandai dengan...", "options": {"A": "Batuk, napas tidak cepat", "B": "Batuk, napas cepat", "C": "Batuk, stridor dan dinding dada bawah tertarik", "D": "Batuk, demam ringan", "E": "Batuk, pilek"}, "correctAnswer": "C", "explanation": "Pneumonia berat pada MTBS ditandai dengan adanya stridor dan dinding dada bawah tertarik (chest indrawing)."}, {"id": 21, "category": "asuhan-pelayanan", "section": "teknis", "text": "Frekuensi napas normal dewasa adalah...", "options": {"A": "8-12 kali/menit", "B": "12-20 kali/menit", "C": "20-30 kali/menit", "D": "30-40 kali/menit", "E": "40-60 kali/menit"}, "correctAnswer": "B", "explanation": "Frekuensi napas normal dewasa adalah 12-20 kali per menit."}, {"id": 22, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda Cushing triad pada peningkatan tekanan intrakranial meliputi...", "options": {"A": "Hipotensi, bradikardia, takipnea", "B": "Hipertensi, bradikardia, pola napas ireguler", "C": "Hipertensi, takikardia, demam", "D": "Hipotensi, takikardia, hipoksia", "E": "Hipertensi, takipnea, miosis"}, "correctAnswer": "B", "explanation": "Triad Cushing: hipertensi, bradikardia, dan pola napas ireguler (cheyne-stokes) menandakan peningkatan TIK signifikan."}, {"id": 23, "category": "asuhan-pelayanan", "section": "teknis", "text": "Skrining kanker serviks menggunakan metode IVA (Inspeksi Visual dengan Asam Asetat) dilakukan pada wanita usia...", "options": {"A": "20-50 tahun", "B": "30-50 tahun", "C": "40-60 tahun", "D": "25-65 tahun", "E": "35-70 tahun"}, "correctAnswer": "B", "explanation": "Skrining IVA dianjurkan pada wanita usia 30-50 tahun, dilakukan setiap 5 tahun jika hasil negatif."}, {"id": 24, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada bayi dengan ikterus fisiologis, biasanya muncul pada hari ke...", "options": {"A": "Hari ke-1", "B": "Hari ke-2 sampai 3", "C": "Hari ke-4 sampai 5", "D": "Hari ke-7", "E": "Hari ke-14"}, "correctAnswer": "B", "explanation": "Ikterus fisiologis muncul pada hari ke-2 sampai ke-3, mencapai puncak hari ke-4-5, dan hilang dalam 1-2 minggu."}, {"id": 25, "category": "asuhan-pelayanan", "section": "teknis", "text": "Penanganan luka bakar derajat II dengan luas < 10% pada dewasa sebaiknya...", "options": {"A": "Dibiarkan terbuka", "B": "Diberi salep antibiotik saja", "C": "Dinginkan dengan air mengalir, beri penutup steril", "D": "Segera rujuk ke RS", "E": "Berikan es batu langsung ke luka"}, "correctAnswer": "C", "explanation": "Luka bakar derajat II < 10% pada dewasa: dinginkan dengan air mengalir 20 menit, lalu tutup dengan kasa steril."}, {"id": 26, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada Pengelolaan Terpadu Balita Sakit (MTBS), tanda umum bahaya yang memerlukan rujukan segera adalah...", "options": {"A": "Batuk lebih dari 7 hari", "B": "Tidak bisa minum/menyusu, muntah semua, kejang", "C": "Demam 2 hari", "D": "Diare 2 kali sehari", "E": "Pilek dan batuk"}, "correctAnswer": "B", "explanation": "Tanda umum bahaya pada MTBS meliputi tidak bisa minum/menyusu, muntah semua, dan kejang — semuanya perlu rujukan segera."}, {"id": 27, "category": "asuhan-pelayanan", "section": "teknis", "text": "Tanda vital penderita dewasa dengan status gawat darurat yang memerlukan resusitasi segera adalah...", "options": {"A": "Sistolik 110 mmHg", "B": "Sistolik < 90 mmHg", "C": "Nadi 80 kali/menit", "D": "Suhu 37.2°C", "E": "SpO2 95%"}, "correctAnswer": "B", "explanation": "Tekanan darah sistolik < 90 mmHg pada dewasa menandakan syok dan memerlukan resusitasi cairan segera."}, {"id": 28, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pengobatan standar filariasis massal menggunakan obat...", "options": {"A": "Albendazole + DEC", "B": "Ivermectin + DEC", "C": "Praziquantel", "D": "Metronidazole", "E": "Diethylcarbamazine citrate tunggal"}, "correctAnswer": "A", "explanation": "Pengobatan massal filariasis menggunakan kombinasi DEC + Albendazole diminum sekali setahun selama 5 tahun."}, {"id": 29, "category": "asuhan-pelayanan", "section": "teknis", "text": "Skrining tumbuh kembang bayi usia 0-6 bulan yang penting dilakukan terkait gangguan pendengaran adalah...", "options": {"A": "OAE (Otoacoustic Emission)", "B": "Audiometri nada murni", "C": "Rinne test", "D": "Weber test", "E": "BERA diagnostik"}, "correctAnswer": "A", "explanation": "OAE (Otoacoustic Emission) adalah metode skrining pendengaran bayi baru lahir yang non-invasif dan cepat."}, {"id": 30, "category": "asuhan-pelayanan", "section": "teknis", "text": "Pada pasien dengan kejang demam kompleks, tanda yang membedakan dari kejang demam sederhana adalah...", "options": {"A": "Durasi < 5 menit, umum", "B": "Durasi > 15 menit, fokal atau berulang dalam 24 jam", "C": "Demam < 38°C", "D": "Suhu normal saat kejang", "E": "Tidak ada riwayat demam"}, "correctAnswer": "B", "explanation": "Kejang demam kompleks ditandai durasi > 15 menit, fokal, atau berulang dalam 24 jam — berbeda dari kejang demam sederhana."}, {"id": 31, "category": "etika-hukum", "section": "teknis", "text": "Prinsip informed consent dalam pelayanan kesehatan berasaskan...", "options": {"A": "Otonomi pasien", "B": "Beneficence", "C": "Non-maleficence", "D": "Justice", "E": "Veracity"}, "correctAnswer": "A", "explanation": "Informed consent berasaskan prinsip otonomi pasien, yaitu hak pasien untuk menentukan nasibnya sendiri."}, {"id": 32, "category": "etika-hukum", "section": "teknis", "text": "Prinsip bioetika", "options": {"A": "Menghormati keputusan pasien", "B": "Melakukan yang terbaik untuk pasien", "C": "Tidak menimbulkan kerugian", "D": "Keadilan dalam distribusi sumber daya", "E": "Mengatakan yang benar"}, "correctAnswer": "B", "explanation": "Beneficence adalah prinsip berbuat baik, melakukan tindakan terbaik untuk kepentingan pasien."}, {"id": 33, "category": "etika-hukum", "section": "teknis", "text": "Prinsip non-maleficence dalam pelayanan kesehatan dikenal dengan istilah...", "options": {"A": "Berbuat baik", "B": "Tidak membahayakan (primum non nocere)", "C": "Menghormati otonomi", "D": "Keadilan distribusi", "E": "Mengatakan kebenaran"}, "correctAnswer": "B", "explanation": "Non-maleficence berasal dari prinsip primum non nocere ="}, {"id": 34, "category": "etika-hukum", "section": "teknis", "text": "Enam Sasaran Keselamatan Pasien (Patient Safety) menurut Permenkes yang pertama adalah...", "options": {"A": "Mengurangi risiko infeksi nosokomial", "B": "Identifikasi pasien dengan benar", "C": "Peningkatan keamanan obat yang perlu perhatian khusus", "D": "Komitmen keselamatan pasien", "E": "Komunikasi yang efektif"}, "correctAnswer": "B", "explanation": "Sasaran 1 Patient Safety adalah identifikasi pasien dengan benar menggunakan minimal 2 identitas (nama lengkap + tanggal lahir)."}, {"id": 35, "category": "etika-hukum", "section": "teknis", "text": "Pada Sasaran Keselamatan Pasien,", "options": {"A": "Sasaran 1: Identifikasi pasien", "B": "Sasaran 3: Meningkatkan keamanan prosedur tindakan invasif", "C": "Sasaran 4: Meningkatkan keamanan operasi", "D": "Sasaran 5: Mengurangi risiko infeksi", "E": "Sasaran 6: Mengurangi risiko pasien jatuh"}, "correctAnswer": "C", "explanation": "Penandaan lokasi operasi termasuk Sasaran 4: Meningkatkan keamanan operasi (correct site, correct procedure, correct patient)."}, {"id": 36, "category": "etika-hukum", "section": "teknis", "text": "Kewajiban tenaga kesehatan menjaga rahasia medis pasien tertuang dalam...", "options": {"A": "UU No. 36 Tahun 2009 tentang Kesehatan", "B": "UU No. 29 Tahun 2004 tentang Praktik Kedokteran", "C": "UU No. 44 Tahun 2009 tentang Rumah Sakit", "D": "Semua di atas", "E": "Permenkes tentang Rekam Medis"}, "correctAnswer": "D", "explanation": "Kewajiban menjaga rahasia medis pasien diatur dalam berbagai UU: 36/2009, 29/2004, dan 44/2009."}, {"id": 37, "category": "etika-hukum", "section": "teknis", "text": "Hak pasien untuk menolak tindakan medis dilindungi oleh...", "options": {"A": "Prinsip veracity", "B": "Prinsip otonomi", "C": "Prinsip beneficence", "D": "Prinsip justice", "E": "Prinsip paternalism"}, "correctAnswer": "B", "explanation": "Hak menolak tindakan adalah bentuk otonomi pasien yang harus dihormati tenaga kesehatan setelah diberi informasi."}, {"id": 38, "category": "etika-hukum", "section": "teknis", "text": "Sasaran Keselamatan Pasien ke-6 (Pasien Jatuh) menggunakan skala Morse. Skor Morse yang menunjukkan risiko jatuh tinggi adalah...", "options": {"A": "< 25", "B": "25-50", "C": "> 50", "D": "> 75", "E": "> 100"}, "correctAnswer": "C", "explanation": "Skala Morse > 50 menunjukkan risiko jatuh tinggi yang memerlukan intervensi pencegahan."}, {"id": 39, "category": "etika-hukum", "section": "teknis", "text": "Sanksi hukum bagi tenaga kesehatan yang melakukan malapraktik sesuai UU No. 36 Tahun 2009 dapat berupa...", "options": {"A": "Teguran lisan saja", "B": "Sanksi administratif, perdata, dan pidana", "C": "Pemutusan kontrak kerja", "D": "Denda administratif", "E": "Tidak ada sanksi"}, "correctAnswer": "B", "explanation": "Malapraktik dapat dikenai sanksi administratif (izin dicabut), perdata (ganti rugi), dan pidana jika memenuhi unsur pidana."}, {"id": 40, "category": "etika-hukum", "section": "teknis", "text": "Dalam komunikasi terapeutik, prinsip konfidensialitas dapat dilanggar dalam kondisi...", "options": {"A": "Saat pasien meminta", "B": "Saat ada kepentingan umum yang lebih tinggi (wabah, kekerasan)", "C": "Saat pasien akan pindah RS", "D": "Saat dokter konsultan meminta", "E": "Tidak pernah bisa dilanggar"}, "correctAnswer": "B", "explanation": "Konfidensialitas dapat dilanggar jika kepentingan umum lebih tinggi (mis. wabah, ancaman nyawa orang lain)."}, {"id": 41, "category": "etika-hukum", "section": "teknis", "text": "Prinsip komunikasi", "options": {"A": "Situation, Background, Assessment, Recommendation", "B": "Subjective, Background, Action, Result", "C": "Situation, Briefing, Analysis, Resolution", "D": "Standard, Benchmark, Action, Report", "E": "Symptom, Background, Allergy, Response"}, "correctAnswer": "A", "explanation": "SBAR = Situation, Background, Assessment, Recommendation — format komunikasi standar untuk handover pasien."}, {"id": 42, "category": "etika-hukum", "section": "teknis", "text": "Pada informed consent, yang bukan merupakan unsur wajib adalah...", "options": {"A": "Diagnosis", "B": "Tindakan medis dan tujuan", "C": "Risiko dan komplikasi", "D": "Biaya total pasti", "E": "Alternatif tindakan"}, "correctAnswer": "D", "explanation": "Biaya total pasti bukan unsur wajib informed consent (meskipun etis disampaikan); unsur wajib: diagnosis, tindakan, tujuan, risiko, alternatif, prognosis."}, {"id": 43, "category": "etika-hukum", "section": "teknis", "text": "Pada Sasaran Keselamatan Pasien ke-2 (Peningkatan keamanan obat), obat dengan", "options": {"A": "Obat dengan nama mirip dan ejaan mirip yang berisiko tertukar", "B": "Obat generik dan paten", "C": "Obat keras dan obat bebas", "D": "Obat narkotik dan psikotropika", "E": "Obat dosis tinggi"}, "correctAnswer": "A", "explanation": "LASA = Look-Alike Sound-Alike, obat dengan nama/ejaan serupa yang berisiko tertukar, harus dikelola khusus."}, {"id": 44, "category": "etika-hukum", "section": "teknis", "text": "Dokumen rekam medis menurut Permenkes No. 24 Tahun 2022 harus disimpan minimal selama...", "options": {"A": "5 tahun", "B": "10 tahun", "C": "15 tahun", "D": "20 tahun", "E": "Selama pasien hidup"}, "correctAnswer": "B", "explanation": "Berdasarkan Permenkes 24/2022, rekam medis disimpan minimal 10 tahun setelah pasien terakhir berobat."}, {"id": 45, "category": "etika-hukum", "section": "teknis", "text": "Sasaran 5 Keselamatan Pasien", "options": {"A": "Hand hygiene 5 momen", "B": "Penggunaan APD lengkap", "C": "Sterilisasi alat", "D": "Isolasi pasien", "E": "Pemberian antibiotik profilaksis"}, "correctAnswer": "A", "explanation": "Sasaran 5 menekankan kepatuhan hand hygiene 5 momen sebagai langkah utama pencegahan infeksi nosokomial."}, {"id": 46, "category": "manajemen-puskesmas", "section": "teknis", "text": "Fungsi utama Puskesmas dalam Sistem Kesehatan Nasional adalah...", "options": {"A": "Pelayanan rawat inap spesialistik", "B": "Pusat pelayanan kesehatan tingkat pertama dan kesehatan masyarakat", "C": "Rujukan tertinggi kasus kompleks", "D": "Pendidikan tenaga kesehatan", "E": "Penelitian epidemiologi"}, "correctAnswer": "B", "explanation": "Puskesmas berfungsi sebagai pusat pelayanan kesehatan tingkat pertama (UKP) dan pusat pelayanan kesehatan masyarakat (UKM)."}, {"id": 47, "category": "manajemen-puskesmas", "section": "teknis", "text": "Standar Pelayanan Minimal (SPM) Puskesmas diatur berdasarkan...", "options": {"A": "Peraturan Menteri Kesehatan", "B": "Peraturan Presiden", "C": "Peraturan Pemerintah No. 2 Tahun 2018", "D": "Keputusan Menteri Kesehatan", "E": "Peraturan Daerah"}, "correctAnswer": "C", "explanation": "SPM bidang kesehatan diatur dalam PP No. 2 Tahun 2018 tentang Standar Pelayanan Minimal."}, {"id": 48, "category": "manajemen-puskesmas", "section": "teknis", "text": "Upaya Kesehatan Masyarakat (UKM) di Puskesmas dikelompokkan menjadi...", "options": {"A": "UKM esensial dan UKM rujukan", "B": "UKM dasar dan UKM lanjutan", "C": "UKM preventif dan UKM kuratif", "D": "UKM primer dan UKM sekunder", "E": "UKM langsung dan UKM tidak langsung"}, "correctAnswer": "A", "explanation": "UKM dibagi menjadi UKM esensial (dasar) dan UKM rujukan (klinik kesehatan masyarakat)."}, {"id": 49, "category": "manajemen-puskesmas", "section": "teknis", "text": "PIS-PK (Penilaian Independen Pencapaian Kinerja Puskesmas) dilaksanakan dengan frekuensi...", "options": {"A": "Setiap bulan", "B": "Setiap 3 bulan", "C": "Setiap 6 bulan", "D": "Setiap 1 tahun", "E": "Setiap 5 tahun"}, "correctAnswer": "D", "explanation": "PIS-PK (juga dikenal sebagai PKP — Penilaian Kinerja Puskesmas) dilakukan minimal 1 kali setahun."}, {"id": 50, "category": "manajemen-puskesmas", "section": "teknis", "text": "Sesuai Permenkes No. 25 Tahun 2014, jumlah Upaya Kesehatan Masyarakat Esensial di Puskesmas ada...", "options": {"A": "5 upaya", "B": "6 upaya", "C": "7 upaya", "D": "8 upaya", "E": "10 upaya"}, "correctAnswer": "B", "explanation": "Permenkes 25/2014 mengatur 6 UKM Esensial: UKM P2M, UKM Kesehatan Ibu, UKM Kesehatan Anak, UKM Gizi, UKM Kesehatan Lingkungan, UKM Promkes."}, {"id": 51, "category": "manajemen-puskesmas", "section": "teknis", "text": "Perencanaan obat di Puskesmas menggunakan metode...", "options": {"A": "Metode konvensional", "B": "Metode ABC/VEN (Consumption-morbiditas)", "C": "Metode trial and error", "D": "Metode order langsung", "E": "Metode stok maksimal"}, "correctAnswer": "B", "explanation": "Perencanaan obat Puskesmas menggunakan metode ABC/VEN dengan analisis konsumsi dan morbiditas untuk efisiensi."}, {"id": 52, "category": "manajemen-puskesmas", "section": "teknis", "text": "PLP (Penerimaan, Penyimpanan, Pendistribusian) obat di Puskesmas termasuk dalam fungsi...", "options": {"A": "Perencanaan", "B": "Pengadaan", "C": "Pengelolaan", "D": "Pemanfaatan", "E": "Pengawasan"}, "correctAnswer": "C", "explanation": "Penerimaan, penyimpanan, dan pendistribusian (PLP) termasuk fungsi pengelolaan obat di Puskesmas."}, {"id": 53, "category": "manajemen-puskesmas", "section": "teknis", "text": "Siklus manajemen Puskesmas yang ideal dimulai dari...", "options": {"A": "Pelaksanaan → Evaluasi → Perencanaan", "B": "Perencanaan → Pelaksanaan → Pengawasan → Evaluasi", "C": "Pengawasan → Perencanaan → Pelaksanaan", "D": "Evaluasi → Perencanaan → Pelaksanaan", "E": "Pelaksanaan → Perencanaan → Pengawasan"}, "correctAnswer": "B", "explanation": "Siklus manajemen Puskesmas: Perencanaan → Pelaksanaan → Pengawasan dan Pengendalian → Evaluasi."}, {"id": 54, "category": "manajemen-puskesmas", "section": "teknis", "text": "Cakupan D/S pada Puskesmas mengukur...", "options": {"A": "Cakupan kunjungan bayi dibagi balita", "B": "Cakupan kunjungan balita dibagi sasaran balita", "C": "Cakupan kunjungan ibu hamil", "D": "Cakupan imunisasi lengkap", "E": "Cakupan penimbangan balita"}, "correctAnswer": "B", "explanation": "D/S = jumlah balita yang ditimbang dibagi jumlah sasaran balita di wilayah kerja Puskesmas."}, {"id": 55, "category": "manajemen-puskesmas", "section": "teknis", "text": "Kegiatan UKM (Upaya Kesehatan Masyarakat) Perorangan di Puskesmas meliputi...", "options": {"A": "Promosi kesehatan", "B": "Pemeriksaan dan pengobatan pasien rawat jalan", "C": "Penyehatan lingkungan", "D": "Surveilans epidemiologi", "E": "Pemberantasan vektor"}, "correctAnswer": "B", "explanation": "UKP (Upaya Kesehatan Perorangan) di Puskesmas meliputi pemeriksaan, diagnosis, dan pengobatan pasien rawat jalan."}, {"id": 56, "category": "manajemen-puskesmas", "section": "teknis", "text": "Pengisian SPM (Standar Pelayanan Minimal) di Puskesmas dilaporkan ke...", "options": {"A": "Kementerian Kesehatan langsung", "B": "Dinas Kesehatan Kabupaten/Kota", "C": "Bupati/Walikota langsung", "D": "Kepala Daerah", "E": "BPS"}, "correctAnswer": "B", "explanation": "Puskesmas melaporkan SPM ke Dinas Kesehatan Kabupaten/Kota untuk diteruskan ke tingkat pusat."}, {"id": 57, "category": "manajemen-puskesmas", "section": "teknis", "text": "Pengorganisasian UKM rujukan di Puskesmas mencakup klinik untuk...", "options": {"A": "TB-MDR, kusta, DBD", "B": "Kesehatan jiwa, gigi, geriatric", "C": "P2 ISPA, diare, malaria", "D": "Rawat inap dan UGD", "E": "Spesialisasi penyakit dalam"}, "correctAnswer": "A", "explanation": "UKM rujukan mencakup klinik TB MDR, kusta, filariasis, DBD, dan lain-lain yang membutuhkan penanganan khusus."}, {"id": 58, "category": "manajemen-puskesmas", "section": "teknis", "text": "Perencanaan Operasional Puskesmas (POP) dibuat untuk periode...", "options": {"A": "1 tahun", "B": "2 tahun", "C": "5 tahun", "D": "10 tahun", "E": "Bulanan"}, "correctAnswer": "A", "explanation": "Perencanaan Operasional (POP) Puskesmas dibuat untuk periode 1 tahun (tahun berjalan) dengan kegiatan rinci."}, {"id": 59, "category": "manajemen-puskesmas", "section": "teknis", "text": "Indikator dari Rencana Usulan Kegiatan (RUK) Puskesmas terutama digunakan untuk...", "options": {"A": "Mengukur kinerja dokter", "B": "Menyusun rencana kegiatan tahun berikutnya", "C": "Mengukur kepuasan pasien", "D": "Mengukur kualitas pelayanan", "E": "Mengukur kinerja perawat"}, "correctAnswer": "B", "explanation": "RUK (Rencana Usulan Kegiatan) Puskesmas adalah dokumen perencanaan untuk menyusun kegiatan tahun berikutnya."}, {"id": 60, "category": "manajemen-puskesmas", "section": "teknis", "text": "Konsep", "options": {"A": "Alma-Ata 1978", "B": "Ottawa 1986", "C": "Jakarta 1997", "D": "Bangkok 2005", "E": "Helsinki 2013"}, "correctAnswer": "A", "explanation": "Deklarasi Alma-Ata 1978 menetapkan"}, {"id": 61, "category": "ppi-k3-kesling", "section": "teknis", "text": "Lima momen cuci tangan menurut WHO tidak termasuk...", "options": {"A": "Sebelum kontak dengan pasien", "B": "Sebelum tindakan aseptik", "C": "Sesudah terpapar cairan tubuh", "D": "Sesudah kontak dengan pasien", "E": "Sebelum makan"}, "correctAnswer": "E", "explanation": "Lima momen cuci tangan WHO: sebelum kontak pasien, sebelum tindakan aseptik, setelah risiko paparan cairan, setelah kontak pasien, setelah kontak lingkungan pasien — bukan sebelum makan."}, {"id": 62, "category": "ppi-k3-kesling", "section": "teknis", "text": "Penggunaan APD (Alat Pelindung Diri) yang benar saat menangani pasien COVID-19 suspek di ruang rawat adalah...", "options": {"A": "Masker bedah dan sarung tangan saja", "B": "Masker N95, faceshield, gaun panjang, sarung tangan, sepatu boot", "C": "Hanya masker N95", "D": "Masker bedah dan goggle", "E": "Tidak perlu APD bila jaga jarak 2m"}, "correctAnswer": "B", "explanation": "Penanganan pasien suspek COVID-19 dengan tindakan aerosolized memerlukan APD lengkap level 3: N95, faceshield, gaun, sarung tangan, sepatu boot."}, {"id": 63, "category": "ppi-k3-kesling", "section": "teknis", "text": "Warna kantong plastik untuk limbah infeksius menurut Permenkes adalah...", "options": {"A": "Kuning", "B": "Merah", "C": "Hijau", "D": "Hitam", "E": "Putih"}, "correctAnswer": "A", "explanation": "Limbah infeksius dikemas dalam kantong kuning dengan simbol biohazard."}, {"id": 64, "category": "ppi-k3-kesling", "section": "teknis", "text": "Limbah benda tajam (jarum suntik) harus dibuang ke...", "options": {"A": "Kantong kuning", "B": "Kantong hitam", "C": "Safety box kuning keras", "D": "Kantong merah", "E": "Tempat sampah biasa"}, "correctAnswer": "C", "explanation": "Limbah benda tajam harus dibuang ke safety box kuning keras yang tahan tusukan."}, {"id": 65, "category": "ppi-k3-kesling", "section": "teknis", "text": "Pemilihan APD berdasarkan risiko paparan mengikuti prinsip...", "options": {"A": "Universal precaution", "B": "Standard precaution", "C": "Droplet precaution", "D": "Contact precaution", "E": "Airborne precaution"}, "correctAnswer": "B", "explanation": "Standard precaution adalah prinsip dasar pemilihan APD untuk SEMUA pasien, diperketat sesuai tipe transmisi (kontak, droplet, airborne)."}, {"id": 66, "category": "ppi-k3-kesling", "section": "teknis", "text": "Standar kualitas air bersih untuk kebutuhan domestik sesuai Permenkes No. 32 Tahun 2017 adalah...", "options": {"A": "E.coli = 0 per 100 ml", "B": "E.coli < 10 per 100 ml", "C": "E.coli < 100 per 100 ml", "D": "E.coli < 1000 per 100 ml", "E": "Tidak ada batasan"}, "correctAnswer": "A", "explanation": "Sesuai Permenkes 32/2017, air bersih untuk minum harus 0 E.coli per 100 ml."}, {"id": 67, "category": "ppi-k3-kesling", "section": "teknis", "text": "SPMI (Standar Pelayanan Minimal Rumah Sakit) terkait PPI mensyaratkan angka infeksi nosokomial (ILO) ≤...", "options": {"A": "< 1%", "B": "< 5%", "C": "< 10%", "D": "< 15%", "E": "< 20%"}, "correctAnswer": "B", "explanation": "Target nasional ILO ≤ 5% sesuai standar PPI di fasilitas kesehatan."}, {"id": 68, "category": "ppi-k3-kesling", "section": "teknis", "text": "Sanitasi total berbasis masyarakat (STBM) memiliki 5 pilar, yang pertama adalah...", "options": {"A": "Stop BABS Bebas", "B": "Cuci tangan pakai sabun", "C": "Pengelolaan air minum aman", "D": "Pengelolaan sampah rumah tangga", "E": "Pengelolaan limbah cair"}, "correctAnswer": "A", "explanation": "Pilar pertama STBM adalah Stop BABS (Buang Air Besar Sembarangan) Bebas."}, {"id": 69, "category": "ppi-k3-kesling", "section": "teknis", "text": "Pada K3 (Keselamatan dan Kesehatan Kerja), APD untuk melindungi mata dari paparan cahaya pengelasan adalah...", "options": {"A": "Kacamata bening", "B": "Welding helmet/goggle filter shade", "C": "Faceshield bening", "D": "Sarung tangan", "E": "Respirator"}, "correctAnswer": "B", "explanation": "Pengelasan memerlukan helmet/goggle dengan filter shade sesuai tingkat radiasi UV/IR untuk melindungi retina."}, {"id": 70, "category": "ppi-k3-kesling", "section": "teknis", "text": "Insidental finding seorang pekerja terpapar darah akibat tertusuk jarum suntik bekas. Tindakan pertama yang benar adalah...", "options": {"A": "Laporkan ke K3 dan segera lakukan post-exposure prophylaxis (PEP) HIV", "B": "Diam saja bila tidak ada luka", "C": "Cuci dengan alkohol 70%", "D": "Berikan antibiotik profilaksis", "E": "Istirahat 1 hari"}, "correctAnswer": "A", "explanation": "Tertusuk jarum bekas: cuci dengan air sabun, laporkan, dan segera evaluasi PEP HIV dalam 2-72 jam pertama."}, {"id": 71, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Rute pemberian obat yang memiliki onset paling cepat adalah...", "options": {"A": "Sublingual", "B": "Intravena", "C": "Intramuskular", "D": "Subkutan", "E": "Oral"}, "correctAnswer": "B", "explanation": "Pemberian intravena (IV) memiliki onset paling cepat karena langsung masuk sirkulasi sistemik."}, {"id": 72, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Obat pilihan pertama untuk tachycardia ventricular dengan destabilisasi hemodinamik adalah...", "options": {"A": "Amiodaron IV", "B": "Adenosine IV", "C": "Verapamil IV", "D": "Lidokain IV", "E": "Atropine IV"}, "correctAnswer": "A", "explanation": "Amiodaron IV adalah obat pilihan VT dengan destabilisasi hemodinamik (jika tidak perlu synchroniz cardioversion segera)."}, {"id": 73, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Nilai normal gula darah puasa pada dewasa adalah...", "options": {"A": "< 70 mg/dL", "B": "70-100 mg/dL", "C": "100-126 mg/dL", "D": "126-200 mg/dL", "E": "> 200 mg/dL"}, "correctAnswer": "B", "explanation": "Gula darah puasa normal dewasa: 70-100 mg/dL (Perkeni). Diabetes jika GDP ≥ 126 mg/dL."}, {"id": 74, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "HbA1c mencerminkan kadar glukosa darah rata-rata dalam periode...", "options": {"A": "1 minggu", "B": "2-4 minggu", "C": "8-12 minggu", "D": "6 bulan", "E": "1 tahun"}, "correctAnswer": "C", "explanation": "HbA1c mencerminkan rata-rata glukosa darah 8-12 minggu (2-3 bulan) terakhir karena masa hidup eritrosit."}, {"id": 75, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Tanda WHO pada dehidrasi berat pada balita adalah...", "options": {"A": "Haus, mata cekung", "B": "Letargis, mata sangat cekung, cubitan kulit balik sangat lambat", "C": "Demam ringan", "D": "Mual dan muntah", "E": "Tidak buang air 6 jam"}, "correctAnswer": "B", "explanation": "Dehidrasi berat: letargis, mata sangat cekung, tidak bisa minum, cubitan kulit balik sangat lambat (> 2 detik)."}, {"id": 76, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Pada adult respiratory distress syndrome (ARDS), gambaran X-ray thorax khas berupa...", "options": {"A": "Infiltrat interstisial difus bilateral", "B": "Kavitas berdinding tipis", "C": "Pneumothorax", "D": "Efusi pleura", "E": "Massa bulat soliter"}, "correctAnswer": "A", "explanation": "ARDS menunjukkan infiltrat interstisial-alveolar difus bilateral (ground-glass opacity) tanpa gagal jantung kongestif."}, {"id": 77, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Bila pasien ditemukan henti jantung, urutan BLS (Basic Life Support) yang benar adalah...", "options": {"A": "Airway-Breathing-Compression", "B": "Compression-Airway-Breathing (C-A-B)", "C": "Breathing-Compression-Airway", "D": "Airway-Compression-Breathing", "E": "Compression-Breathing-Airway"}, "correctAnswer": "B", "explanation": "BLS 2020 menggunakan urutan C-A-B: Compression dulu (30x), lalu Airway, lalu Breathing (2x)."}, {"id": 78, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Dosis epinefrin standar pada cardiac arrest dewasa adalah...", "options": {"A": "0.1 mg IV bolus", "B": "1 mg IV bolus setiap 3-5 menit", "C": "5 mg IV bolus", "D": "10 mg IV bolus", "E": "0.5 mg subkutan"}, "correctAnswer": "B", "explanation": "Epinefrin 1 mg IV bolus setiap 3-5 menit selama resusitasi cardiac arrest dewasa (AHA 2020)."}, {"id": 79, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Indeks massa tubuh (IMT) untuk kategori obesitas pada orang Asia adalah...", "options": {"A": "> 23 kg/m²", "B": "> 25 kg/m²", "C": "> 27.5 kg/m²", "D": "> 30 kg/m²", "E": "> 35 kg/m²"}, "correctAnswer": "C", "explanation": "Klasifikasi Asia-Pasifik: obesitas IMT ≥ 27.5 kg/m²; overweight 23-24.9; normal 18.5-22.9."}, {"id": 80, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Kebutuhan cairan maintenance dewasa per hari menurut rumus Holliday-Segar (4-2-1) untuk 60 kg adalah...", "options": {"A": "1500 mL/24 jam", "B": "2000 mL/24 jam", "C": "2400 mL/24 jam", "D": "3000 mL/24 jam", "E": "3600 mL/24 jam"}, "correctAnswer": "C", "explanation": "Rumus 4-2-1: 10 kg pertama (40) + 10 kg kedua (20) + 40 kg sisanya @1 = 100 mL/jam → 2400 mL/24 jam."}, {"id": 81, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Jenis cairan kristaloid isotonik yang paling seimbang elektrolitnya adalah...", "options": {"A": "NaCl 0.9%", "B": "Ringer Laktat", "C": "Dextrose 5%", "D": "NaCl 3%", "E": "Aminofusin"}, "correctAnswer": "B", "explanation": "Ringer Laktat lebih seimbang elektrolitnya dibanding NaCl 0.9% (mendekati komposisi cairan ekstraseluler)."}, {"id": 82, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Interaksi obat yang paling berbahaya pada pasien yang minum warfarin adalah dengan...", "options": {"A": "Antasida", "B": "Eritromisin atau ketokonazol", "C": "Vitamin C", "D": "Parasetamol dosis rendah", "E": "Antihistamin"}, "correctAnswer": "B", "explanation": "Eritromisin/ketokonazol menghambat CYP3A4 sehingga meningkatkan kadar warfarin dan risiko perdarahan."}, {"id": 83, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Pemeriksaan penunjang yang paling spesifik untuk diagnosis infark miokard akut adalah...", "options": {"A": "CK-MB", "B": "Troponin I/T", "C": "LDH", "D": "AST (SGOT)", "E": "Myoglobin"}, "correctAnswer": "B", "explanation": "Troponin I/T adalah biomarker paling spesifik untuk infark miokard akut, naik dalam 3-4 jam dan bertahan 7-10 hari."}, {"id": 84, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Pada keadaan anafilaksis, obat pertama yang diberikan adalah...", "options": {"A": "Difenhidramin IV", "B": "Epinefrin 0.3-0.5 mg IM (anterolateral paha)", "C": "Hidrokortison IV", "D": "Salbutamol nebulizer", "E": "Oksigen 100%"}, "correctAnswer": "B", "explanation": "Epinefrin IM di paha anterolateral adalah pengobatan first-line anafilaksis (dewasa 0.3-0.5 mg)."}, {"id": 85, "category": "farmakologi-lab-gd-gizi", "section": "teknis", "text": "Pemberian makanan enteral pada pasien kritis dianjurkan dalam waktu...", "options": {"A": "< 6 jam sejak masuk ICU", "B": "24-48 jam sejak masuk ICU", "C": "Setelah 72 jam puasa", "D": "Setelah ekstubasi saja", "E": "Bila pasien sadar penuh"}, "correctAnswer": "B", "explanation": "Nutrition support therapy merekomendasikan nutrisi enteral dalam 24-48 jam pertama masuk ICU untuk pasien kritis."}, {"id": 86, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Akronim BerAKHLAK sebagai core values ASN berarti...", "options": {"A": "Berorientasi Pelayanan, Akuntabel, Kompeten, Harmonis, Loyal, Adaptif, Kolaboratif", "B": "Berintegritas, Akuntabel, Kompeten, Harmonis, Loyal, Adaptif, Kolaboratif", "C": "Berorientasi Hasil, Akuntabel, Kreatif, Harmonis, Loyal, Adaptif, Kolaboratif", "D": "Berintegritas, Aktual, Kompeten, Harmonis, Loyal, Adaptif, Kolaboratif", "E": "Berorientasi Pelayanan, Aktual, Kompeten, Hormat, Loyal, Adaptif, Kolaboratif"}, "correctAnswer": "A", "explanation": "BerAKHLAK = Berorientasi Pelayanan, Akuntabel, Kompeten, Harmonis, Loyal, Adaptif, Kolaboratif (ditetapkan via PermenPANRB)."}, {"id": 87, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Dalam ASN BerAKHLAK,", "options": {"A": "Bekerja sesuai standar pelayanan publik", "B": "Bertanggung jawab atas kepercayaan publik dan sumber daya negara", "C": "Mengutamakan kepentingan bersama di atas individu", "D": "Berdedikasi pada negara dan bangsa", "E": "Cepat menyesuaikan diri dengan perubahan"}, "correctAnswer": "B", "explanation": "Akuntabel = bertanggung jawab atas kepercayaan dan sumber daya yang diberikan publik kepada ASN."}, {"id": 88, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Pilar Smart ASN mencakup...", "options": {"A": "Smart PNS, smart PPPK, smart TNI", "B": "Smart Kinerja, smart talent, smart digital, smart service", "C": "Smart kompetensi, smart promosi, smart mutasi", "D": "Smart recruitment, smart training, smart remuneration", "E": "Smart leadership, smart culture, smart system"}, "correctAnswer": "B", "explanation": "Smart ASN: Smart Kinerja, Smart Talent, Smart Digital, Smart Service — pilar transformasi SDM ASN."}, {"id": 89, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Tahapan dalam proses manajemen perubahan menurut Kotter yang pertama adalah...", "options": {"A": "Membentuk visi dan strategi", "B": "Menciptakan urgensi", "C": "Mengkomunikasikan visi perubahan", "D": "Menghapus hambatan", "E": "Menciptakan kemenangan jangka pendek"}, "correctAnswer": "B", "explanation": "Model Kotter: 1) Menciptakan urgensi, 2) Membentuk koalisi pengarah, 3) Mengembangkan visi & strategi, ..."}, {"id": 90, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Gaya kepemimpinan situasional Hersey-Blanchard menekankan bahwa gaya kepemimpinan harus disesuaikan dengan...", "options": {"A": "Karakteristik organisasi", "B": "Tingkat kematangan (maturity) bawahan", "C": "Budaya perusahaan", "D": "Lingkungan eksternal", "E": "Jumlah karyawan"}, "correctAnswer": "B", "explanation": "Model Hersey-Blanchard: gaya kepemimpinan (Telling, Selling, Participating, Delegating) disesuaikan dengan tingkat kematangan bawahan."}, {"id": 91, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Empat fungsi manajemen klasik menurut Henri Fayol adalah...", "options": {"A": "Planning, Organizing, Actuating, Controlling (POAC)", "B": "Leading, Managing, Directing, Evaluating", "C": "Forecasting, Planning, Coordinating, Reporting", "D": "Planning, Doing, Checking, Acting", "E": "Setting goals, Hiring, Firing, Reporting"}, "correctAnswer": "A", "explanation": "Fungsi manajemen Fayol: Planning, Organizing, Actuating, Controlling (POAC)."}, {"id": 92, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Metode SWOT analysis dalam perencanaan strategis terdiri dari...", "options": {"A": "Strengths, Weaknesses, Opportunities, Threats", "B": "Strategy, Wisdom, Operation, Target", "C": "Standard, Working, Operation, Time", "D": "Strength, Wisdom, Output, Trust", "E": "Strategic, Wise, Open, Tactical"}, "correctAnswer": "A", "explanation": "SWOT = Strengths (kekuatan), Weaknesses (kelemahan) internal; Opportunities (peluang), Threats (ancaman) eksternal."}, {"id": 93, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Konsep", "options": {"A": "Specific, Measurable, Achievable, Relevant, Time-bound", "B": "Simple, Meaningful, Attainable, Realistic, Timely", "C": "Strategic, Manageable, Actionable, Reliable, Testable", "D": "Standard, Modern, Appropriate, Responsible, Trustworthy", "E": "Specific, Maintained, Achievable, Repeatable, Trackable"}, "correctAnswer": "A", "explanation": "SMART goals: Specific, Measurable, Achievable, Relevant, Time-bound — kerangka penyusunan tujuan yang baik."}, {"id": 94, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Dalam teori motivasi Maslow, hierarki kebutuhan dari terendah ke tertinggi adalah...", "options": {"A": "Fisiologis → Aman → Sosial → Penghargaan → Aktualisasi Diri", "B": "Aman → Fisiologis → Sosial → Penghargaan → Aktualisasi", "C": "Sosial → Aman → Fisiologis → Aktualisasi → Penghargaan", "D": "Penghargaan → Sosial → Aman → Fisiologis → Aktualisasi", "E": "Aktualisasi → Penghargaan → Sosial → Aman → Fisiologis"}, "correctAnswer": "A", "explanation": "Hierarki Maslow: fisiologis (basic) → keamanan → sosial → penghargaan → aktualisasi diri (puncak)."}, {"id": 95, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Komunikasi efektif dalam organisasi tidak ditandai oleh...", "options": {"A": "Keterbukaan dan transparansi", "B": "Mendengarkan aktif", "C": "Empati pada penerima pesan", "D": "Penggunaan jargon teknis yang rumit", "E": "Umpan balik yang konstruktif"}, "correctAnswer": "D", "explanation": "Penggunaan jargon teknis yang berlebihan justru menghambat komunikasi efektif, terutama kepada audiens non-teknis."}, {"id": 96, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Pemberian perilaku yang baik (leading by example) oleh pemimpin tercermin dari nilai...", "options": {"A": "Integritas", "B": "Loyal", "C": "Kompeten", "D": "Adaptif", "E": "Kolaboratif"}, "correctAnswer": "A", "explanation": "Leading by example paling erat dengan nilai Integritas — pemimpin menjalankan apa yang diucapkan."}, {"id": 97, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Sikap kolaboratif dalam tim multidisiplin kesehatan mengharuskan...", "options": {"A": "Mementingkan profesi sendiri", "B": "Saling berbagi informasi, menghargai kontribusi setiap profesi", "C": "Menghindari konflik dengan cara menyembunyikan pendapat", "D": "Mengikuti pendapat profesi paling senior", "E": "Membiarkan dokter memutuskan semua hal"}, "correctAnswer": "B", "explanation": "Kolaborasi tim multidisiplin: berbagi informasi, menghargai kontribusi tiap profesi untuk pasien."}, {"id": 98, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Pemecahan masalah dengan metode", "options": {"A": "Mencari 5 solusi alternatif", "B": "Menemukan akar penyebab masalah dengan bertanya \"mengapa\" 5 kali", "C": "Memecah masalah menjadi 5 bagian", "D": "Menggali 5 opini stakeholder", "E": "Membuat 5 kategori masalah"}, "correctAnswer": "B", "explanation": "Metode 5 Why (Toyota Production System) bertanya"}, {"id": 99, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Sikap Adaptif pada ASN BerAKHLAK terutama berhubungan dengan...", "options": {"A": "Pemenuhan target kuantitatif", "B": "Kemampuan menyesuaikan diri dengan perubahan zaman dan teknologi", "C": "Kepatuhan pada hierarki", "D": "Pengelolaan keuangan daerah", "E": "Penghargaan formal dari atasan"}, "correctAnswer": "B", "explanation": "Adaptif = cepat menyesuaikan diri dengan perubahan lingkungan, teknologi, dan tuntutan masyarakat."}, {"id": 100, "category": "manajerial-sosio-kultural", "section": "teknis", "text": "Bentuk konflik yang positif dalam organisasi yang dapat memicu inovasi disebut...", "options": {"A": "Konflik disfungsional", "B": "Konflik fungsional (konstruktif)", "C": "Konflik afektif", "D": "Konflik destruktif", "E": "Konflik laten"}, "correctAnswer": "B", "explanation": "Konflik fungsional/konstruktif memicu inovasi dan perbaikan; konflik disfungsional justru merusak."}, {"id": 101, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tahapan dalam proses manajemen konflik yang pertama adalah...", "options": {"A": "Menghindari konflik", "B": "Mengidentifikasi dan memahami sumber konflik", "C": "Mediasi pihak ketiga", "D": "Apersepsi konflik", "E": "Komunikasi terbuka"}, "correctAnswer": "B", "explanation": "Manajemen konflik dimulai dengan mengidentifikasi dan memahami sumber/akar konflik sebelum intervensi."}, {"id": 102, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap menghargai pendapat orang lain dalam diskusi tim mencerminkan nilai...", "options": {"A": "Loyalitas", "B": "Harmonis", "C": "Akuntabel", "D": "Kompeten", "E": "Adaptif"}, "correctAnswer": "B", "explanation": "Harmonis = saling menghargai perbedaan dan bekerja sama untuk kepentingan bersama."}, {"id": 103, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam prinsip Public Service yang dianut ASN,orientasi pelayanan publik menekankan pada...", "options": {"A": "Kecepatan pelayanan tanpa memperhatikan kualitas", "B": "Pemenuhan kebutuhan masyarakat dengan kualitas dan integritas", "C": "Penyelesaian administrasi sebelum kebutuhan masyarakat", "D": "Volume pelayanan yang tinggi", "E": "Penghematan biaya pelayanan"}, "correctAnswer": "B", "explanation": "Berorientasi Pelayanan = memenuhi kebutuhan masyarakat dengan kualitas terbaik dan integritas."}, {"id": 104, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Prinsip tahapan pengambilan keputusan berdasarkan data dikenal dengan...", "options": {"A": "Top-down decision making", "B": "Data-driven decision making", "C": "Intuitive decision making", "D": "Random decision making", "E": "Consensus decision making"}, "correctAnswer": "B", "explanation": "Data-driven decision making: keputusan berbasis data dan analisis bukan asumsi atau intuisi semata."}, {"id": 105, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Teori motivasi yang membagi faktor motivasi menjadi", "options": {"A": "Abraham Maslow", "B": "Frederick Herzberg", "C": "David McClelland", "D": "Douglas McGregor", "E": "Clayton Alderfer"}, "correctAnswer": "B", "explanation": "Herzberg Two-Factor Theory: hygiene factors (gaji, lingkungan) mencegah ketidakpuasan; motivators (prestasi, pengakuan) memotivasi."}, {"id": 106, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep", "options": {"A": "ASN sebagai warga negara biasa", "B": "Kepercayaan publik yang harus dijaga dengan integritas dan akuntabilitas", "C": "Hak ASN atas imbalan jasa", "D": "Hubungan ASN dengan atasan langsung", "E": "Kewajiban ASN membayar pajak"}, "correctAnswer": "B", "explanation": "Public Trust = kepercayaan masyarakat kepada ASN yang harus dijaga melalui integritas dan akuntabilitas."}, {"id": 107, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap", "options": {"A": "Pelaporan pelanggaran etika dan hukum oleh ASN", "B": "Penolakan tugas dari atasan", "C": "Pengunduran diri ASN", "D": "Penonaktifan ASN", "E": "Protes atas kebijakan"}, "correctAnswer": "A", "explanation": "Whistleblowing: melaporkan pelanggaran etika/hukum yang merugikan negara — bagian dari Akuntabilitas."}, {"id": 108, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sistem merit dalam pengelolaan ASN mengutamakan...", "options": {"A": "Senioritas dalam promosi", "B": "Kinerja dan kompetensi sebagai dasar promosi dan pengembangan karier", "C": "Koneksi politik", "D": "Asal daerah pegawai", "E": "Jenis kelamin"}, "correctAnswer": "B", "explanation": "Sistem merit: pengelolaan ASN berdasarkan kualifikasi, kinerja, dan kompetensi, bukan karena suka-relasi."}, {"id": 109, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam prinsip Good Governance, transparansi berarti...", "options": {"A": "Membuka seluruh data rahasia negara", "B": "Memberikan akses informasi yang relevan kepada publik sesuai ketentuan", "C": "Mengumumkan gaji seluruh pegawai", "D": "Membuka rapat internal ke publik", "E": "Membocorkan dokumen internal"}, "correctAnswer": "B", "explanation": "Transparansi = memberi akses informasi yang relevan dan tidak rahasia kepada publik sesuai UU KIP."}, {"id": 110, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Prinsip delegasi wewenang yang efektif mensyaratkan...", "options": {"A": "Pendelegasian tanpa pengawasan", "B": "Pendelegasian disertai kejelasan tugas, wewenang, dan akuntabilitas", "C": "Pendelegasian hanya pada tugas yang sulit", "D": "Pendelegasian tugas tanpa batas waktu", "E": "Tidak boleh mendelegasikan sama sekali"}, "correctAnswer": "B", "explanation": "Delegasi efektif: tegas pada apa, kepada siapa, wewenang apa, batas waktu, dan mekanisme akuntabilitas."}, {"id": 111, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep", "options": {"A": "Memperbanyak jumlah pegawai", "B": "Menghilangkan pemborosan (waste) dan meningkatkan value bagi pelanggan", "C": "Memotong gaji pegawai", "D": "Memperbanyak laporan administratif", "E": "Mengurangi jam kerja"}, "correctAnswer": "B", "explanation": "Lean Management: menghilangkan waste (overproduction, waiting, defects, dll) untuk memberi value maksimal."}, {"id": 112, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap kolaboratif antar instansi pemerintah terutama diperlukan dalam...", "options": {"A": "Pengisian absensi harian", "B": "Penanganan bencana, kesehatan masyarakat, dan isu lintas-sektor", "C": "Pembuatan laporan bulanan", "D": "Penataan ruang kantor", "E": "Pemilihan panitia internal"}, "correctAnswer": "B", "explanation": "Isu lintas-sektor seperti bencana, KLB, stunting, dll. memerlukan kolaborasi multi-instansi (BNPB, Kemenkes, dll.)."}, {"id": 113, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Fungsi Control (pengawasan) dalam manajemen klasik dilakukan dengan cara...", "options": {"A": "Mengatur kembali struktur organisasi", "B": "Membandingkan realisasi dengan rencana dan melakukan koreksi", "C": "Mempekerjakan lebih banyak pegawai", "D": "Memberi pelatihan ulang", "E": "Mengganti pemimpin"}, "correctAnswer": "B", "explanation": "Controlling: membandingkan hasil dengan target/sasaran, menganalisis variansi, dan mengambil tindakan korektif."}, {"id": 114, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Pemberian pelatihan dan pengembangan kompetensi pegawai merupakan investasi pada...", "options": {"A": "Modal manusia (human capital)", "B": "Teknologi informasi", "C": "Fisik bangunan", "D": "Perlengkapan kantor", "E": "Sarana transportasi"}, "correctAnswer": "A", "explanation": "Pengembangan SDM = investasi pada human capital untuk meningkatkan kapabilitas jangka panjang."}, {"id": 115, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap kerja yang mencerminkan nilai Loyalitas pada ASN BerAKHLAK adalah...", "options": {"A": "Mengikuti perintah walaupun salah", "B": "Berdedikasi pada negara, bangsa, dan pemerintahan yang sah", "C": "Membela atasan apapun yang terjadi", "D": "Tidak pernah mengkritik kebijakan", "E": "Mengikuti kebijakan partai"}, "correctAnswer": "B", "explanation": "Loyalitas ASN = berdedikasi pada NKRI, Pancasila, UUD 1945, dan pemerintahan sah — bukan loyalitas buta pada personel."}, {"id": 116, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Salah satu pilar Open Government Partnership (OGP) adalah...", "options": {"A": "Transparansi, partisipasi publik, akuntabilitas, inovasi teknologi", "B": "Penertiban birokrasi", "C": "Privasi data pejabat", "D": "Pengawasan internal", "E": "Pemberian bonus pegawai"}, "correctAnswer": "A", "explanation": "Pilar OGP: transparansi, partisipasi masyarakat, akuntabilitas, dan inovasi teknologi untuk tata kelola yang terbuka."}, {"id": 117, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Komitmen ASN pada etika publik tercermin dalam tindakan...", "options": {"A": "Menerima gratifikasi dalam bentuk apapun", "B": "Menolak gratifikasi dan melaporkannya ke KPK", "C": "Mengikuti kebiasaan setempat", "D": "Meminta imbalan informal untuk pelayanan", "E": "Memanfaatkan jabatan untuk kepentingan pribadi"}, "correctAnswer": "B", "explanation": "ASN wajib menolak gratifikasi dan melaporkannya ke KPK atau UU Tipikor berlaku."}, {"id": 118, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam teori kepemimpinan transformasional, 4 komponen utamanya adalah...", "options": {"A": "Idealized influence, inspirational motivation, intellectual stimulation, individualized consideration", "B": "Command, control, comply, conform", "C": "Reward, punishment, supervision, evaluation", "D": "Order, dictate, manage, control", "E": "Coordinate, delegate, supervise, evaluate"}, "correctAnswer": "A", "explanation": "Kepemimpinan transformasional (Bass): 4I — Idealized Influence, Inspirational Motivation, Intellectual Stimulation, Individualized Consideration."}, {"id": 119, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Manajemen risiko di fasilitas kesehatan mencakup tahapan...", "options": {"A": "Identifikasi → Analisis → Evaluasi → Mitigasi → Monitoring", "B": "Perencanaan → Pelaksanaan → Evaluasi", "C": "Identifikasi → Pengobatan → Pemulihan", "D": "Survei → Pengawasan → Pelaporan", "E": "Audit → Investigasi → Tuntutan"}, "correctAnswer": "A", "explanation": "Siklus manajemen risiko: identifikasi → analisis → evaluasi → mitigasi → monitoring dan review."}, {"id": 120, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam budaya organisasi yang sehat, dimensi yang menonjol meliputi...", "options": {"A": "Hierarki kaku, ikut-ikutan, takut salah", "B": "Inovasi, perhatian pada detail, orientasi hasil, kerja tim, integritas", "C": "Persaingan internal, ego sektoral", "D": "Patuh pada senior tanpa pertimbangan", "E": "Kesejahteraan individu di atas organisasi"}, "correctAnswer": "B", "explanation": "Budaya organisasi sehat: inovasi, perhatian detail, orientasi hasil, kerja tim, dan integritas (OCAI framework)."}, {"id": 121, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep ZBB (Zero-Based Budgeting) dalam perencanaan anggaran pemerintah berarti...", "options": {"A": "Anggaran dimulai dari nol setiap tahun tanpa mengacu tahun sebelumnya", "B": "Anggaran ditambah 10% dari tahun lalu", "C": "Anggaran dipangkas 50%", "D": "Tidak ada anggaran untuk pos baru", "E": "Mengikuti inflasi tahunan"}, "correctAnswer": "A", "explanation": "Zero-Based Budgeting: setiap pos anggaran harus dipertanggungjawabkan dari nol, bukan increment dari tahun lalu."}, {"id": 122, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tahapan dalam PDCA (Deming Cycle) untuk peningkatan mutu adalah...", "options": {"A": "Plan, Do, Check, Act", "B": "Predict, Direct, Compare, Achieve", "C": "Prepare, Deliver, Coordinate, Audit", "D": "Plan, Document, Coordinate, Approve", "E": "Project, Do, Calculate, Approve"}, "correctAnswer": "A", "explanation": "PDCA: Plan (perencanaan), Do (pelaksanaan), Check (verifikasi), Act (tindakan korektif) untuk continuous improvement."}, {"id": 123, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep Kaizen dalam manajemen mutu berasal dari...", "options": {"A": "Cina", "B": "Jepang", "C": "Korea Selatan", "D": "Amerika Serikat", "E": "Jerman"}, "correctAnswer": "B", "explanation": "Kaizen (改善) adalah filosofi perbaikan berkelanjutan yang berasal dari Jepang, dipopulerkan Toyota Production System."}, {"id": 124, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap profesional ASN yang berorientasi pelayanan tercermin dari...", "options": {"A": "Menunda pelayanan untuk istirahat", "B": "Memberikan pelayanan prima tanpa diskriminasi", "C": "Membatasi jam pelayanan", "D": "Menerima suap untuk mempercepat layanan", "E": "Memberikan prioritas pada relasi dekat"}, "correctAnswer": "B", "explanation": "Berorientasi Pelayanan: memberikan layanan prima tanpa diskriminasi kepada semua warga negara."}, {"id": 125, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sistem akuntabilitas kinerja di instansi pemerintah mengacu pada...", "options": {"A": "LAKIP (Laporan Akuntabilitas Kinerja Instansi Pemerintah)", "B": "Laporan keuangan tahunan", "C": "Laporan kegiatan bulanan", "D": "Absensi pegawai", "E": "Notulen rapat"}, "correctAnswer": "A", "explanation": "LAKIP = laporan akuntabilitas kinerja instansi pemerintah, dasar evaluasi kinerja berbasis Inpres 7/1999."}, {"id": 126, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Untuk menilai kepuasan masyarakat atas pelayanan publik digunakan instrumen...", "options": {"A": "SKM (Survei Kepuasan Masyarakat)", "B": "Audit finansial BPK", "C": "Laporan bulanan", "D": "Evaluasi internal", "E": "Penilaian atasan"}, "correctAnswer": "A", "explanation": "SKM (Survei Kepuasan Masyarakat) diatur dalam Permenpan-RB untuk mengukur kepuasan atas pelayanan publik."}, {"id": 127, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tanda dari", "options": {"A": "Memegang jabatan tinggi tanpa syarat pendidikan", "B": "Meningkatkan dan memelihara kompetensinya secara berkelanjutan", "C": "Mengandalkan pengalaman lama", "D": "Tidak mengikuti pelatihan", "E": "Mengandalkan rekomendasi atasan"}, "correctAnswer": "B", "explanation": "Kompeten = terus meningkatkan dan memelihara kompetensi melalui pelatihan dan pengembangan diri."}, {"id": 128, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Prinsip utama dalam penyelenggaraan Public Service Mall (MPP) adalah...", "options": {"A": "Pemusatan pelayanan publik dari berbagai instansi dalam satu tempat", "B": "Pemindahan ASN ke pusat kota", "C": "Penambahan birokrasi", "D": "Pembuatan gedung baru", "E": "Penghapusan pelayanan online"}, "correctAnswer": "A", "explanation": "MPP = Mal Pelayanan Publik: mengintegrasikan pelayanan berbagai instansi dalam satu lokasi untuk efisiensi."}, {"id": 129, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam teori ADKAR untuk manajemen perubahan,", "options": {"A": "Resistance", "B": "Reinforcement", "C": "Reasoning", "D": "Restructuring", "E": "Reporting"}, "correctAnswer": "B", "explanation": "ADKAR (Prosci): Awareness, Desire, Knowledge, Ability, Reinforcement — model perubahan individual."}, {"id": 130, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Pendekatan", "options": {"A": "Kebutuhan dan kepuasan masyarakat sebagai pelanggan", "B": "Kepuasan pegawai", "C": "Volume dokumen yang dihasilkan", "D": "Kepuasan atasan", "E": "Jumlah anggaran terserap"}, "correctAnswer": "A", "explanation": "Customer-centric = masyarakat sebagai pelanggan utama; layanan dirancang berbasis kebutuhan mereka."}, {"id": 131, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Salah satu prinsip dalam Code of Conduct ASN Indonesia adalah...", "options": {"A": "Mementingkan kelompok/golongan sendiri", "B": "Menjunjung tinggi kejujuran, integritas, dan profesionalitas", "C": "Mengutamakan kedekatan dengan pejabat", "D": "Mengabaikan prosedur bila menguntungkan", "E": "Menolak inovasi"}, "correctAnswer": "B", "explanation": "Code of Conduct ASN menekankan kejujuran, integritas, dan profesionalitas dalam pelayanan publik."}, {"id": 132, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap", "options": {"A": "Menolak teknologi baru", "B": "Memanfaatkan digital untuk pelayanan yang lebih cepat dan akurat", "C": "Mengandalkan kertas sepenuhnya", "D": "Membatasi jam online pelayanan", "E": "Membiarkan masyarakat antri"}, "correctAnswer": "B", "explanation": "Era digital: ASN harus memanfaatkan teknologi untuk mempercepat dan meningkatkan akurasi pelayanan publik."}, {"id": 133, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tujuan utama reformasi birokrasi di Indonesia adalah...", "options": {"A": "Memperbanyak jumlah pegawai", "B": "Mewujudkan tata kelola pemerintahan yang bersih, efektif, dan responsif", "C": "Mengganti seluruh ASN", "D": "Memperbanyak aturan administratif", "E": "Mengurangi pelayanan publik"}, "correctAnswer": "B", "explanation": "Reformasi Birokrasi: bersih, efektif, transparan, akuntabel, dan responsif terhadap kebutuhan publik."}, {"id": 134, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam situasi krisis/kedaruratan, ASN menunjukkan kompetensi kepemimpinan dengan...", "options": {"A": "Menunggu instruksi atasan", "B": "Mengambil keputusan cepat berbasis data untuk keselamatan publik", "C": "Menghindari tanggung jawab", "D": "Menyerahkan ke pihak swasta", "E": "Mengunci diri di kantor"}, "correctAnswer": "B", "explanation": "Dalam krisis, ASN dengan kompetensi kepemimpinan mengambil keputusan cepat berbasis data demi keselamatan publik."}, {"id": 135, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sikap antisipatif terhadap perubahan kebijakan tercermin pada...", "options": {"A": "Menolak kebijakan baru", "B": "Mempelajari, beradaptasi, dan menyesuaikan diri dengan kebijakan baru", "C": "Menunda pelaksanaan selama mungkin", "D": "Mengabaikan instruksi atasan", "E": "Mengkritik tanpa solusi"}, "correctAnswer": "B", "explanation": "Adaptif: cepat mempelajari, memahami, dan menyesuaikan diri dengan kebijakan baru untuk pelayanan optimal."}, {"id": 136, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Salah satu pilar menuju Smart ASN adalah Smart Talent. Hal ini berkaitan dengan...", "options": {"A": "Pengembangan kapasitas pegawai berbasis kompetensi dan kinerja", "B": "Pengadaan perangkat IT", "C": "Pembangunan gedung baru", "D": "Penambahan remunerasi", "E": "Penambahan jumlah pegawai"}, "correctAnswer": "A", "explanation": "Smart Talent: sistem pengembangan SDM berbasis kompetensi, kinerja, dan jenjang karier yang objektif."}, {"id": 137, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Aspek", "options": {"A": "Hanya melayani kelompok mayoritas", "B": "Melayani semua kelompok termasuk penyandang disabilitas dan kelompok rentan", "C": "Mengutamakan pejabat", "D": "Mengutamakan warga lokal", "E": "Mengutamakan yang mampu membayar"}, "correctAnswer": "B", "explanation": "Inklusivitas: pelayanan harus dapat diakses semua kelompok termasuk disabilitas, lansia, ibu hamil, dan kelompok rentan."}, {"id": 138, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam model kompetensi ASN,", "options": {"A": "Kemampuan komunikasi", "B": "Pengetahuan teknis sesuai bidang tugas (mis. klinis, farmakologi)", "C": "Kepemimpinan", "D": "Kerja tim", "E": "Integritas"}, "correctAnswer": "B", "explanation": "Technical competencies: keterampilan teknis spesifik bidang (mis. kompetensi klinis bagi tenaga kesehatan)."}, {"id": 139, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Komitmen terhadap etika publik ditunjukkan dengan tindakan berikut, KECUALI...", "options": {"A": "Mengelola konflik kepentingan", "B": "Menjaga kerahasiaan informasi rahasia", "C": "Menerima hadiah dari rekanan sebagai tanda terima kasih", "D": "Menolak gratifikasi", "E": "Bertindak adil dan tidak diskriminatif"}, "correctAnswer": "C", "explanation": "Menerima hadiah dari rekanan = gratifikasi yang dilarang dan harus dilaporkan. Pelanggaran etika publik."}, {"id": 140, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Dalam model Stakeholder Analysis, kelompok dengan", "options": {"A": "Dimonitor saja", "B": "Dikelola secara ketat (Manage closely)", "C": "Diberi informasi secukupnya", "D": "Dikejarkan", "E": "Ditampilkan secara pasif"}, "correctAnswer": "B", "explanation": "Pada Power-Interest Grid: high power + high interest = Manage closely (pemangku kepentingan utama)."}, {"id": 141, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep", "options": {"A": "Pemimpin yang dilayani bawahan", "B": "Pemimpin yang melayani dan memberdayakan bawahan", "C": "Pemimpin yang otoriter", "D": "Pemimpin yang pasif", "E": "Pemimpin yang mengejar prestasi pribadi"}, "correctAnswer": "B", "explanation": "Servant Leadership (Greenleaf): pemimpin ada untuk melayani dan memberdayakan bawahan, bukan sebaliknya."}, {"id": 142, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Untuk membangun budaya kerja yang adaptif dan inovatif, ASN perlu...", "options": {"A": "Menjaga status quo", "B": "Mendorong eksperimentasi, pembelajaran, dan pemberdayaan tim", "C": "Mengabaikan masukan bawahan", "D": "Menekan inovasi agar tidak terlalu berisiko", "E": "Mengikuti pola lama"}, "correctAnswer": "B", "explanation": "Budaya adaptif-inovatif: mendorong eksperimen, learning dari kegagalan, dan pemberdayaan tim."}, {"id": 143, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Sistem penilaian kinerja ASN modern menggunakan...", "options": {"A": "Daftar hadir harian saja", "B": "Sasaran Kinerja Pegawai (SKP) + Perilaku Kerja", "C": "Penilaian subjektif atasan", "D": "Voting rekan kerja", "E": "Tes tertulis tahunan"}, "correctAnswer": "B", "explanation": "SKP (Sasaran Kinerja Pegawai) + Perilaku Kerja adalah dasar penilaian kinerja ASN sesuai PP 30 Tahun 2019."}, {"id": 144, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Prinsip etika", "options": {"A": "Distribusi obat ke pasien", "B": "Pembagian beban dan manfaat yang adil di masyarakat", "C": "Penyusunan jadwal dinas", "D": "Distribusi gaji ASN", "E": "Distribusi tugas harian"}, "correctAnswer": "B", "explanation": "Distributive Justice: pembagian beban, manfaat, dan sumber daya secara adil di masyarakat."}, {"id": 145, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tanda ASN yang Adaptif dalam menghadapi era digitalisasi...", "options": {"A": "Tetap menggunakan kertas dan manual", "B": "Aktif belajar teknologi digital dan mengintegrasikannya dalam pelayanan", "C": "Menolak sistem online", "D": "Membiarkan generasi muda yang menangani IT", "E": "Mengganti semua sistem lama dengan drastis"}, "correctAnswer": "B", "explanation": "ASN adaptif: aktif belajar teknologi digital dan mengintegrasikannya secara bertahap untuk pelayanan yang lebih baik."}, {"id": 146, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tujuan utama penerapan standar pelayanan publik (SPP) adalah...", "options": {"A": "Menyulitkan masyarakat dengan aturan teknis", "B": "Menjamin kualitas, ketersediaan, dan kepastian pelayanan kepada masyarakat", "C": "Menambah jumlah pegawai", "D": "Memperbanyak dokumen administratif", "E": "Mengurangi biaya pelayanan"}, "correctAnswer": "B", "explanation": "SPP menjamin kualitas, ketersediaan, dan kepastian pelayanan publik sesuai standar yang ditetapkan."}, {"id": 147, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Pengembangan budaya etika di lingkungan ASN diawali oleh...", "options": {"A": "Atasan sebagai role model dengan menerapkan integritas", "B": "Penalti bagi pelanggar berat", "C": "Sosialisasi tertulis tanpa contoh", "D": "Audit eksternal tahunan", "E": "Pembentukan tim khusus"}, "correctAnswer": "A", "explanation": "Budaya etika dimulai dari"}, {"id": 148, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Untuk mengukur efektivitas suatu program pelayanan publik digunakan indikator...", "options": {"A": "Output (jumlah kegiatan) saja", "B": "Input, output, outcome, dan benefit secara berurutan", "C": "Hanya anggaran terserap", "D": "Jumlah pegawai yang terlibat", "E": "Lama pelaksanaan"}, "correctAnswer": "B", "explanation": "Indikator kinerja: Input → Output → Outcome → Benefit untuk mengukur efektivitas program."}, {"id": 149, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Konsep", "options": {"A": "Produksi bersama antar instansi pemerintah", "B": "Keterlibatan aktif masyarakat dalam produksi pelayanan publik", "C": "Kerja sama dengan swasta dalam kontrak", "D": "Pengalihan layanan ke swasta", "E": "Penggabungan beberapa instansi"}, "correctAnswer": "B", "explanation": "Co-production: keterlibatan aktif masyarakat/sukarelawan dalam merancang dan menyelenggarakan pelayanan publik."}, {"id": 150, "category": "manajerial-sosio-kultural", "section": "man-soskul", "text": "Tiga aspek utama yang harus dijaga ASN dalam menjalankan tugas di era digital adalah...", "options": {"A": "Gaji, jabatan, dan fasilitas", "B": "Integritas, kompetensi, dan kolaborasi lintas sektor", "C": "Senioritas, loyalitas, dan disiplin", "D": "Koneksi, pengalaman, dan keberuntungan", "E": "Jabatan, kekuasaan, dan pengaruh"}, "correctAnswer": "B", "explanation": "Era digital menuntut ASN menjaga integritas, terus meningkatkan kompetensi, dan kolaborasi lintas sektor."}];
+window.__CATEGORIES__ = [{"id": "asuhan-pelayanan", "label": "Asuhan & Pelayanan Kesehatan", "shortLabel": "Asuhan", "range": "1-30", "section": "teknis", "color": "emerald", "hex": "#10b981"}, {"id": "etika-hukum", "label": "Etika, Hukum Kesehatan & Patient Safety", "shortLabel": "Etika & Safety", "range": "31-45", "section": "teknis", "color": "rose", "hex": "#f43f5e"}, {"id": "manajemen-puskesmas", "label": "Manajemen Puskesmas & Kesehatan Masyarakat", "shortLabel": "Manajemen Puskesmas", "range": "46-60", "section": "teknis", "color": "amber", "hex": "#f59e0b"}, {"id": "ppi-k3-kesling", "label": "PPI, K3 & Kesehatan Lingkungan", "shortLabel": "PPI, K3 & Kesling", "range": "61-70", "section": "teknis", "color": "cyan", "hex": "#06b6d4"}, {"id": "farmakologi-lab-gd-gizi", "label": "Farmakologi, Lab, Gawat Darurat & Gizi", "shortLabel": "Farmakologi & GD", "range": "71-85", "section": "teknis", "color": "violet", "hex": "#8b5cf6"}, {"id": "manajerial-sosio-kultural", "label": "Manajerial & Sosio Kultural ASN BerAKHLAK", "shortLabel": "Manajerial & Sosio Kultural", "range": "86-150", "section": "man-soskul", "color": "slate", "hex": "#64748b"}];
+</script>
+
+<!-- ============ APP SCRIPT ============ -->
+<script>
+
+(function() {
+  'use strict';
+
+  const QUESTIONS = window.__QUESTIONS__;
+  const CATEGORIES = window.__CATEGORIES__;
+  const EXAM_DURATION_SEC = 150 * 60;
+  const PASSING_GRADE = 70;
+  const STORAGE_KEY = 'manta-f-tryout-state-v1';
+
+  // ============ STATE ============
+  const state = {
+    page: 'dashboard', // dashboard | intro | exam | results
+    sidebarExpanded: { 'data-info': false },
+    activeMenu: 'dashboard',
+    exam: {
+      currentIdx: 0,
+      answers: {}, // { [questionId]: { answer: 'A'|null, isDoubt: bool } }
+      startTime: null,
+      endTime: null,
+      started: false,
+      finished: false,
+      result: null,
+      showEstimate: false,
+      activeCategory: null,
+    },
+    filter: 'all',
+    timer: { remaining: EXAM_DURATION_SEC, intervalId: null },
+  };
+
+  // ============ PERSISTENCE ============
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved.exam) {
+        state.exam = Object.assign(state.exam, saved.exam);
+        // Don't restore timer's intervalId
+        if (state.exam.started && !state.exam.finished && state.exam.startTime) {
+          startTimer();
+        }
+      }
+      if (saved.page) state.page = saved.page;
+      if (saved.sidebarExpanded) state.sidebarExpanded = saved.sidebarExpanded;
+      if (saved.activeMenu) state.activeMenu = saved.activeMenu;
+    } catch (e) {
+      console.warn('Failed to load state', e);
+    }
+  }
+
+  function saveState() {
+    try {
+      const toSave = {
+        page: state.page,
+        sidebarExpanded: state.sidebarExpanded,
+        activeMenu: state.activeMenu,
+        exam: state.exam,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (e) {
+      console.warn('Failed to save state', e);
+    }
+  }
+
+  // ============ HELPERS ============
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+  function formatTime(sec) {
+    if (sec < 0) sec = 0;
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    return [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
+  }
+
+  function getCategoryMeta(id) {
+    return CATEGORIES.find(c => c.id === id) || { label: id, shortLabel: id, color: 'slate', hex: '#94a3b8' };
+  }
+
+  function currentQuestion() {
+    return QUESTIONS[state.exam.currentIdx];
+  }
+
+  function calcStats() {
+    let answered = 0, doubt = 0;
+    for (const q of QUESTIONS) {
+      const a = state.exam.answers[q.id];
+      if (a && a.answer) answered++;
+      if (a && a.isDoubt) doubt++;
+    }
+    return { answered, doubt, unanswered: QUESTIONS.length - answered, total: QUESTIONS.length };
+  }
+
+  function calcLiveEstimate() {
+    let answered = 0, correct = 0, doubt = 0;
+    const unansweredIds = [], doubtIds = [];
+    const sectionStats = {
+      teknis: { label: 'TEKNIS', total: 0, answered: 0, correct: 0 },
+      'man-soskul': { label: 'MAN-SOSKUL', total: 0, answered: 0, correct: 0 },
+    };
+    for (const q of QUESTIONS) {
+      sectionStats[q.section].total++;
+      const rec = state.exam.answers[q.id];
+      if (rec && rec.isDoubt) { doubt++; doubtIds.push(q.id); }
+      if (rec && rec.answer) {
+        answered++;
+        sectionStats[q.section].answered++;
+        if (rec.answer === q.correctAnswer) {
+          correct++;
+          sectionStats[q.section].correct++;
+        }
+      } else {
+        unansweredIds.push(q.id);
+      }
+    }
+    const total = QUESTIONS.length;
+    const unanswered = total - answered;
+    const estimatedNow = Math.round((correct / total) * 100);
+    const maxPossible = Math.round(((correct + unanswered) / total) * 100);
+    return {
+      total, answered, unanswered, doubt, correct,
+      estimatedScoreNow: estimatedNow,
+      maxPossibleScore: maxPossible,
+      perSection: Object.entries(sectionStats).map(([k, v]) => ({
+        section: k, label: v.label, total: v.total, answered: v.answered, correct: v.correct,
+        score: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
+      })),
+      unansweredIds, doubtIds,
+      predictedPass: maxPossible >= PASSING_GRADE,
+    };
+  }
+
+  function calcResult() {
+    let answered = 0, correct = 0, wrong = 0, unanswered = 0;
+    const catStats = {};
+    const sectionStats = {
+      teknis: { label: 'TEKNIS', total: 0, correct: 0 },
+      'man-soskul': { label: 'MAN-SOSKUL', total: 0, correct: 0 },
+    };
+    for (const q of QUESTIONS) {
+      sectionStats[q.section].total++;
+      if (!catStats[q.category]) {
+        catStats[q.category] = { label: getCategoryMeta(q.category).label, total: 0, correct: 0, wrong: 0, unanswered: 0 };
+      }
+      catStats[q.category].total++;
+      const ans = state.exam.answers[q.id]?.answer || null;
+      if (!ans) {
+        unanswered++;
+        catStats[q.category].unanswered++;
+      } else {
+        answered++;
+        if (ans === q.correctAnswer) {
+          correct++;
+          catStats[q.category].correct++;
+          sectionStats[q.section].correct++;
+        } else {
+          wrong++;
+          catStats[q.category].wrong++;
+        }
+      }
+    }
+    const score = Math.round((correct / QUESTIONS.length) * 100);
+    return {
+      totalQuestions: QUESTIONS.length, answered, correct, wrong, unanswered,
+      score, passed: score >= PASSING_GRADE,
+      perCategory: Object.entries(catStats).map(([k, v]) => ({
+        category: k, label: v.label, total: v.total, correct: v.correct, wrong: v.wrong, unanswered: v.unanswered,
+        score: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
+      })),
+      perSection: Object.entries(sectionStats).map(([k, v]) => ({
+        section: k, label: v.label, total: v.total, correct: v.correct,
+        score: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
+      })),
+    };
+  }
+
+  // ============ TIMER ============
+  function startTimer() {
+    if (state.timer.intervalId) clearInterval(state.timer.intervalId);
+    const tick = () => {
+      if (!state.exam.startTime) return;
+      const elapsed = Math.floor((Date.now() - state.exam.startTime) / 1000);
+      const rem = EXAM_DURATION_SEC - elapsed;
+      state.timer.remaining = rem;
+      updateTimerUI(rem);
+      if (rem <= 0) {
+        clearInterval(state.timer.intervalId);
+        state.timer.intervalId = null;
+        finishExam();
+      }
+    };
+    tick();
+    state.timer.intervalId = setInterval(tick, 1000);
+  }
+
+  function stopTimer() {
+    if (state.timer.intervalId) {
+      clearInterval(state.timer.intervalId);
+      state.timer.intervalId = null;
+    }
+  }
+
+  function updateTimerUI(rem) {
+    const el = $('#exam-timer');
+    if (!el) return;
+    el.textContent = formatTime(rem);
+    const isWarn = rem <= 600 && rem > 120;
+    const isCrit = rem <= 120 && rem > 0;
+    const isExp = rem <= 0;
+    el.classList.remove('pulse-warning', 'pulse-critical');
+    if (isExp || isCrit) {
+      el.classList.add('pulse-critical');
+      el.style.color = '#b91c1c';
+      el.style.backgroundColor = '#fee2e2';
+      el.style.borderColor = '#fecaca';
+    } else if (isWarn) {
+      el.classList.add('pulse-warning');
+      el.style.color = '#92400e';
+      el.style.backgroundColor = '#fef3c7';
+      el.style.borderColor = '#fde68a';
+    } else {
+      el.style.color = '#1e293b';
+      el.style.backgroundColor = '#f1f5f9';
+      el.style.borderColor = '#e2e8f0';
+    }
+  }
+
+  // ============ RENDERING ============
+  function render() {
+    const app = $('#app');
+    if (state.page === 'exam') {
+      // Exam page is full-screen without sidebar
+      app.innerHTML = renderExamPage();
+      attachExamHandlers();
+    } else {
+      app.innerHTML = `
+        <div class="flex min-h-screen bg-slate-50">
+          ${renderSidebar()}
+          <main class="flex-1 min-w-0">
+            ${state.page === 'dashboard' ? renderDashboard() : ''}
+            ${state.page === 'intro' ? renderIntro() : ''}
+            ${state.page === 'results' ? renderResults() : ''}
+          </main>
+        </div>
+      `;
+      attachSidebarHandlers();
+      if (state.page === 'dashboard') attachDashboardHandlers();
+      if (state.page === 'intro') attachIntroHandlers();
+      if (state.page === 'results') attachResultsHandlers();
+    }
+    saveState();
+    window.scrollTo(0, 0);
+  }
+
+  // ============ SIDEBAR ============
+  function renderSidebar() {
+    const diExpanded = state.sidebarExpanded['data-info'];
+    return `
+      <aside class="flex flex-col bg-slate-900 text-slate-100 w-72 shrink-0 fixed lg:static inset-y-0 left-0 z-50 transition-transform duration-200 ${state._mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}" id="sidebar">
+        <div class="flex items-center justify-between px-5 py-5 border-b border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+            </div>
+            <div>
+              <h1 class="text-base font-semibold leading-tight">MantaF Health</h1>
+              <p class="text-[11px] text-slate-400">Uji Kompetensi Jabfungkes</p>
+            </div>
+          </div>
+          <button onclick="document.getElementById('sidebar').classList.add('-translate-x-full','lg:translate-x-0'); state._mobileSidebarOpen=false;" class="lg:hidden text-slate-400 hover:text-white" aria-label="Tutup menu">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          <button data-menu="dashboard" class="nav-btn w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${state.activeMenu==='dashboard'?'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30':'text-slate-300 hover:bg-slate-800/60 hover:text-white'}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            Dashboard
+          </button>
+          <div>
+            <button data-toggle="data-info" class="nav-btn w-full flex items-center justify-between gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${diExpanded?'bg-slate-800 text-white':'text-slate-300 hover:bg-slate-800/60 hover:text-white'}">
+              <span class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+                Data dan Informasi
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 ${diExpanded?'':'rotate-180'} transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            ${diExpanded ? `
+              <div class="ml-3 pl-4 border-l border-slate-700/60 space-y-1 mt-1">
+                <button data-nav="try-out" class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors ${state.activeMenu==='try-out'?'bg-emerald-500/20 text-emerald-300 font-medium ring-1 ring-emerald-500/30':'text-slate-300 hover:bg-slate-800/60 hover:text-white'}">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Try Out CAT BKN
+                  <span class="ml-auto text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded">BARU</span>
+                </button>
+                <button data-nav="pegawai" disabled class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Data Pegawai <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+                </button>
+                <button data-nav="pasien" disabled class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+                  Data Pasien <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+                </button>
+                <button data-nav="kunjungan" disabled class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+                  Kunjungan <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+                </button>
+                <button data-nav="pelayanan" disabled class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+                  Pelayanan <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+                </button>
+                <button data-nav="laporan" disabled class="nav-btn w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/></svg>
+                  Laporan Bulanan <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+          <button data-nav="reports" disabled class="nav-btn w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            Laporan & Analisis <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+          </button>
+          <button data-nav="settings" disabled class="nav-btn w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800/40 cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Pengaturan <span class="ml-auto text-[10px] text-slate-500">Soon</span>
+          </button>
+        </nav>
+        <div class="border-t border-slate-800 p-4 text-[11px] text-slate-400">
+          <p class="font-medium text-slate-300">v1.0 · MantaF Health</p>
+          <p class="mt-1">${QUESTIONS.length} soal · 150 menit · Kisi-kisi Kemenkes</p>
+        </div>
+      </aside>
+      ${state._mobileSidebarOpen ? `<div class="lg:hidden fixed inset-0 z-40 bg-slate-900/50" onclick="state._mobileSidebarOpen=false; render();"></div>` : ''}
+    `;
+  }
+
+  function attachSidebarHandlers() {
+    $$('[data-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-toggle');
+        state.sidebarExpanded[key] = !state.sidebarExpanded[key];
+        render();
+      });
+    });
+    $$('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const nav = btn.getAttribute('data-nav');
+        state.activeMenu = nav;
+        if (nav === 'try-out') {
+          // Reset exam if previously finished
+          if (state.exam.finished) {
+            resetExam();
+          }
+          state.page = 'intro';
+        } else if (nav === 'dashboard') {
+          state.page = 'dashboard';
+        }
+        render();
+      });
+    });
+    $$('[data-menu]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const menu = btn.getAttribute('data-menu');
+        state.activeMenu = menu;
+        if (menu === 'dashboard') state.page = 'dashboard';
+        render();
+      });
+    });
+  }
+
+  // ============ DASHBOARD ============
+  function renderDashboard() {
+    const catCards = CATEGORIES.map(cat => {
+      const count = QUESTIONS.filter(q => q.category === cat.id).length;
+      return `
+        <div class="flex items-center gap-3 p-2.5 rounded-md border border-slate-200 bg-white">
+          <span class="h-8 w-1 rounded-full shrink-0" style="background:${cat.hex}"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-slate-800 truncate">${cat.label}</div>
+            <div class="text-[11px] text-slate-500">Soal ${cat.range} · ${count} soal · ${cat.section==='teknis'?'TEKNIS':'MAN-SOSKUL'}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <button onclick="state._mobileSidebarOpen=true; render();" class="lg:hidden fixed top-4 left-4 z-30 inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm hover:bg-slate-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 6h16M4 18h16"/></svg>
+      </button>
+      <div class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+          <div class="flex items-center gap-2 text-emerald-100 text-xs mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+            <span>SISTEM INFORMASI MANAJEMEN JABFUNGKES</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-bold mb-3">Selamat Datang di MantaF Health</h1>
+          <p class="text-emerald-50 text-sm sm:text-base max-w-2xl mb-5">Portal informasi & uji kompetensi Jabatan Fungsional Kesehatan. Siapkan diri Anda untuk CAT BKN dengan try out berbasis kisi-kisi resmi Kemenkes.</p>
+          <button id="start-tryout-btn" class="btn btn-primary bg-white text-emerald-700 hover:bg-emerald-50 px-6 py-3 text-base shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Mulai Try Out CAT BKN
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div class="rounded-lg border p-4 bg-emerald-50 border-emerald-200 text-emerald-700">
+            <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Total Soal
+            </div>
+            <div class="text-2xl font-bold">${QUESTIONS.length}</div>
+            <div class="text-xs opacity-70">6 kategori</div>
+          </div>
+          <div class="rounded-lg border p-4 bg-sky-50 border-sky-200 text-sky-700">
+            <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Durasi
+            </div>
+            <div class="text-2xl font-bold">150</div>
+            <div class="text-xs opacity-70">menit</div>
+          </div>
+          <div class="rounded-lg border p-4 bg-amber-50 border-amber-200 text-amber-700">
+            <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Passing Grade
+            </div>
+            <div class="text-2xl font-bold">${PASSING_GRADE}</div>
+            <div class="text-xs opacity-70">skor minimum</div>
+          </div>
+          <div class="rounded-lg border p-4 bg-violet-50 border-violet-200 text-violet-700">
+            <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              Format
+            </div>
+            <div class="text-2xl font-bold">A-E</div>
+            <div class="text-xs opacity-70">pilihan ganda</div>
+          </div>
+        </div>
+
+        <h2 class="text-lg font-semibold text-slate-800 mb-3">Akses Cepat</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div class="rounded-lg border border-slate-200 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all bg-white" id="qa-tryout">
+            <div class="flex items-start gap-3 mb-2">
+              <div class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-semibold text-slate-800">Try Out CAT BKN</h3>
+                  <span class="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded">BARU</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">Simulasi uji kompetensi ${QUESTIONS.length} soal lengkap dengan timer, lembar jawaban, dan estimasi nilai real-time.</p>
+            <div class="mt-3 flex items-center gap-1 text-xs text-emerald-700 font-medium">Buka <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          </div>
+          ${['Data Pegawai','Data Pasien','Kunjungan','Pelayanan','Laporan Bulanan'].map(t => `
+            <div class="rounded-lg border border-slate-200 shadow-sm p-5 opacity-90 bg-white">
+              <div class="flex items-start gap-3 mb-2">
+                <div class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-slate-800">${t}</h3>
+                    <span class="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded">Soon</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">Menu ini akan segera tersedia pada versi mendatang.</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="rounded-lg border border-slate-200 shadow-sm bg-white">
+          <div class="px-6 py-4 border-b border-slate-100">
+            <h3 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              Kisi-Kisi Try Out (Kemenkes)
+            </h3>
+          </div>
+          <div class="p-6">
+            <div class="grid sm:grid-cols-2 gap-2">${catCards}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function attachDashboardHandlers() {
+    const startBtn = $('#start-tryout-btn');
+    if (startBtn) startBtn.addEventListener('click', () => {
+      if (state.exam.finished) resetExam();
+      state.page = 'intro';
+      state.activeMenu = 'try-out';
+      state.sidebarExpanded['data-info'] = true;
+      render();
+    });
+    const qaT = $('#qa-tryout');
+    if (qaT) qaT.addEventListener('click', () => {
+      if (state.exam.finished) resetExam();
+      state.page = 'intro';
+      state.activeMenu = 'try-out';
+      state.sidebarExpanded['data-info'] = true;
+      render();
+    });
+  }
+
+  // ============ INTRO ============
+  function renderIntro() {
+    const catCards = CATEGORIES.map(cat => {
+      const count = QUESTIONS.filter(q => q.category === cat.id).length;
+      return `
+        <div class="flex items-center gap-3 p-3 rounded-md border border-slate-200 bg-white hover:shadow-sm transition-shadow">
+          <span class="h-9 w-1.5 rounded-full shrink-0" style="background:${cat.hex}"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-slate-800 truncate">${cat.label}</div>
+            <div class="text-xs text-slate-500">Soal ${cat.range} · ${count} soal</div>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded border ${cat.section==='teknis'?'bg-emerald-50 text-emerald-700 border-emerald-200':'bg-slate-100 text-slate-700 border-slate-300'}">${cat.section==='teknis'?'TEKNIS':'MAN-SOSKUL'}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="min-h-screen bg-slate-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div class="text-center mb-8">
+            <span class="inline-block px-3 py-1 mb-3 text-xs font-medium uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full">UJI KOMPETENSI · JABFUNGKES</span>
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">Try Out CAT BKN</h1>
+            <p class="text-slate-600 max-w-2xl mx-auto">Simulasi Computer Assisted Test (CAT) BKN untuk Jabatan Fungsional Kesehatan. ${QUESTIONS.length} soal, 150 menit, passing grade ${PASSING_GRADE}.</p>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            <div class="rounded-lg border p-4 bg-emerald-50 border-emerald-200 text-emerald-700">
+              <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Jumlah Soal
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-2xl font-bold">${QUESTIONS.length}</span>
+                <span class="text-xs opacity-70">Pilihan ganda</span>
+              </div>
+            </div>
+            <div class="rounded-lg border p-4 bg-sky-50 border-sky-200 text-sky-700">
+              <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Durasi
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-2xl font-bold">150</span>
+                <span class="text-xs opacity-70">menit</span>
+              </div>
+            </div>
+            <div class="rounded-lg border p-4 bg-amber-50 border-amber-200 text-amber-700">
+              <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                Passing Grade
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-2xl font-bold">${PASSING_GRADE}</span>
+                <span class="text-xs opacity-70">skor minimum</span>
+              </div>
+            </div>
+            <div class="rounded-lg border p-4 bg-violet-50 border-violet-200 text-violet-700">
+              <div class="flex items-center gap-1.5 mb-1.5 text-[11px] font-medium uppercase">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                Format
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-2xl font-bold">A-E</span>
+                <span class="text-xs opacity-70">5 pilihan jawaban</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 shadow-sm bg-white mb-6">
+            <div class="px-6 py-4 border-b border-slate-100">
+              <h3 class="text-base font-semibold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Kisi-Kisi Soal (Kemenkes)
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="grid sm:grid-cols-2 gap-3">${catCards}</div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-amber-200 bg-amber-50/40 mb-6">
+            <div class="px-6 py-4 border-b border-amber-100">
+              <h3 class="text-base font-semibold text-amber-900 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Tata Tertib & Aturan Ujian
+              </h3>
+            </div>
+            <div class="p-6">
+              <ul class="space-y-2 text-sm text-slate-700">
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Timer di atas akan berkedip merah jika sisa waktu <strong>kurang dari 10 menit</strong>, dan otomatis submit saat habis.</li>
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Lembar jawaban (kanan) menampilkan status: abu-abu=belum, hijau=dijawab, kuning=ragu, biru=aktif.</li>
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Grid dibagi sekat: <strong>1-100 TEKNIS</strong> dan <strong>101-150 MAN-SOSKUL</strong>.</li>
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Anda dapat menggunakan tombol <strong>Cek Jawaban & Estimasi Nilai</strong> kapan saja untuk evaluasi sementara.</li>
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Keyboard shortcuts: <kbd class="px-1.5 py-0.5 bg-amber-100 border border-amber-200 rounded text-[11px]">A-E</kbd> untuk menjawab, <kbd class="px-1.5 py-0.5 bg-amber-100 border border-amber-200 rounded text-[11px]">←</kbd> <kbd class="px-1.5 py-0.5 bg-amber-100 border border-amber-200 rounded text-[11px]">→</kbd> untuk navigasi.</li>
+                <li class="flex gap-2"><span class="text-amber-600 mt-0.5">•</span>Hasil akan menampilkan skor, breakdown per kategori, dan review lengkap dengan kunci + pembahasan.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <button id="start-exam-btn" class="btn btn-primary px-8 h-12 text-base shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              Mulai Ujian
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p class="mt-3 text-xs text-slate-500">Dengan memulai ujian, Anda menyetujui tata tertib di atas.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function attachIntroHandlers() {
+    const btn = $('#start-exam-btn');
+    if (btn) btn.addEventListener('click', () => {
+      startExam();
+    });
+  }
+
+  // ============ EXAM ============
+  function startExam() {
+    state.exam = {
+      currentIdx: 0,
+      answers: {},
+      startTime: Date.now(),
+      endTime: null,
+      started: true,
+      finished: false,
+      result: null,
+      showEstimate: false,
+      activeCategory: null,
+    };
+    state.page = 'exam';
+    startTimer();
+    render();
+  }
+
+  function resetExam() {
+    stopTimer();
+    state.exam = {
+      currentIdx: 0, answers: {}, startTime: null, endTime: null,
+      started: false, finished: false, result: null,
+      showEstimate: false, activeCategory: null,
+    };
+    state.timer = { remaining: EXAM_DURATION_SEC, intervalId: null };
+    state.filter = 'all';
+    saveState();
+  }
+
+  function finishExam() {
+    stopTimer();
+    state.exam.endTime = Date.now();
+    state.exam.finished = true;
+    state.exam.result = calcResult();
+    state.page = 'results';
+    render();
+  }
+
+  function renderExamPage() {
+    const q = currentQuestion();
+    const cat = getCategoryMeta(q.category);
+    const userAns = state.exam.answers[q.id]?.answer || null;
+    const isDoubt = state.exam.answers[q.id]?.isDoubt || false;
+    const stats = calcStats();
+    const isFirst = state.exam.currentIdx === 0;
+    const isLast = state.exam.currentIdx === QUESTIONS.length - 1;
+
+    const catTabs = [{id: null, shortLabel: 'Semua', range: ''}, ...CATEGORIES].map(c => {
+      const active = state.exam.activeCategory === c.id;
+      return `<button data-cat="${c.id ?? ''}" class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${active?'tab-active':'tab-inactive'}">
+        <span>${c.shortLabel}</span>
+        ${c.range ? `<span class="text-[10px] px-1.5 py-0.5 rounded badge-range">${c.range}</span>` : ''}
+      </button>`;
+    }).join('');
+
+    const optsHtml = ['A','B','C','D','E'].map(letter => {
+      const isSelected = userAns === letter;
+      return `
+        <button data-opt="${letter}" class="opt-btn w-full text-left flex items-start gap-3 rounded-md border px-4 py-3 transition-all ${isSelected?'selected':'border-slate-200 bg-white'}">
+          <span class="inline-flex items-center justify-center h-7 w-7 rounded-full text-sm font-semibold shrink-0 ${isSelected?'bg-emerald-600 text-white':'bg-slate-100 text-slate-700'}">${letter}</span>
+          <span class="text-sm sm:text-[15px] text-slate-800 pt-0.5">${q.options[letter]}</span>
+        </button>
+      `;
+    }).join('');
+
+    const grid = renderAnswerGrid();
+
+    return `
+      <div class="min-h-screen bg-slate-50">
+        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div class="flex items-center justify-between gap-4 px-4 sm:px-6 py-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="hidden sm:flex h-9 w-9 items-center justify-center rounded-md bg-emerald-100">
+                <span class="text-emerald-700 text-sm font-bold">CAT</span>
+              </div>
+              <div class="min-w-0">
+                <h1 class="text-sm sm:text-base font-semibold text-slate-900 truncate">Uji Kompetensi Jabatan Fungsional Kesehatan</h1>
+                <p class="text-[11px] text-slate-500">CAT BKN · ${QUESTIONS.length} Soal · 150 Menit · Passing Grade ${PASSING_GRADE}</p>
+              </div>
+            </div>
+            <div id="exam-timer" class="flex items-center gap-2 rounded-md px-3 py-2 font-mono text-sm sm:text-base font-semibold tabular-nums ring-1 ring-inset bg-slate-100 text-slate-800 ring-slate-200" style="border:1px solid #e2e8f0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>${formatTime(state.timer.remaining)}</span>
+            </div>
+          </div>
+          <div class="h-1.5 bg-slate-100">
+            <div class="h-full bg-emerald-500 transition-all" style="width:${(stats.answered/QUESTIONS.length)*100}%"></div>
+          </div>
+          <div class="px-4 sm:px-6 py-2 flex items-center justify-between text-[11px] text-slate-600 border-t border-slate-100">
+            <div class="flex items-center gap-4">
+              <span>Terjawab: <strong class="text-emerald-700">${stats.answered}</strong>/${QUESTIONS.length}</span>
+              <span>Ragu-ragu: <strong class="text-amber-600">${stats.doubt}</strong></span>
+              <span class="hidden sm:inline">Belum dijawab: <strong class="text-slate-700">${stats.unanswered}</strong></span>
+            </div>
+            <div class="hidden md:flex items-center gap-1.5 text-[10px] text-slate-500">
+              <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded">A-E</kbd> jawab ·
+              <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded">←</kbd>
+              <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded">→</kbd> navigasi
+            </div>
+          </div>
+        </header>
+
+        <div class="border-b border-slate-200 bg-white overflow-x-auto">
+          <div class="flex items-center gap-1 px-4 sm:px-6 py-2 min-w-max">${catTabs}</div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 p-4 sm:p-6">
+          <div class="flex-1 min-w-0">
+            <div class="rounded-lg border border-slate-200 shadow-sm bg-white overflow-hidden">
+              <div class="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-slate-900 text-white text-sm font-semibold">${state.exam.currentIdx + 1}</span>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs border" style="background:${cat.hex}1a;color:${cat.hex};border-color:${cat.hex}40">${cat.label}</span>
+                  ${q.section==='teknis'?'<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs border bg-emerald-50 text-emerald-700 border-emerald-200">TEKNIS</span>':'<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs border bg-slate-100 text-slate-700 border-slate-300">MAN-SOSKUL</span>'}
+                  ${isDoubt?'<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs border bg-amber-50 text-amber-700 border-amber-200">Ragukan</span>':''}
+                </div>
+                <span class="text-[11px] text-slate-500">Kategori ${cat.range}</span>
+              </div>
+              <div class="p-6">
+                <p class="text-[15px] sm:text-base text-slate-900 leading-relaxed mb-5 whitespace-pre-wrap">${q.text}</p>
+                <div class="space-y-2.5">${optsHtml}</div>
+              </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              <button id="btn-prev" class="btn btn-secondary px-4 py-2" ${isFirst?'disabled':''}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                <span>Sebelumnya</span>
+              </button>
+              <button id="btn-doubt" class="btn ${isDoubt?'btn-warning':'btn-outline-warning'} px-4 py-2 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+                <span>Ragu-ragu</span>
+              </button>
+              <button id="btn-clear" class="btn btn-outline-danger px-4 py-2 text-xs" ${(!userAns && !isDoubt)?'disabled':''}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span>Kosongkan</span>
+              </button>
+              <button id="btn-estimate" class="btn btn-outline-info px-4 py-2 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Cek Estimasi</span>
+              </button>
+              <button id="btn-finish" class="btn btn-danger px-4 py-2 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                <span>Akhiri</span>
+              </button>
+            </div>
+
+            <div class="mt-2">
+              <button id="btn-next" class="btn btn-primary w-full px-4 py-3" ${isLast?'disabled':''}>
+                Soal Selanjutnya
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:w-80 xl:w-96 shrink-0">${grid}</div>
+        </div>
+
+        ${state.exam.showEstimate ? renderEstimatePanel() : ''}
+        ${state._showFinishDialog ? renderFinishDialog() : ''}
+      </div>
+    `;
+  }
+
+  function renderAnswerGrid() {
+    const teknis = QUESTIONS.filter(q => q.section === 'teknis');
+    const manSos = QUESTIONS.filter(q => q.section === 'man-soskul');
+    const currentId = currentQuestion().id;
+
+    function cellClass(qId) {
+      const a = state.exam.answers[qId];
+      const isActive = qId === currentId;
+      if (isActive) return 'grid-cell active';
+      if (!a || a.answer === null) {
+        if (a && a.isDoubt) return 'grid-cell doubt';
+        return 'grid-cell unanswered';
+      }
+      if (a.isDoubt) return 'grid-cell answered-doubt';
+      return 'grid-cell answered';
+    }
+
+    const teknisHtml = teknis.map(q => `
+      <button data-jump="${q.id - 1}" class="cell-btn ${cellClass(q.id)} aspect-square rounded text-[11px] font-semibold border" title="Soal ${q.id}">${q.id}</button>
+    `).join('');
+
+    const manSosHtml = manSos.map(q => `
+      <button data-jump="${q.id - 1}" class="cell-btn ${cellClass(q.id)} aspect-square rounded text-[11px] font-semibold border" title="Soal ${q.id}">${q.id}</button>
+    `).join('');
+
+    return `
+      <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-slate-800">Lembar Jawaban</h2>
+          <button id="grid-estimate-btn" class="btn btn-outline-info px-3 py-1.5 text-xs">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Cek Estimasi
+          </button>
+        </div>
+        <div class="px-4 py-3 border-b border-slate-100 grid grid-cols-2 gap-2 text-[10.5px] text-slate-600">
+          <div class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-slate-100 border border-slate-300"></span>Belum dijawab</div>
+          <div class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-emerald-500"></span>Sudah dijawab</div>
+          <div class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-amber-200 border border-amber-400"></span>Ragu-ragu</div>
+          <div class="flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-sky-500"></span>Soal aktif</div>
+        </div>
+        <div class="overflow-y-auto h-[420px] sm:h-[560px] p-4 space-y-4">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
+              <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-wide">TEKNIS (1-100)</h3>
+            </div>
+            <div class="grid grid-cols-10 gap-1.5">${teknisHtml}</div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-2 w-2 rounded-full bg-slate-500"></div>
+              <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-wide">MAN-SOSKUL (101-150)</h3>
+            </div>
+            <div class="grid grid-cols-10 gap-1.5">${manSosHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEstimatePanel() {
+    const est = calcLiveEstimate();
+    const isPass = est.estimatedScoreNow >= PASSING_GRADE;
+    const canPass = est.maxPossibleScore >= PASSING_GRADE;
+
+    const unansweredHtml = est.unansweredIds.length === 0 ?
+      `<p class="text-xs text-slate-500 italic">Semua soal sudah dijawab!</p>` :
+      `<div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto p-2 border border-slate-100 rounded scrollbar-thin">${est.unansweredIds.map(id => `<button data-jump="${id - 1}" class="h-7 w-9 rounded text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">${id}</button>`).join('')}</div>`;
+
+    const doubtHtml = est.doubtIds.length === 0 ?
+      `<p class="text-xs text-slate-500 italic">Tidak ada soal ragu-ragu.</p>` :
+      `<div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto p-2 border border-slate-100 rounded scrollbar-thin">${est.doubtIds.map(id => `<button data-jump="${id - 1}" class="h-7 w-9 rounded text-xs font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors">${id}</button>`).join('')}</div>`;
+
+    return `
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60" id="estimate-overlay">
+        <div class="w-full max-w-3xl max-h-[92vh] sm:max-h-[85vh] overflow-hidden bg-white rounded-lg border border-slate-200 shadow-2xl flex flex-col">
+          <div class="border-b border-slate-100 px-5 py-3 flex items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-semibold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Estimasi Nilai Sementara
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">Evaluasi sebelum mengakhiri ujian — klik nomor soal untuk meloncat.</p>
+            </div>
+            <button id="close-estimate" class="btn btn-ghost h-8 w-8 p-0" aria-label="Tutup">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-5 space-y-5">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="rounded-md border p-3 bg-emerald-50 border-emerald-200 text-emerald-700">
+                <div class="flex items-center gap-1.5 text-[11px] font-medium mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                  Terjawab
+                </div>
+                <div class="text-xl font-bold">${est.answered}<span class="text-[10px] opacity-70"> / ${est.total}</span></div>
+              </div>
+              <div class="rounded-md border p-3 bg-slate-50 border-slate-200 text-slate-700">
+                <div class="flex items-center gap-1.5 text-[11px] font-medium mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                  Belum Dijawab
+                </div>
+                <div class="text-xl font-bold">${est.unanswered}<span class="text-[10px] opacity-70"> / ${est.total}</span></div>
+              </div>
+              <div class="rounded-md border p-3 bg-amber-50 border-amber-200 text-amber-700">
+                <div class="flex items-center gap-1.5 text-[11px] font-medium mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
+                  Ragu-ragu
+                </div>
+                <div class="text-xl font-bold">${est.doubt}<span class="text-[10px] opacity-70"> / ${est.total}</span></div>
+              </div>
+              <div class="rounded-md border p-3 bg-sky-50 border-sky-200 text-sky-700">
+                <div class="flex items-center gap-1.5 text-[11px] font-medium mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  Benar
+                </div>
+                <div class="text-xl font-bold">${est.correct}<span class="text-[10px] opacity-70"> / ${est.total}</span></div>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4">
+              <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 19.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 19.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                  <span class="font-semibold text-slate-800">Estimasi Skor</span>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs border ${isPass?'bg-emerald-50 text-emerald-700 border-emerald-200':'bg-rose-50 text-rose-700 border-rose-200'}">${isPass?'LULUS (≥ 70)':'BELUM LULUS'}</span>
+              </div>
+              <div class="flex items-baseline gap-2 mb-2">
+                <span class="text-4xl font-bold text-slate-900">${est.estimatedScoreNow}</span>
+                <span class="text-slate-500 text-sm">/100</span>
+                <span class="text-xs text-slate-400 ml-2">(${est.correct}/${est.total} benar)</span>
+              </div>
+              <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 transition-all" style="width:${est.estimatedScoreNow}%"></div>
+              </div>
+              <div class="mt-3 flex items-center justify-between text-xs text-slate-600 flex-wrap gap-2">
+                <div class="flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                  <span>Skor maksimal: <strong class="${canPass?'text-emerald-700':'text-rose-700'}">${est.maxPossibleScore}</strong></span>
+                </div>
+                <div>${canPass?'<span class="text-emerald-700">Masih bisa LULUS jika sisa soal benar semua</span>':'<span class="text-rose-700">Tidak mungkin lulus lagi</span>'}</div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-semibold text-slate-800 mb-2">Skor per Bagian</h3>
+              <div class="space-y-2">
+                ${est.perSection.map(s => `
+                  <div class="flex items-center gap-3 p-3 rounded-md border border-slate-200 bg-white">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-slate-700">${s.label}</span>
+                        <span class="text-xs text-slate-500">${s.answered}/${s.total} dijawab</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <div class="h-1.5 flex-1 bg-slate-200 rounded-full overflow-hidden">
+                          <div class="h-full ${s.section==='teknis'?'bg-emerald-500':'bg-slate-500'}" style="width:${s.score}%"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-700 w-10 text-right">${s.score}</span>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <h4 class="text-xs font-semibold text-slate-700 mb-2">Belum dijawab (${est.unansweredIds.length})</h4>
+                ${unansweredHtml}
+              </div>
+              <div>
+                <h4 class="text-xs font-semibold text-slate-700 mb-2">Ragu-ragu (${est.doubtIds.length})</h4>
+                ${doubtHtml}
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 p-4 flex items-center justify-end gap-2">
+            <button id="continue-btn" class="btn btn-primary px-4 py-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" style="background:#059669;color:white;border-color:#059669">
+              Lanjut Mengerjakan
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFinishDialog() {
+    const stats = calcStats();
+    const isWarn = stats.unanswered > 0;
+    return `
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60" id="finish-overlay">
+        <div class="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold flex items-center gap-2 mb-3">
+              ${isWarn ? `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+                Akhiri Ujian?
+              ` : `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                Semua soal sudah dijawab
+              `}
+            </h2>
+            <div class="space-y-3 text-sm text-slate-700">
+              <p>Anda akan mengakhiri ujian. Tindakan ini tidak dapat dibatalkan.</p>
+              <div class="grid grid-cols-3 gap-2 mt-2">
+                <div class="rounded-md bg-emerald-50 border border-emerald-200 p-2.5 text-center">
+                  <div class="text-[10px] text-emerald-700 uppercase">Terjawab</div>
+                  <div class="text-lg font-bold text-emerald-800">${stats.answered}</div>
+                </div>
+                <div class="rounded-md bg-slate-50 border border-slate-200 p-2.5 text-center">
+                  <div class="text-[10px] text-slate-600 uppercase">Belum</div>
+                  <div class="text-lg font-bold text-slate-700">${stats.unanswered}</div>
+                </div>
+                <div class="rounded-md bg-amber-50 border border-amber-200 p-2.5 text-center">
+                  <div class="text-[10px] text-amber-700 uppercase">Ragu</div>
+                  <div class="text-lg font-bold text-amber-800">${stats.doubt}</div>
+                </div>
+              </div>
+              ${isWarn ? `
+                <div class="flex items-start gap-2 p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                  <p>Masih ada <strong>${stats.unanswered} soal</strong> belum dijawab. Soal yang tidak dijawab akan dianggap salah. Yakin akhiri?</p>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div class="bg-slate-50 px-6 py-4 flex items-center justify-end gap-2">
+            <button id="cancel-finish" class="btn btn-secondary px-4 py-2">Lanjut Mengerjakan</button>
+            <button id="confirm-finish" class="btn btn-danger px-4 py-2">Ya, Akhiri Ujian</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function attachExamHandlers() {
+    // Click option
+    $$('[data-opt]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const letter = btn.getAttribute('data-opt');
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = letter;
+        saveState();
+        render();
+      });
+    });
+
+    // Navigation
+    const btnPrev = $('#btn-prev');
+    if (btnPrev) btnPrev.addEventListener('click', () => {
+      if (state.exam.currentIdx > 0) { state.exam.currentIdx--; saveState(); render(); }
+    });
+    const btnNext = $('#btn-next');
+    if (btnNext) btnNext.addEventListener('click', () => {
+      if (state.exam.currentIdx < QUESTIONS.length - 1) { state.exam.currentIdx++; saveState(); render(); }
+    });
+    const btnDoubt = $('#btn-doubt');
+    if (btnDoubt) btnDoubt.addEventListener('click', () => {
+      const q = currentQuestion();
+      if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+      state.exam.answers[q.id].isDoubt = !state.exam.answers[q.id].isDoubt;
+      saveState();
+      render();
+    });
+    const btnClear = $('#btn-clear');
+    if (btnClear) btnClear.addEventListener('click', () => {
+      const q = currentQuestion();
+      state.exam.answers[q.id] = { answer: null, isDoubt: false };
+      saveState();
+      render();
+    });
+
+    // Estimate panel
+    const btnEst = $('#btn-estimate');
+    if (btnEst) btnEst.addEventListener('click', () => {
+      state.exam.showEstimate = true;
+      render();
+    });
+    const btnGridEst = $('#grid-estimate-btn');
+    if (btnGridEst) btnGridEst.addEventListener('click', () => {
+      state.exam.showEstimate = true;
+      render();
+    });
+
+    // Finish dialog
+    const btnFinish = $('#btn-finish');
+    if (btnFinish) btnFinish.addEventListener('click', () => {
+      state._showFinishDialog = true;
+      render();
+    });
+
+    // Grid jump
+    $$('[data-jump]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-jump'), 10);
+        if (!isNaN(idx)) {
+          state.exam.currentIdx = idx;
+          if (state.exam.showEstimate && state._jumpClosesEstimate) {
+            state.exam.showEstimate = false;
+            state._jumpClosesEstimate = false;
+          }
+          saveState();
+          render();
+        }
+      });
+    });
+
+    // Category tabs
+    $$('[data-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-cat') || null;
+        state.exam.activeCategory = cat;
+        if (cat) {
+          const firstIdx = QUESTIONS.findIndex(q => q.category === cat);
+          if (firstIdx >= 0) state.exam.currentIdx = firstIdx;
+        }
+        saveState();
+        render();
+      });
+    });
+
+    // Estimate overlay
+    const closeEst = $('#close-estimate');
+    if (closeEst) closeEst.addEventListener('click', () => {
+      state.exam.showEstimate = false;
+      render();
+    });
+    const contBtn = $('#continue-btn');
+    if (contBtn) contBtn.addEventListener('click', () => {
+      state.exam.showEstimate = false;
+      render();
+    });
+    // Also close estimate when clicking a jump button
+    if (state.exam.showEstimate) {
+      $$('[data-jump]').forEach(btn => {
+        // Override to also close estimate
+        const old = btn.onclick;
+        btn.addEventListener('click', () => {
+          state.exam.showEstimate = false;
+        }, { once: true });
+      });
+    }
+
+    // Finish dialog
+    const cancelFinish = $('#cancel-finish');
+    if (cancelFinish) cancelFinish.addEventListener('click', () => {
+      state._showFinishDialog = false;
+      render();
+    });
+    const confirmFinish = $('#confirm-finish');
+    if (confirmFinish) confirmFinish.addEventListener('click', () => {
+      state._showFinishDialog = false;
+      finishExam();
+    });
+
+    // Keyboard shortcuts
+    document.onkeydown = (e) => {
+      if (state.exam.showEstimate || state._showFinishDialog) return;
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'ArrowRight' && state.exam.currentIdx < QUESTIONS.length - 1) {
+        state.exam.currentIdx++;
+        saveState();
+        render();
+      } else if (e.key === 'ArrowLeft' && state.exam.currentIdx > 0) {
+        state.exam.currentIdx--;
+        saveState();
+        render();
+      } else if (['a','A','1'].includes(e.key)) {
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = 'A';
+        saveState(); render();
+      } else if (['b','B','2'].includes(e.key)) {
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = 'B';
+        saveState(); render();
+      } else if (['c','C','3'].includes(e.key)) {
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = 'C';
+        saveState(); render();
+      } else if (['d','D','4'].includes(e.key)) {
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = 'D';
+        saveState(); render();
+      } else if (['e','E','5'].includes(e.key)) {
+        const q = currentQuestion();
+        if (!state.exam.answers[q.id]) state.exam.answers[q.id] = { answer: null, isDoubt: false };
+        state.exam.answers[q.id].answer = 'E';
+        saveState(); render();
+      }
+    };
+
+    // Scroll active cell into view
+    const activeCell = $('[data-jump].grid-cell.active');
+    if (activeCell) activeCell.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // ============ RESULTS ============
+  function renderResults() {
+    const r = state.exam.result;
+    if (!r) return '<div class="p-6">No result.</div>';
+
+    // Build review list with filter
+    const reviewData = QUESTIONS.map(q => {
+      const ans = state.exam.answers[q.id]?.answer || null;
+      const isCorrect = ans === q.correctAnswer;
+      const status = ans === null ? 'unanswered' : (isCorrect ? 'correct' : 'wrong');
+      return { ...q, userAnswer: ans, isCorrect, status };
+    });
+    const filtered = reviewData.filter(item => {
+      if (state.filter === 'all') return true;
+      return item.status === state.filter;
+    });
+
+    const catColors = {};
+    CATEGORIES.forEach(c => catColors[c.id] = c.hex);
+
+    // SVG bar chart
+    const maxScore = 100;
+    const barWidth = 80;
+    const barGap = 16;
+    const chartWidth = CATEGORIES.length * (barWidth + barGap);
+    const chartHeight = 220;
+    const chartBars = CATEGORIES.map((cat, i) => {
+      const stat = r.perCategory.find(c => c.category === cat.id);
+      const score = stat ? stat.score : 0;
+      const barHeight = (score / maxScore) * (chartHeight - 40);
+      const x = i * (barWidth + barGap) + 10;
+      const y = chartHeight - barHeight - 20;
+      return `
+        <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="${cat.hex}" rx="6">
+          <animate attributeName="height" from="0" to="${barHeight}" dur=".5s" fill="freeze"/>
+          <animate attributeName="y" from="${chartHeight - 20}" to="${y}" dur=".5s" fill="freeze"/>
+        </rect>
+        <text x="${x + barWidth/2}" y="${y - 5}" text-anchor="middle" font-size="11" font-weight="700" fill="#1e293b">${score}</text>
+        <text x="${x + barWidth/2}" y="${chartHeight - 5}" text-anchor="middle" font-size="10" fill="#475569">${cat.shortLabel}</text>
+      `;
+    }).join('');
+
+    const reviewRows = filtered.map(q => {
+      const cat = getCategoryMeta(q.category);
+      const statusBadge = q.status === 'correct' ?
+        '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200">Benar</span>' :
+        q.status === 'wrong' ?
+        '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 border border-rose-200">Salah</span>' :
+        '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200">Kosong</span>';
+
+      const statusBg = q.status === 'correct' ? 'bg-emerald-500 text-white' :
+                       q.status === 'wrong' ? 'bg-rose-500 text-white' :
+                       'bg-slate-300 text-slate-700';
+
+      const optsList = ['A','B','C','D','E'].map(letter => {
+        const isUser = q.userAnswer === letter;
+        const isCorrect = q.correctAnswer === letter;
+        const bg = isCorrect ? 'bg-emerald-50 border-emerald-200' :
+                   (isUser && !isCorrect) ? 'bg-rose-50 border-rose-200' :
+                   'border-transparent';
+        const circle = isCorrect ? 'bg-emerald-500 text-white' :
+                       (isUser && !isCorrect) ? 'bg-rose-500 text-white' :
+                       'bg-slate-200 text-slate-700';
+        const badge = isCorrect ? '<span class="ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">Kunci</span>' :
+                     (isUser && !isCorrect) ? '<span class="ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 border border-rose-200">Jawaban Anda</span>' : '';
+        return `
+          <div class="flex items-start gap-2 px-2 py-1.5 rounded text-xs border ${bg}">
+            <span class="inline-flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-semibold shrink-0 ${circle}">${letter}</span>
+            <span class="text-slate-700 pt-0.5">${q.options[letter]}</span>
+            ${badge}
+          </div>
+        `;
+      }).join('');
+
+      const userAnsText = q.userAnswer ?
+        `<strong class="text-slate-800">${q.userAnswer}. ${q.options[q.userAnswer].slice(0,40)}${q.options[q.userAnswer].length>40?'...':''}</strong>` :
+        '<strong class="text-slate-400 italic">(kosong)</strong>';
+      const correctAnsText = `<strong class="text-emerald-700">${q.correctAnswer}. ${q.options[q.correctAnswer].slice(0,40)}${q.options[q.correctAnswer].length>40?'...':''}</strong>`;
+
+      return `
+        <div class="review-row rounded-md border border-slate-200 bg-white overflow-hidden">
+          <button class="review-toggle w-full flex items-start gap-3 p-3 text-left hover:bg-slate-50 transition-colors">
+            <span class="inline-flex items-center justify-center h-7 w-7 rounded-md text-xs font-semibold shrink-0 ${statusBg}">${q.id}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-slate-800 line-clamp-2">${q.text}</p>
+              <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                <span>Jawaban Anda: ${userAnsText}</span>
+                <span>·</span>
+                <span>Kunci: ${correctAnsText}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${statusBadge}
+              <svg xmlns="http://www.w3.org/2000/svg" class="chevron h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </button>
+          <div class="options-list border-t border-slate-100 p-3 bg-slate-50/50">
+            <div class="space-y-1.5 mb-2">${optsList}</div>
+            <div class="mt-2 pt-2 border-t border-slate-200">
+              <p class="text-xs text-slate-600"><strong class="text-slate-700">Pembahasan:</strong> ${q.explanation}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const filterBtns = [
+      { id: 'all', label: `Semua (${QUESTIONS.length})` },
+      { id: 'correct', label: `Benar (${r.correct})` },
+      { id: 'wrong', label: `Salah (${r.wrong})` },
+      { id: 'unanswered', label: `Kosong (${r.unanswered})` },
+    ].map(opt => `
+      <button data-filter="${opt.id}" class="px-2 py-1 rounded-md transition-colors text-xs ${state.filter===opt.id?'bg-slate-900 text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${opt.label}</button>
+    `).join('');
+
+    return `
+      <div class="min-h-screen bg-slate-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div class="rounded-lg border-2 shadow-md overflow-hidden mb-6 ${r.passed?'border-emerald-300':'border-rose-300'}">
+            <div class="px-6 py-8 text-center text-white ${r.passed?'bg-emerald-600':'bg-rose-600'}">
+              <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-white/20 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 19.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 19.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-bold mb-2">${r.passed?'SELAMAT, ANDA LULUS!':'BELUM LULUS'}</h1>
+              <p class="text-white/90 text-sm mb-4">${r.passed?'Anda memenuhi passing grade uji kompetensi (≥ 70).':'Anda belum mencapai passing grade (≥ 70). Tetap semangat belajar!'}</p>
+              <div class="inline-flex items-baseline gap-2">
+                <span class="text-6xl font-bold tabular-nums">${r.score}</span>
+                <span class="text-2xl font-medium text-white/80">/ 100</span>
+              </div>
+              <div class="mt-3 text-sm text-white/90">${r.correct} benar · ${r.wrong} salah · ${r.unanswered} kosong</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="rounded-lg border p-4 bg-emerald-50 border-emerald-200 text-emerald-700">
+              <div class="flex items-center gap-1.5 text-[11px] font-medium uppercase mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Benar
+              </div>
+              <div class="text-2xl font-bold">${r.correct}</div>
+            </div>
+            <div class="rounded-lg border p-4 bg-rose-50 border-rose-200 text-rose-700">
+              <div class="flex items-center gap-1.5 text-[11px] font-medium uppercase mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>Salah
+              </div>
+              <div class="text-2xl font-bold">${r.wrong}</div>
+            </div>
+            <div class="rounded-lg border p-4 bg-slate-50 border-slate-200 text-slate-700">
+              <div class="flex items-center gap-1.5 text-[11px] font-medium uppercase mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>Tidak Dijawab
+              </div>
+              <div class="text-2xl font-bold">${r.unanswered}</div>
+            </div>
+            <div class="rounded-lg border p-4 ${r.passed?'bg-emerald-50 border-emerald-200 text-emerald-700':'bg-rose-50 border-rose-200 text-rose-700'}">
+              <div class="flex items-center gap-1.5 text-[11px] font-medium uppercase mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 19.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 19.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>Skor Akhir
+              </div>
+              <div class="text-2xl font-bold">${r.score}</div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 shadow-sm bg-white mb-6">
+            <div class="px-6 py-4 border-b border-slate-100">
+              <h3 class="text-base font-semibold">Skor per Bagian</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                ${r.perSection.map(s => `
+                  <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                      <div class="flex items-center gap-2">
+                        <span class="h-2.5 w-2.5 rounded-full ${s.section==='teknis'?'bg-emerald-500':'bg-slate-500'}"></span>
+                        <span class="text-sm font-medium text-slate-800">${s.label}</span>
+                        <span class="text-xs text-slate-500">(${s.correct}/${s.total} benar)</span>
+                      </div>
+                      <span class="text-sm font-bold text-slate-800">${s.score}</span>
+                    </div>
+                    <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full ${s.section==='teknis'?'bg-emerald-500':'bg-slate-500'} transition-all" style="width:${s.score}%"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 shadow-sm bg-white mb-6">
+            <div class="px-6 py-4 border-b border-slate-100">
+              <h3 class="text-base font-semibold">Breakdown Nilai per Kategori</h3>
+            </div>
+            <div class="p-6">
+              <div class="w-full overflow-x-auto">
+                <svg viewBox="0 0 ${chartWidth + 20} ${chartHeight + 10}" class="w-full" style="max-height:280px">
+                  <line x1="0" y1="${chartHeight - 20}" x2="${chartWidth + 20}" y2="${chartHeight - 20}" stroke="#e2e8f0" stroke-width="1"/>
+                  <line x1="10" y1="0" x2="10" y2="${chartHeight - 20}" stroke="#e2e8f0" stroke-width="1"/>
+                  ${[0, 25, 50, 75, 100].map(t => {
+                    const y = chartHeight - 20 - (t/100) * (chartHeight - 40);
+                    return `<line x1="10" y1="${y}" x2="${chartWidth + 20}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/><text x="0" y="${y+3}" font-size="9" fill="#94a3b8" text-anchor="end">${t}</text>`;
+                  }).join('')}
+                  ${chartBars}
+                </svg>
+              </div>
+              <div class="space-y-2 mt-4">
+                ${r.perCategory.map(c => {
+                  const cat = getCategoryMeta(c.category);
+                  return `
+                    <div class="flex items-center justify-between gap-3 p-2.5 rounded-md border border-slate-200 bg-white">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${cat.hex}"></span>
+                        <span class="text-xs sm:text-sm font-medium text-slate-700 truncate">${c.label}</span>
+                      </div>
+                      <div class="flex items-center gap-3 shrink-0 text-xs">
+                        <span class="text-emerald-700 font-medium">${c.correct} ✓</span>
+                        <span class="text-rose-700 font-medium">${c.wrong} ✗</span>
+                        <span class="text-slate-500">${c.unanswered} −</span>
+                        <span class="font-bold text-slate-800 w-10 text-right">${c.score}</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 shadow-sm bg-white mb-6">
+            <div class="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+              <h3 class="text-base font-semibold">Review Lengkap · Jawaban vs Kunci</h3>
+              <div class="flex items-center gap-1 text-xs flex-wrap">${filterBtns}</div>
+            </div>
+            <div class="p-6 space-y-2">${reviewRows}${filtered.length===0?'<p class="text-center text-sm text-slate-500 py-8">Tidak ada soal pada filter ini.</p>':''}</div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button id="back-home" class="btn btn-secondary px-4 py-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Kembali ke Dashboard
+            </button>
+            <button id="restart" class="btn btn-primary px-4 py-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Ulangi Ujian
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function attachResultsHandlers() {
+    $$('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.filter = btn.getAttribute('data-filter');
+        render();
+      });
+    });
+    $$('.review-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.review-row');
+        row.classList.toggle('open');
+      });
+    });
+    const backHome = $('#back-home');
+    if (backHome) backHome.addEventListener('click', () => {
+      state.page = 'dashboard';
+      state.activeMenu = 'dashboard';
+      render();
+    });
+    const restart = $('#restart');
+    if (restart) restart.addEventListener('click', () => {
+      resetExam();
+      state.page = 'intro';
+      render();
+    });
+  }
+
+  // ============ INIT ============
+  loadState();
+  // Auto-route to results if exam was finished
+  if (state.exam.finished && state.exam.result && state.page !== 'results') {
+    state.page = 'results';
+  }
+  render();
+
+  // Expose state for debugging
+  window.__state = state;
+})();
+
+</script>
+
+</body>
+</html>
