@@ -1,4 +1,4 @@
-# MantaF v2.4 — Supabase Edition
+# MantaF v2.4.1 — Supabase Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
@@ -6,6 +6,16 @@ Dinas Kesehatan Kabupaten Kutai Kartanegara
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
 
+> **v2.4.1 — FIX tabrakan deklarasi `bezettingCache`:**
+> 1. **Perbaiki `Uncaught SyntaxError: Identifier 'bezettingCache' has already been declared`** —
+>    variabel cache di `dashboard.js` kini bernama `dashBezettingCache` sehingga tidak lagi
+>    bentrok dengan deklarasi di `bezetting.js` (halaman **Bezetting** & **Data Peserta UKOM**
+>    gagal termuat karena error ini). Referensi lintas file kini dilindungi pemeriksaan
+>    `typeof` (admin.js, csvimport.js).
+> 2. **Cache dashboard selalu segar** — setiap perubahan data dari Panel Admin maupun hasil
+>    import CSV otomatis membuang cache dashboard (`dashPesertaCache` & `dashBezettingCache`)
+>    agar kartu statistik, donut, dan grafik tren menampilkan angka terkini saat dibuka lagi.
+>
 > **v2.4 — Foto profil akun di sidebar + privasi pop up dashboard:**
 > 1. **Foto profil kini tampil di SIDEBAR** — saat admin/operator login, bagian profil sidebar
 >    menampilkan foto akun (fallback: inisial nama), nama lengkap, dan role (Administrator/Operator).

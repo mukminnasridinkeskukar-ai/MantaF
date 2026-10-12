@@ -192,6 +192,12 @@ function logoutAdmin(){
 
 async function adminRefreshAll(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
+  /* Buang cache dashboard agar statistik selalu segar setelah ada perubahan data
+     (cache akan dimuat ulang otomatis saat halaman dashboard dibuka kembali). */
+  try{
+    if(typeof dashPesertaCache !== 'undefined') dashPesertaCache = null;
+    if(typeof dashBezettingCache !== 'undefined') dashBezettingCache = null;
+  }catch(e){ /* abaikan */ }
   /* Muat tiap tabel SECARA TERPISAH: satu tabel gagal (mis. tabel petunjuk
      belum dibuat karena schema belum di-run ulang) tidak membuat seluruh
      panel admin kosong. */
@@ -480,7 +486,7 @@ function openBezettingForm(id){
       else await API.createBezetting(row);
       showToast(b ? 'Data bezetting diperbarui' : 'Data bezetting ditambahkan', 'success');
       overlay.remove();
-      if(document.getElementById('bezettingBody') && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
+      if(document.getElementById('bezettingBody') && typeof bezettingCache !== 'undefined' && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
       adminRefreshAll();
     }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; }
   });
@@ -493,7 +499,7 @@ function admDeleteBezetting(id){
     try{
       await API.deleteBezetting(id);
       showToast('Data bezetting dihapus', 'success');
-      if(document.getElementById('bezettingBody') && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
+      if(document.getElementById('bezettingBody') && typeof bezettingCache !== 'undefined' && bezettingCache && typeof loadBezetting === 'function') loadBezetting(true);
       adminRefreshAll();
     }catch(err){ showToast('Gagal menghapus: ' + err.message, 'error'); }
   });

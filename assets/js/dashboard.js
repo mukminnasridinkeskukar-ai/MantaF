@@ -4,7 +4,7 @@
    ============================================================ */
 
 let dashPesertaCache = null;
-let bezettingCache = null;
+let dashBezettingCache = null;
 
 SectionInit['dashboard'] = function(){
   loadDashboardStats();
@@ -60,9 +60,9 @@ async function loadDashboardCharts(){
     if(!dashPesertaCache){
       dashPesertaCache = await API.getPesertaUkom();
     }
-    if(!bezettingCache){
-      try{ bezettingCache = await API.getBezetting(); }
-      catch(eB){ console.error('Gagal memuat bezetting:', eB); bezettingCache = []; }
+    if(!dashBezettingCache){
+      try{ dashBezettingCache = await API.getBezetting(); }
+      catch(eB){ console.error('Gagal memuat bezetting:', eB); dashBezettingCache = []; }
     }
     renderStatusDonut();
     renderJabfungDonut();
@@ -270,15 +270,15 @@ let _dashLowonganRows = [];
 
 function showLowonganModal(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
-  if(!bezettingCache){
+  if(!dashBezettingCache){
     API.getBezetting().then(function(data){
-      bezettingCache = data || [];
+      dashBezettingCache = data || [];
       showLowonganModal();
     }).catch(function(err){ showToast('Gagal memuat bezetting: ' + err.message, 'error'); });
     return;
   }
 
-  _dashLowonganRows = bezettingCache.slice().sort(function(a, b){
+  _dashLowonganRows = dashBezettingCache.slice().sort(function(a, b){
     return (parseInt(b.lowongan, 10) || 0) - (parseInt(a.lowongan, 10) || 0) ||
            String(a.instansi || '').localeCompare(String(b.instansi || ''), 'id');
   });

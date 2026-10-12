@@ -722,6 +722,7 @@ function csvAfterImport(tableKey){
       if(typeof pengumumanCacheInvalidate === 'function') pengumumanCacheInvalidate();
     }else if(tableKey === 'bezetting'){
       if(typeof loadBezetting === 'function' && typeof bezettingCache !== 'undefined' && bezettingCache) loadBezetting(true);
+      if(typeof dashBezettingCache !== 'undefined') dashBezettingCache = null;
     }else if(tableKey === 'peserta'){
       if(typeof pesertaUkomCache !== 'undefined') pesertaUkomCache = null;
       if(typeof dashPesertaCache !== 'undefined') dashPesertaCache = null;
