@@ -4,26 +4,32 @@
 -- File ini ADDITIVE & IDEMPOTENT — aman dijalankan ulang.
 -- Dapat dijalankan SETELAH schema.sql / perbaikan-login-admin.sql.
 --
+-- PENTING (v2.1.1 — fix):
+--   Bila sebelumnya Anda mendapat error "column nama of relation admin_users
+--   does not exist" atau RPC `admin_login` / `admin_list_users` tidak ditemukan,
+--   file ini sudah diperbaiki dengan:
+--     1. DROP semua function lama di awal (cascade) → memastikan recreate bersih
+--        tanpa konflik language (sql vs plpgsql) atau return type.
+--     2. ALTER TABLE add column `nama`, `role`, `aktif` sebelum INSERT/SELECT.
+--
 -- Yang ditambahkan:
---   A. Kolom baru pada admin_users: last_login_at, last_password_change_at,
---      password_changed_by, failed_login_count, locked_until.
---   B. Role 'operator' di samping 'admin' (admin = akses penuh + kelola akun;
---      operator = akses data saja, TIDAK bisa kelola akun).
---   C. Seed akun operator default (username: operator | password: operator123).
---   D. RPC admin_login versi baru yang:
---        - menolak akun yang sedang dikunci (locked_until > now),
---        - menambah failed_login_count bila password salah,
---        - mengunci akun otomatis 15 menit setelah 5 kali gagal berturut-turut,
---        - mereset counter & mencatat last_login_at saat berhasil.
---   E. RPC admin_get_my_profile(p_username)  → profil sendiri (untuk modal "Akun Saya").
---   F. RPC admin_change_my_username(...)     → ubah username sendiri (verifikasi password).
---   G. RPC admin_change_password(...)        → diperbarui: catat last_password_change_at.
---   H. RPC admin_list_users(p_requester)     → daftar akun (HANYA admin).
---   I. RPC admin_create_user(...)            → buat akun baru (HANYA admin).
---   J. RPC admin_update_user(...)            → ubah nama/role/aktif (HANYA admin).
---   K. RPC admin_reset_user_password(...)    → reset password akun lain (HANYA admin).
---   L. RPC admin_delete_user(...)            → hapus akun (HANYA admin; tidak bisa hapus
---      diri sendiri & tidak bisa hapus admin terakhir).
+--   0a. DROP function lama (cascade) supaya recreate bersih.
+--   0b. Pastikan tabel admin_users + kolom inti (nama, role, aktif) ada.
+--   A.  Kolom audit: last_login_at, last_password_change_at, password_changed_by,
+--       failed_login_count, locked_until, avatar_url.
+--   B.  Role 'operator' + seed akun default (username: operator | password: operator123).
+--   C.  RPC admin_login versi aman (lockout 5x gagal → kunci 15 menit + audit trail).
+--   D.  RPC admin_get_my_profile(p_username)         → profil sendiri.
+--   E0. RPC admin_set_my_avatar(...)                 → upload/hapus foto profil.
+--   E.  RPC admin_change_my_username(...)            → ubah username sendiri.
+--   F.  RPC admin_change_password(...)               → ganti password (catat audit).
+--   G.  RPC _admin_verify_requester(...) (internal)  → verifikasi admin untuk RPC manajemen.
+--   H.  RPC admin_list_users(...)                    → daftar akun (admin only).
+--   I.  RPC admin_create_user(...)                   → buat akun baru (admin only).
+--   J.  RPC admin_update_user(...)                   → ubah nama/role/aktif (admin only).
+--   K.  RPC admin_reset_user_password(...)           → reset password akun lain (admin only).
+--   L.  RPC admin_delete_user(...)                   → hapus akun (admin only).
+--   M.  RPC admin_unlock_user(...)                   → buka kunci manual (admin only).
 -- ============================================================================
 
 
@@ -31,6 +37,27 @@
 -- 0. EKSTENSI
 -- ---------------------------------------------------------------------------
 create extension if not exists pgcrypto with schema extensions;
+
+
+-- ---------------------------------------------------------------------------
+-- 0a. DROP SEMUA FUNCTION LAMA (jika ada) supaya bisa di-recreate bersih
+--     Tanpa ini, "create or replace" bisa GAGAL bila function lama di-define
+--     dengan language/return type berbeda (mis. dari schema.sql versi lawas).
+--     DROP IF EXISTS aman bila function belum pernah dibuat.
+--     CASCADE memastikan dependensi ikut terhapus.
+-- ---------------------------------------------------------------------------
+drop function if exists public.admin_login(text, text) cascade;
+drop function if exists public.admin_get_my_profile(text) cascade;
+drop function if exists public.admin_change_my_username(text, text, text) cascade;
+drop function if exists public.admin_change_password(text, text, text) cascade;
+drop function if exists public.admin_set_my_avatar(text, text, text) cascade;
+drop function if exists public.admin_list_users(text, text) cascade;
+drop function if exists public.admin_create_user(text, text, text, text, text, text) cascade;
+drop function if exists public.admin_update_user(text, text, uuid, text, text, boolean) cascade;
+drop function if exists public.admin_reset_user_password(text, text, uuid, text) cascade;
+drop function if exists public.admin_delete_user(text, text, uuid) cascade;
+drop function if exists public.admin_unlock_user(text, text, uuid) cascade;
+drop function if exists public._admin_verify_requester(text, text) cascade;
 
 
 -- ---------------------------------------------------------------------------
@@ -166,6 +193,10 @@ begin
   return;
 end;
 $$;
+
+-- WAJIB: grant execute ke anon & authenticated supaya bisa dipanggil dari client
+-- (drop function di atas menghapus grants lama dari schema.sql).
+grant execute on function public.admin_login(text, text) to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------------
