@@ -281,6 +281,54 @@ display:flex;align-items:center;gap:8px;
 font-variant-numeric:tabular-nums;
 }
 
+/* ---------- TOMBOL ADMIN DI TOPBAR ---------- */
+.topbar-admin-btn{
+display:flex;align-items:center;gap:9px;
+background:linear-gradient(135deg,#0f766e,#14b8a6);
+color:#fff;border:none;cursor:pointer;
+padding:6px 14px 6px 6px;border-radius:999px;
+font-size:13px;font-weight:600;font-family:inherit;
+box-shadow:0 4px 12px rgba(15,118,110,.28);
+transition:all .18s ease;
+max-width:220px;
+}
+.topbar-admin-btn:hover{
+transform:translateY(-1px);
+box-shadow:0 6px 18px rgba(15,118,110,.38);
+}
+.topbar-admin-btn.is-logged-in{
+background:linear-gradient(135deg,#1e293b,#334155);
+box-shadow:0 4px 12px rgba(30,41,59,.25);
+}
+.topbar-admin-btn.is-logged-in:hover{
+box-shadow:0 6px 18px rgba(30,41,59,.38);
+}
+
+.topbar-admin-avatar{
+width:34px;height:34px;border-radius:50%;
+background:rgba(255,255,255,.22);
+display:flex;align-items:center;justify-content:center;
+overflow:hidden;flex-shrink:0;
+font-size:14px;
+}
+.topbar-admin-avatar img{
+width:100%;height:100%;object-fit:cover;border-radius:50%;
+}
+.topbar-admin-avatar .avatar-initial{
+font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;
+}
+.topbar-admin-avatar i{color:#fff}
+
+.topbar-admin-label{
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+max-width:140px;
+}
+
+@media (max-width:640px){
+  .topbar-admin-label{display:none}
+  .topbar-admin-btn{padding:6px;max-width:none}
+}
+
 /* ---------- SECTIONS ---------- */
 .section{display:none;animation:fade .35s ease}
 .section.active{display:block}

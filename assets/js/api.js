@@ -156,6 +156,15 @@ const API = {
     })
   ),
 
+  /* ---------- AVATAR (foto profil) ---------- */
+  adminSetMyAvatar: (username, password, avatarUrl) => sbQuery(
+    db.rpc('admin_set_my_avatar', {
+      p_username: username,
+      p_password: password,
+      p_avatar_url: avatarUrl || ''
+    })
+  ),
+
   /* ---------- MANAJEMEN AKUN (admin only) ---------- */
   adminListUsers: (requesterUsername, requesterPassword) => sbQuery(
     db.rpc('admin_list_users', {

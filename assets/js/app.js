@@ -108,6 +108,54 @@ function startClock(){
   setInterval(tick, 30000);
 }
 
+/* ---------- TOMBOL ADMIN DI TOPBAR ----------
+   - Belum login → label "Admin" + ikon user-shield → klik buka section admin (form login)
+   - Sudah login → tampilkan avatar (atau inisial) + label nama → klik buka section admin (panel)
+   - Dipanggil setelah login/logout/upload-avatar agar topbar selalu sinkron. */
+function refreshTopbarAdmin(){
+  const btn     = document.getElementById('topbarAdminBtn');
+  const avatar  = document.getElementById('topbarAdminAvatar');
+  const label   = document.getElementById('topbarAdminLabel');
+  if(!btn || !avatar || !label) return;
+
+  const s = (typeof getAdminSession === 'function') ? getAdminSession() : null;
+  if(s){
+    /* Sudah login — tampilkan avatar atau inisial */
+    const initial = (s.nama || s.username || 'A').trim().charAt(0).toUpperCase();
+    const url = (typeof _adminAvatarUrl !== 'undefined') ? _adminAvatarUrl : (s.avatar_url || '');
+    if(url){
+      /* Bangun elemen img dengan addEventListener onerror (lebih aman daripada inline) */
+      avatar.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = s.nama || s.username || 'Avatar';
+      img.onerror = function(){
+        avatar.innerHTML = '<i class="fas fa-user-shield"></i>';
+      };
+      avatar.appendChild(img);
+    }else{
+      avatar.innerHTML = '<span class="avatar-initial"></span>';
+      avatar.querySelector('.avatar-initial').textContent = initial;
+    }
+    label.textContent = s.nama || s.username;
+    btn.classList.add('is-logged-in');
+    btn.title = 'Panel Admin — ' + (s.nama || s.username);
+  }else{
+    /* Belum login */
+    avatar.innerHTML = '<i class="fas fa-user-shield"></i>';
+    label.textContent = 'Admin';
+    btn.classList.remove('is-logged-in');
+    btn.title = 'Login Admin';
+  }
+}
+
+function goAdminFromTopbar(){
+  /* Aktifkan tombol menu "admin" bila ada (kompatibilitas dengan sidebar lama) */
+  const menuBtn = document.querySelector('.menu button[data-section="admin"]');
+  if(menuBtn) showSection('admin', menuBtn);
+  else showSection('admin');
+}
+
 /* ---------- BOOT ---------- */
 (async function boot(){
   /* cek protokol */
@@ -118,6 +166,7 @@ function startClock(){
   }
 
   startClock();
+  refreshTopbarAdmin();
 
   /* muat landing partial */
   try{

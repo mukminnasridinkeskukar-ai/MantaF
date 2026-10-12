@@ -14,6 +14,10 @@ let admPesPage = 1;
 const ADM_PES_PER_PAGE = 20;
 let adminInited = false;
 
+/* Avatar URL pengguna yang sedang login (di-mirror di memori agar topbar &
+   modal Akun Saya bisa menampilkan tanpa fetch ulang). */
+let _adminAvatarUrl = '';
+
 SectionInit['admin'] = function(){
   if(adminInited) return;
   adminInited = true;
@@ -76,6 +80,22 @@ function showAdminPanel(admin){
   var tabAkun = document.querySelector('.admin-tab-akun');
   if(tabAkun) tabAkun.style.display = (admin && admin.role === 'admin') ? '' : 'none';
 
+  /* Refresh topbar (avatar/label) */
+  if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+
+  /* Fetch profil untuk dapat avatar_url terbaru (RPC admin_login tidak
+     mengembalikan avatar_url, jadi kita fetch di sini). */
+  if(admin && admin.username){
+    API.adminGetMyProfile(admin.username).then(function(rows){
+      var p = (rows && rows.length) ? rows[0] : null;
+      if(p){
+        _adminAvatarUrl = p.avatar_url || '';
+        updateAdminSession({ avatar_url: _adminAvatarUrl });
+        if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+      }
+    }).catch(function(){ /* abaikan — profil mungkin belum punya kolom avatar_url */ });
+  }
+
   adminRefreshAll();
 }
 
@@ -83,6 +103,7 @@ function logoutAdmin(){
   confirmDialog('Keluar dari Panel Admin?', 'Sesi Anda akan diakhiri dan kembali ke halaman login.', function(){
     clearAdminSession();
     clearAdminRpcPass();
+    _adminAvatarUrl = '';
     /* bersihkan cache data agar tidak tertinggal di memori setelah logout */
     admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null; admAkunCache = null;
     admPesPage = 1;
@@ -90,6 +111,7 @@ function logoutAdmin(){
     document.getElementById('adminLoginSection').style.display = 'block';
     document.getElementById('adminUser').value = '';
     document.getElementById('adminPass').value = '';
+    if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
     showToast('Anda telah keluar', 'info');
   }, { icon:'fa-right-from-bracket', iconClass:'info', yesText:'Ya, Keluar', yesClass:'btn-danger' });
 }
@@ -958,11 +980,18 @@ async function openMyAccount(){
   const overlay = crudModal('Akun Saya', 'fa-id-card',
     '<div id="myAcctBody"><div style="padding:30px;text-align:center"><i class="fas fa-spinner fa-spin"></i> Memuat profil…</div></div>',
     '<button class="btn btn-ghost" data-close>Tutup</button>' +
+    '<button class="btn" id="myAcctChangeAvatar"><i class="fas fa-camera"></i> Ganti Foto</button>' +
     '<button class="btn" id="myAcctChangeUname"><i class="fas fa-user-pen"></i> Ubah Username</button>' +
     '<button class="btn" id="myAcctChangePass"><i class="fas fa-key"></i> Ganti Password</button>'
   );
 
   /* Tombol aksi */
+  overlay.querySelector('#myAcctChangeAvatar').addEventListener('click', function(){
+    openChangeAvatar(function(){ /* setelah upload sukses, refresh modal */
+      overlay.remove();
+      openMyAccount();
+    });
+  });
   overlay.querySelector('#myAcctChangeUname').addEventListener('click', function(){
     overlay.remove();
     openChangeUsername();
@@ -981,6 +1010,11 @@ async function openMyAccount(){
         '<div style="padding:24px;color:#dc2626"><i class="fas fa-circle-xmark"></i> Profil tidak ditemukan. Silakan login ulang.</div>';
       return;
     }
+    /* Sinkronkan avatar di memori & session */
+    _adminAvatarUrl = p.avatar_url || '';
+    updateAdminSession({ avatar_url: _adminAvatarUrl });
+    if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+
     const lastLogin = p.last_login_at ? formatDateTimeId(p.last_login_at) : 'Belum pernah';
     const lastPass  = p.last_password_change_at ? formatDateTimeId(p.last_password_change_at) : 'Belum pernah';
     const roleBadge = p.role === 'operator'
@@ -990,7 +1024,21 @@ async function openMyAccount(){
       ? '<span class="badge-status badge-aktif">Aktif</span>'
       : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
 
+    /* Blok avatar — bangun tanpa inline onerror (lebih aman & bersih) */
+    const initial = (p.nama || p.username || 'A').trim().charAt(0).toUpperCase();
+    const avatarCircleHtml = '<div class="my-acct-avatar-circle" id="myAcctAvatarCircle"></div>';
+
     overlay.querySelector('#myAcctBody').innerHTML =
+      '<div class="my-acct-avatar-block">' +
+        avatarCircleHtml +
+        '<div class="my-acct-avatar-actions">' +
+          '<button class="btn btn-sm" id="myAcctAvatarChange"><i class="fas fa-camera"></i> Ganti Foto</button>' +
+          (p.avatar_url
+            ? '<button class="btn btn-sm btn-ghost" id="myAcctAvatarClear"><i class="fas fa-trash"></i> Hapus Foto</button>'
+            : '') +
+        '</div>' +
+        '<div class="my-acct-avatar-hint">JPG/PNG, maks 2 MB. Foto akan tampil di topbar &amp; header Panel Admin.</div>' +
+      '</div>' +
       '<div class="my-acct-grid">' +
         '<div class="my-acct-row"><label>Username</label><div class="my-acct-value"><code>' + escapeHtml(p.username) + '</code></div></div>' +
         '<div class="my-acct-row"><label>Nama Lengkap</label><div class="my-acct-value">' + escapeHtml(p.nama) + '</div></div>' +
@@ -1001,16 +1049,167 @@ async function openMyAccount(){
         '<div class="my-acct-row"><label>Akun Dibuat</label><div class="my-acct-value">' + escapeHtml(formatDateTimeId(p.created_at)) + '</div></div>' +
       '</div>' +
       '<div class="csv-hintbox" style="margin-top:18px"><i class="fas fa-shield-halved"></i><div>' +
-        'Anda dapat mengubah <b>username</b> dan <b>password</b> sendiri kapan saja. ' +
-        'Kedua aksi memerlukan konfirmasi password saat ini sebagai verifikasi keamanan. ' +
+        'Anda dapat mengubah <b>foto profil</b>, <b>username</b>, dan <b>password</b> sendiri kapan saja. ' +
+        'Perubahan username &amp; password memerlukan konfirmasi password saat ini sebagai verifikasi keamanan. ' +
         'Password baru minimal <b>6 karakter</b>; username baru 3–50 karakter (huruf, angka, titik, underscore, strip).' +
       '</div></div>';
+
+    /* Isi lingkaran avatar (dengan fallback onerror yang aman) */
+    const circle = overlay.querySelector('#myAcctAvatarCircle');
+    if(p.avatar_url){
+      const img = document.createElement('img');
+      img.src = p.avatar_url;
+      img.alt = 'Avatar';
+      img.className = 'my-acct-avatar-img';
+      img.onerror = function(){
+        circle.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'my-acct-avatar-initial';
+        span.textContent = initial;
+        circle.appendChild(span);
+      };
+      circle.appendChild(img);
+    }else{
+      const span = document.createElement('span');
+      span.className = 'my-acct-avatar-initial';
+      span.textContent = initial;
+      circle.appendChild(span);
+    }
+
+    /* Wire tombol di blok avatar */
+    overlay.querySelector('#myAcctAvatarChange').addEventListener('click', function(){
+      openChangeAvatar(function(){
+        overlay.remove();
+        openMyAccount();
+      });
+    });
+    if(p.avatar_url){
+      overlay.querySelector('#myAcctAvatarClear').addEventListener('click', function(){
+        confirmDialog('Hapus Foto Profil?',
+          'Foto profil Anda akan dihapus dan diganti dengan inisial nama.',
+          async function(){
+            try{
+              /* Hapus file lama dari storage (best-effort) */
+              if(p.avatar_url) await API.deleteStorageFile(p.avatar_url);
+              const ok = await API.adminSetMyAvatar(session.username, _getAdminPassForRpc(), '');
+              if(ok){
+                _adminAvatarUrl = '';
+                updateAdminSession({ avatar_url: '' });
+                if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+                showToast('Foto profil dihapus', 'success');
+                overlay.remove();
+                openMyAccount();
+              }else{
+                showToast('Gagal menghapus foto', 'error');
+              }
+            }catch(err){ showToast('Gagal: ' + err.message, 'error'); }
+          },
+          { icon:'fa-trash', yesText:'Ya, Hapus', yesClass:'btn-danger' });
+      });
+    }
   }catch(err){
     console.error('[admin] getMyProfile error:', err);
     overlay.querySelector('#myAcctBody').innerHTML =
       '<div style="padding:24px;color:#dc2626"><i class="fas fa-circle-xmark"></i> Gagal memuat profil: ' + escapeHtml(err.message) + '<br>' +
       '<span style="font-size:12px;color:#64748b">Pastikan <code>supabase/akun-security.sql</code> sudah dijalankan.</span></div>';
   }
+}
+
+/* ---------- GANTI FOTO PROFIL (upload ke bucket "foto" subfolder avatar) ---------- */
+function openChangeAvatar(onSuccess){
+  const session = getAdminSession();
+  if(!session){ showToast('Sesi tidak ditemukan, silakan login ulang', 'error'); return; }
+
+  const overlay = crudModal('Ganti Foto Profil', 'fa-camera',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1">' +
+        '<label>Pilih Foto Baru <span style="color:#dc2626">*</span></label>' +
+        '<input type="file" id="fAvatarFile" accept="image/jpeg,image/png,image/webp,image/jpg">' +
+        '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Format: JPG/PNG/WEBP. Maksimal 2 MB. Disarankan foto persegi (mis. 400×400).</div>' +
+      '</div>' +
+      '<div class="form-group" style="grid-column:1/-1">' +
+        '<label>Pratinjau</label>' +
+        '<div id="fAvatarPreview" class="avatar-preview-box"><i class="fas fa-image"></i><span>Belum ada file dipilih</span></div>' +
+      '</div>' +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn" id="fAvatarSave"><i class="fas fa-upload"></i> Unggah</button>'
+  );
+
+  /* Preview saat file dipilih */
+  const fileInput = overlay.querySelector('#fAvatarFile');
+  const previewBox = overlay.querySelector('#fAvatarPreview');
+  let selectedFile = null;
+
+  fileInput.addEventListener('change', function(){
+    const file = fileInput.files && fileInput.files[0];
+    selectedFile = null;
+    if(!file){
+      previewBox.innerHTML = '<i class="fas fa-image"></i><span>Belum ada file dipilih</span>';
+      return;
+    }
+    /* Validasi */
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if(allowedTypes.indexOf(file.type) === -1){
+      showToast('Format file harus JPG/PNG/WEBP', 'error');
+      fileInput.value = '';
+      previewBox.innerHTML = '<i class="fas fa-triangle-exclamation"></i><span style="color:#dc2626">Format tidak didukung</span>';
+      return;
+    }
+    if(file.size > (SUPABASE_CONFIG.maxFileSize || 2 * 1024 * 1024)){
+      showToast('Ukuran file maksimal 2 MB', 'error');
+      fileInput.value = '';
+      previewBox.innerHTML = '<i class="fas fa-triangle-exclamation"></i><span style="color:#dc2626">File terlalu besar (maks 2 MB)</span>';
+      return;
+    }
+    selectedFile = file;
+    /* Tampilkan preview */
+    const reader = new FileReader();
+    reader.onload = function(){
+      previewBox.innerHTML = '<img src="' + reader.result + '" alt="Preview">';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  /* Tombol Unggah */
+  overlay.querySelector('#fAvatarSave').addEventListener('click', async function(){
+    if(!selectedFile){ showToast('Pilih file foto terlebih dahulu', 'error'); return; }
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah…';
+    try{
+      /* 1. Upload file ke bucket "foto" subfolder "avatar" */
+      const folder = 'avatar_' + (session.username || 'anon').replace(/[^a-zA-Z0-9_-]/g, '');
+      const newUrl = await API.uploadFile(SUPABASE_CONFIG.buckets.foto, selectedFile, folder);
+      if(!newUrl){ throw new Error('URL upload tidak dikembalikan'); }
+
+      /* 2. Update avatar_url via RPC (verifikasi password) */
+      const ok = await API.adminSetMyAvatar(session.username, _getAdminPassForRpc(), newUrl);
+      if(!ok){
+        /* Rollback: hapus file yang baru saja terupload */
+        try{ await API.deleteStorageFile(newUrl); }catch(e){}
+        showToast('Gagal: verifikasi password gagal. Coba logout & login ulang.', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Unggah';
+        return;
+      }
+
+      /* 3. Hapus avatar lama dari storage (best-effort) */
+      if(_adminAvatarUrl && _adminAvatarUrl !== newUrl){
+        try{ await API.deleteStorageFile(_adminAvatarUrl); }catch(e){}
+      }
+
+      /* 4. Update memori & session */
+      _adminAvatarUrl = newUrl;
+      updateAdminSession({ avatar_url: newUrl });
+      if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+
+      showToast('Foto profil diperbarui', 'success');
+      overlay.remove();
+      if(typeof onSuccess === 'function') onSuccess();
+    }catch(err){
+      showToast('Gagal upload: ' + err.message, 'error');
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Unggah';
+    }
+  });
 }
 
 /* ---------- UBAH USERNAME SENDIRI ---------- */

@@ -34,13 +34,33 @@ create extension if not exists pgcrypto with schema extensions;
 
 
 -- ---------------------------------------------------------------------------
--- A. KOLON BARU PADA admin_users
+-- 0b. PASTIKAN TABEL admin_users ADA & KOLON INTI LENGKAP
+--     (Untuk user dengan skema lama yang belum run schema.sql terbaru.
+--      ALTER ... ADD COLUMN IF NOT EXISTS aman dijalankan berulang kali.)
+-- ---------------------------------------------------------------------------
+create table if not exists public.admin_users (
+  id            uuid primary key default gen_random_uuid(),
+  username      text unique not null,
+  password_hash text not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- Kolom inti (dari schema.sql terbaru) — ditambahkan jika belum ada
+alter table public.admin_users add column if not exists nama  text not null default 'Administrator';
+alter table public.admin_users add column if not exists role  text not null default 'admin';
+alter table public.admin_users add column if not exists aktif boolean not null default true;
+
+
+-- ---------------------------------------------------------------------------
+-- A. KOLON BARU PADA admin_users (audit & keamanan)
 -- ---------------------------------------------------------------------------
 alter table public.admin_users add column if not exists last_login_at           timestamptz;
 alter table public.admin_users add column if not exists last_password_change_at timestamptz;
 alter table public.admin_users add column if not exists password_changed_by     text;
 alter table public.admin_users add column if not exists failed_login_count     integer not null default 0;
 alter table public.admin_users add column if not exists locked_until           timestamptz;
+alter table public.admin_users add column if not exists avatar_url             text;
 
 -- Pastikan role mendukung 'operator' (constraint tidak ditambahkan agar fleksibel;
 -- pengecekan nilai dilakukan di RPC).
@@ -160,6 +180,7 @@ returns table (
   nama text,
   role text,
   aktif boolean,
+  avatar_url text,
   last_login_at timestamptz,
   last_password_change_at timestamptz,
   created_at timestamptz,
@@ -169,7 +190,7 @@ language sql
 security definer
 set search_path = public, extensions
 as $$
-  select id, username, nama, role, aktif,
+  select id, username, nama, role, aktif, avatar_url,
          last_login_at, last_password_change_at,
          created_at, updated_at
   from public.admin_users
@@ -178,6 +199,57 @@ as $$
 $$;
 
 grant execute on function public.admin_get_my_profile(p_username text) to anon, authenticated;
+
+
+-- ---------------------------------------------------------------------------
+-- E0. FUNGSI SET AVATAR SENDIRI (upload foto profil)
+--     Verifikasi password (sama pola keamanan-nya dengan RPC manajemen akun).
+--     URL avatar adalah URL publik dari bucket storage "foto" subfolder "avatar".
+-- ---------------------------------------------------------------------------
+create or replace function public.admin_set_my_avatar(
+  p_username text,
+  p_password text,
+  p_avatar_url text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_row   public.admin_users;
+  v_cocok boolean := false;
+begin
+  select * into v_row
+  from public.admin_users
+  where lower(username) = lower(trim(p_username))
+    and aktif = true
+  limit 1;
+
+  if v_row.id is null then
+    return false;
+  end if;
+
+  if left(v_row.password_hash, 3) = '$2' then
+    v_cocok := (v_row.password_hash = crypt(p_password, v_row.password_hash));
+  else
+    v_cocok := (v_row.password_hash = p_password);
+  end if;
+
+  if not v_cocok then
+    return false;
+  end if;
+
+  -- NULL atau string kosong = hapus avatar
+  update public.admin_users
+  set avatar_url = nullif(trim(coalesce(p_avatar_url, '')), '')
+  where id = v_row.id;
+
+  return true;
+end;
+$$;
+
+grant execute on function public.admin_set_my_avatar(text, text, text) to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------------
@@ -359,6 +431,7 @@ returns table (
   nama text,
   role text,
   aktif boolean,
+  avatar_url text,
   last_login_at timestamptz,
   last_password_change_at timestamptz,
   failed_login_count integer,
@@ -376,7 +449,7 @@ begin
   end if;
 
   return query
-  select id, username, nama, role, aktif,
+  select id, username, nama, role, aktif, avatar_url,
          last_login_at, last_password_change_at,
          failed_login_count, locked_until,
          created_at, updated_at

@@ -81,9 +81,9 @@
         </nav>
       </div>
 
-      <!-- ===== BAGIAN 3 : LAYANAN & ADMIN ===== -->
+      <!-- ===== BAGIAN 3 : LAYANAN ===== -->
       <div class="menu-group">
-        <div class="menu-group-label"><i class="fas fa-hands-holding-circle"></i> Layanan &amp; Admin</div>
+        <div class="menu-group-label"><i class="fas fa-hands-holding-circle"></i> Layanan</div>
         <nav class="menu">
           <button data-section="ukom" onclick="showSection('ukom',this)">
             <i class="fas fa-file-pen"></i><span>Daftar UKOM</span>
@@ -93,9 +93,6 @@
           </button>
           <button onclick="location.href='tryoutukom.html'" title="Simulasi CAT JF Kesehatan — halaman terpisah">
             <i class="fas fa-graduation-cap"></i><span>Try Out</span>
-          </button>
-          <button class="menu-admin" data-section="admin" onclick="showSection('admin',this)">
-            <i class="fas fa-user-shield"></i><span>Admin</span>
           </button>
         </nav>
       </div>
@@ -126,6 +123,13 @@
         <div class="topbar-clock" id="topbarClock"><i class="fas fa-clock"></i> <span>--:--</span></div>
         <button class="btn btn-outline" onclick="openLightbox()">
           <i class="fas fa-circle-info"></i> Tentang Sistem
+        </button>
+        <!-- Tombol Admin (pindah dari sidebar ke topbar) -->
+        <button class="topbar-admin-btn" id="topbarAdminBtn" onclick="goAdminFromTopbar()" title="Login / Panel Admin">
+          <span class="topbar-admin-avatar" id="topbarAdminAvatar">
+            <i class="fas fa-user-shield"></i>
+          </span>
+          <span class="topbar-admin-label" id="topbarAdminLabel">Admin</span>
         </button>
       </div>
     </div>
