@@ -179,10 +179,10 @@ function openDashTableModal(title, rows){
       ' <span style="font-weight:600;color:#64748b">(' + _dashGroupRows.length + ' peserta)</span></h3>' +
       '<button class="dash-modal-close" onclick="closeDashModal()">&times;</button></div>' +
     '<div class="dash-modal-body">' +
-      '<input type="text" class="dash-search" id="dashGroupSearch" placeholder="Cari nama / NIK / NIP / No. peserta…" oninput="renderDashGroupBody(this.value)">' +
-      '<div id="dashGroupInfo" class="dash-modal-info"></div>' +
+      '<input type="text" class="dash-search" id="dashGroupSearch" placeholder="Cari nama / unit kerja…" oninput="renderDashGroupBody(this.value)">' +
+      '<div id="dashGroupInfo" class="dash-modal-info">Menampilkan data tanpa informasi sensitif (NIK, NIP, kontak).</div>' +
       '<div class="table-wrap"><table><thead><tr>' +
-        '<th>No</th><th>Nama</th><th>NIK</th><th>NIP</th><th>Unit Kerja</th>' +
+        '<th>No</th><th>Nama</th><th>Unit Kerja</th>' +
         '<th>Jenis UKOM</th><th>Jabfung Saat Ini</th><th>Periode</th><th>Status UKOM</th><th>Verifikasi</th>' +
       '</tr></thead><tbody id="dashGroupBody"></tbody></table></div>' +
     '</div>';
@@ -195,16 +195,17 @@ function renderDashGroupBody(query){
   if(!tbody) return;
   const q = String(query || '').toLowerCase().trim();
   const filtered = !q ? _dashGroupRows : _dashGroupRows.filter(function(p){
-    return ['nama_tanpa_gelar', 'nik', 'nip', 'no_peserta'].some(function(f){
+    return ['nama_tanpa_gelar', 'nama_unit_kerja'].some(function(f){
       return String(p[f] || '').toLowerCase().indexOf(q) !== -1;
     });
   });
 
   const info = document.getElementById('dashGroupInfo');
   if(info){
-    info.textContent = filtered.length === _dashGroupRows.length
+    const countText = filtered.length === _dashGroupRows.length
       ? 'Menampilkan ' + filtered.length + ' peserta'
       : 'Menampilkan ' + filtered.length + ' dari ' + _dashGroupRows.length + ' peserta';
+    info.textContent = countText + ' — data sensitif (NIK, NIP, kontak) disembunyikan.';
   }
 
   const CAP = 300;
@@ -213,8 +214,6 @@ function renderDashGroupBody(query){
     rows += '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td style="font-weight:600;color:#0f172a">' + escapeHtml(p.nama_tanpa_gelar || '') + '</td>' +
-      '<td>' + escapeHtml(p.nik || '') + '</td>' +
-      '<td>' + escapeHtml(p.nip || '') + '</td>' +
       '<td>' + escapeHtml(p.nama_unit_kerja || '') + '</td>' +
       '<td>' + escapeHtml(p.jenis_ukom || '-') + '</td>' +
       '<td>' + escapeHtml(p.jabfung_saat_ini || '-') + '</td>' +
@@ -224,8 +223,8 @@ function renderDashGroupBody(query){
       '</tr>';
   });
 
-  tbody.innerHTML = (rows || '<tr><td colspan="10" style="text-align:center;padding:24px">Tidak ada data</td></tr>') +
-    (filtered.length > CAP ? '<tr><td colspan="10" style="text-align:center;padding:12px;color:#64748b;font-size:12px">Menampilkan ' + CAP + ' data pertama — gunakan pencarian untuk mempersempit.</td></tr>' : '');
+  tbody.innerHTML = (rows || '<tr><td colspan="8" style="text-align:center;padding:24px">Tidak ada data</td></tr>') +
+    (filtered.length > CAP ? '<tr><td colspan="8" style="text-align:center;padding:12px;color:#64748b;font-size:12px">Menampilkan ' + CAP + ' data pertama — gunakan pencarian untuk mempersempit.</td></tr>' : '');
 }
 
 /* ---------- POP UP KARTU STATISTIK: INSTANSI ---------- */
@@ -518,8 +517,6 @@ function showDashStatusModal(status){
     rows += '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td>' + escapeHtml(p.nama_tanpa_gelar || '') + '</td>' +
-      '<td>' + escapeHtml(p.nik || '') + '</td>' +
-      '<td>' + escapeHtml(p.nip || '') + '</td>' +
       '<td>' + escapeHtml(p.nama_unit_kerja || '') + '</td>' +
       '<td>' + escapeHtml(p.jabfung_tujuan || '-') + '</td>' +
       '<td>' + badgeVerifikasi(p.status_verifikasi) + '</td>' +
@@ -530,9 +527,10 @@ function showDashStatusModal(status){
   const inner =
     '<div class="dash-modal-header"><h3><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + color + '"></span> Data Status: ' + escapeHtml(status) + ' (' + filtered.length + ')</h3>' +
     '<button class="dash-modal-close" onclick="closeDashModal()">&times;</button></div>' +
-    '<div class="dash-modal-body"><div class="table-wrap"><table><thead><tr>' +
-    '<th>No</th><th>Nama</th><th>NIK</th><th>NIP</th><th>Unit Kerja</th><th>Jabfung Tujuan</th><th>Status</th>' +
-    '</tr></thead><tbody>' + (rows || '<tr><td colspan="7" style="text-align:center;padding:24px">Tidak ada data</td></tr>') + '</tbody></table></div></div>';
+    '<div class="dash-modal-body"><div class="dash-modal-info">Menampilkan data tanpa informasi sensitif (NIK, NIP, kontak).</div>' +
+    '<div class="table-wrap"><table><thead><tr>' +
+    '<th>No</th><th>Nama</th><th>Unit Kerja</th><th>Jabfung Tujuan</th><th>Status</th>' +
+    '</tr></thead><tbody>' + (rows || '<tr><td colspan="5" style="text-align:center;padding:24px">Tidak ada data</td></tr>') + '</tbody></table></div></div>';
   openDashModal(inner);
 }
 

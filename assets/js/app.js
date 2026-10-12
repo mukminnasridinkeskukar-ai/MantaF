@@ -116,10 +116,10 @@ function refreshTopbarAdmin(){
   const btn     = document.getElementById('topbarAdminBtn');
   const avatar  = document.getElementById('topbarAdminAvatar');
   const label   = document.getElementById('topbarAdminLabel');
-  if(!btn || !avatar || !label) return;
+  if(btn && avatar && label){
 
-  const s = (typeof getAdminSession === 'function') ? getAdminSession() : null;
-  if(s){
+    const s = (typeof getAdminSession === 'function') ? getAdminSession() : null;
+    if(s){
     /* Sudah login — tampilkan avatar atau inisial */
     const initial = (s.nama || s.username || 'A').trim().charAt(0).toUpperCase();
     const url = (typeof _adminAvatarUrl !== 'undefined') ? _adminAvatarUrl : (s.avatar_url || '');
@@ -140,12 +140,57 @@ function refreshTopbarAdmin(){
     label.textContent = s.nama || s.username;
     btn.classList.add('is-logged-in');
     btn.title = 'Panel Admin — ' + (s.nama || s.username);
-  }else{
+    }else{
     /* Belum login */
     avatar.innerHTML = '<i class="fas fa-user-shield"></i>';
     label.textContent = 'Admin';
     btn.classList.remove('is-logged-in');
     btn.title = 'Login Admin';
+    }
+  }
+
+  /* Sinkronkan juga bagian profil di sidebar (foto, nama, role) */
+  refreshSidebarProfile();
+}
+
+/* ---------- PROFIL SIDEBAR ----------
+   Bagian profil sidebar mengikuti sesi login:
+   - Login (admin/operator) → foto profil akun (avatar_url, fallback inisial
+     via ui-avatars), nama lengkap, dan role.
+   - Belum login → logo MantaF + teks default.
+   Dipanggil dari refreshTopbarAdmin() sehingga otomatis tersinkron setelah
+   login, logout, ganti foto, dan hapus foto. */
+const MANTAF_LOGO_URL = 'https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe';
+const MANTAF_LOGO_FALLBACK = 'https://ui-avatars.com/api/?name=MantaF&background=0f766e&color=fff';
+
+function refreshSidebarProfile(){
+  const img    = document.getElementById('profileImg');
+  const nameEl = document.querySelector('#profileSection .profile-name');
+  const roleEl = document.querySelector('#profileSection .profile-role');
+  if(!img || !nameEl || !roleEl) return;
+
+  const s = (typeof getAdminSession === 'function') ? getAdminSession() : null;
+  if(s){
+    const initial = (s.nama || s.username || 'A').trim().charAt(0).toUpperCase();
+    const initialUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(initial) + '&background=0f766e&color=fff';
+    const url = (typeof _adminAvatarUrl !== 'undefined' && _adminAvatarUrl) ? _adminAvatarUrl : (s.avatar_url || '');
+    img.onerror = function(){
+      img.onerror = null;
+      img.src = initialUrl;
+    };
+    img.src = url || initialUrl;
+    img.alt = s.nama || s.username || 'Avatar';
+    nameEl.textContent = s.nama || s.username || 'Pengguna';
+    roleEl.textContent = (s.role === 'operator') ? 'Operator' : 'Administrator';
+  }else{
+    img.onerror = function(){
+      img.onerror = null;
+      img.src = MANTAF_LOGO_FALLBACK;
+    };
+    img.src = MANTAF_LOGO_URL;
+    img.alt = 'MantaF';
+    nameEl.textContent = 'MantaF';
+    roleEl.textContent = 'Platform Jabfung Kesehatan';
   }
 }
 

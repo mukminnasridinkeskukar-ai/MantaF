@@ -25,5 +25,5 @@ const SUPABASE_CONFIG = {
 
   // Nama aplikasi (tampil pada beberapa tempat)
   appName: 'MantaF',
-  appVersion: '2.3'
+  appVersion: '2.4'
 };

@@ -1,4 +1,4 @@
-# MantaF v2.3 — Supabase Edition
+# MantaF v2.4 — Supabase Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
@@ -6,6 +6,17 @@ Dinas Kesehatan Kabupaten Kutai Kartanegara
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
 
+> **v2.4 — Foto profil akun di sidebar + privasi pop up dashboard:**
+> 1. **Foto profil kini tampil di SIDEBAR** — saat admin/operator login, bagian profil sidebar
+>    menampilkan foto akun (fallback: inisial nama), nama lengkap, dan role (Administrator/Operator).
+>    Log out → kembali ke logo MantaF. Ganti/hapus foto tetap lewat **Panel Admin → Akun Saya →
+>    Ganti Foto** (berlaku untuk akun **admin & operator**, tersimpan di bucket `foto` subfolder
+>    `avatar`, kolom `avatar_url` tabel `admin_users`).
+> 2. **Pop up dashboard kini bebas data sensitif** — semua pop up (Status UKOM, Status Verifikasi,
+>    kategori Jenis UKOM/Jabfung/Periode, Unit Kerja, Instansi, Tren bulanan) tidak lagi
+>    menampilkan **NIK, NIP, nomor WA/telpon, maupun email**. Kolom yang tampil: No, Nama, Unit
+>    Kerja, Jenis UKOM, Jabfung, Periode, dan status. Pencarian di pop up kini per nama/unit kerja.
+>
 > **v2.3 — Dashboard dikembangkan (kartu pop up):**
 > 1. **Kartu "Status UKOM"** — donut + daftar status (Lulus / Tidak Lulus / Menunggu / Belum Ada
 >    Status); klik salah satu status → **pop up daftar peserta** berstatus tersebut (dari Supabase).

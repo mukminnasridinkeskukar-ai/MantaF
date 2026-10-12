@@ -1157,7 +1157,7 @@ async function openMyAccount(){
             ? '<button class="btn btn-sm btn-ghost" id="myAcctAvatarClear"><i class="fas fa-trash"></i> Hapus Foto</button>'
             : '') +
         '</div>' +
-        '<div class="my-acct-avatar-hint">JPG/PNG, maks 2 MB. Foto akan tampil di topbar &amp; header Panel Admin.</div>' +
+        '<div class="my-acct-avatar-hint">JPG/PNG, maks 2 MB. Foto akan tampil di sidebar, topbar &amp; header Panel Admin.</div>' +
       '</div>' +
       '<div class="my-acct-grid">' +
         '<div class="my-acct-row"><label>Username</label><div class="my-acct-value"><code>' + escapeHtml(p.username) + '</code></div></div>' +
