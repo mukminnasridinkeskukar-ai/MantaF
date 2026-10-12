@@ -40,7 +40,13 @@ SectionInit['admin'] = function(){
     if(e.key === 'Enter') loginAdmin();
   });
   const session = getAdminSession();
-  if(session) showAdminPanel(session);
+  if(session){
+    /* PULIHKAN password verifikasi RPC dari sessionStorage (v2.2.1).
+       Tanpa ini, setelah refresh halaman semua RPC (upload foto profil,
+       Manajemen Akun, dll.) terkirim dengan password kosong → gagal. */
+    try{ _adminRpcPass = sessionStorage.getItem('mantafRpcPass') || ''; }catch(e){ _adminRpcPass = ''; }
+    showAdminPanel(session);
+  }
 };
 
 /* ================= LOGIN / LOGOUT ================= */
@@ -225,16 +231,35 @@ async function adminRefreshAll(){
   }
 }
 
-/* ---------- PENYIMPANAN SEMENTARA PASSWORD UNTUK VERIFIKASI RPC ----------
-   RPC manajemen akun (list/create/update/delete/reset) memerlukan password
-   requester sebagai verifikasi. Karena kita tidak menyimpan password di
-   session, password ditahan dalam memori (var module) hanya selama sesi
-   aktif & hilang saat refresh/logout. Ini trade-off UX vs keamanan; setelah
-   60 menit (sesi kedaluwarsa) password otomatis hilang. */
+/* ---------- PENYIMPANAN PASSWORD UNTUK VERIFIKASI RPC (v2.2.1) ----------
+   RPC manajemen akun (list/create/update/delete/reset) dan upload foto profil
+   (admin_set_my_avatar) memerlukan password requester sebagai verifikasi.
+
+   FIX v2.2.1: password kini disimpan di sessionStorage (mantafRpcPass),
+   bukan hanya di variabel memori. Sebelumnya password HILANG saat halaman
+   di-refresh (F5) sementara sesi login tetap aktif → semua RPC terkirim
+   dengan password kosong → "verifikasi password gagal" (upload foto profil
+   & tab Manajemen Akun selalu gagal setelah refresh). Dengan sessionStorage,
+   password bertahan selama tab terbuka & otomatis hilang saat tab ditutup,
+   logout, atau sesi kedaluwarsa (60 menit). */
 let _adminRpcPass = '';
-function setAdminRpcPass(pass){ _adminRpcPass = pass; }
-function _getAdminPassForRpc(){ return _adminRpcPass || ''; }
-function clearAdminRpcPass(){ _adminRpcPass = ''; }
+function setAdminRpcPass(pass){
+  _adminRpcPass = pass || '';
+  try{
+    if(_adminRpcPass) sessionStorage.setItem('mantafRpcPass', _adminRpcPass);
+    else sessionStorage.removeItem('mantafRpcPass');
+  }catch(e){ /* sessionStorage tidak tersedia — fallback ke memori saja */ }
+}
+function _getAdminPassForRpc(){
+  if(_adminRpcPass) return _adminRpcPass;
+  try{ _adminRpcPass = sessionStorage.getItem('mantafRpcPass') || ''; }
+  catch(e){ _adminRpcPass = ''; }
+  return _adminRpcPass;
+}
+function clearAdminRpcPass(){
+  _adminRpcPass = '';
+  try{ sessionStorage.removeItem('mantafRpcPass'); }catch(e){}
+}
 
 /* ================= TABS ================= */
 function switchAdminTab(tab, el){
@@ -1269,6 +1294,14 @@ function openChangeAvatar(onSuccess){
   /* Tombol Unggah */
   overlay.querySelector('#fAvatarSave').addEventListener('click', async function(){
     if(!selectedFile){ showToast('Pilih file foto terlebih dahulu', 'error'); return; }
+    /* v2.2.1: cek password verifikasi SEBELUM upload — bila kosong (sesi
+       kedaluwarsa / data hilang), jangan buang waktu & jangan buat file
+       yatim di storage. Minta login ulang lebih dulu. */
+    const rpcPass = _getAdminPassForRpc();
+    if(!rpcPass){
+      showToast('Verifikasi sesi tidak tersedia. Silakan logout & login ulang, lalu coba lagi.', 'error');
+      return;
+    }
     const btn = this;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengunggah…';
     try{
@@ -1278,11 +1311,11 @@ function openChangeAvatar(onSuccess){
       if(!newUrl){ throw new Error('URL upload tidak dikembalikan'); }
 
       /* 2. Update avatar_url via RPC (verifikasi password) */
-      const ok = await API.adminSetMyAvatar(session.username, _getAdminPassForRpc(), newUrl);
+      const ok = await API.adminSetMyAvatar(session.username, rpcPass, newUrl);
       if(!ok){
         /* Rollback: hapus file yang baru saja terupload */
         try{ await API.deleteStorageFile(newUrl); }catch(e){}
-        showToast('Gagal: verifikasi password gagal. Coba logout & login ulang.', 'error');
+        showToast('Gagal: verifikasi password gagal. Logout & login ulang, lalu coba lagi.', 'error');
         btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Unggah';
         return;
       }

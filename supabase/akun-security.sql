@@ -43,6 +43,29 @@
 --         sebenarnya; password_plain hanyalah arsip tampilan.
 --       - Diisi otomatis saat: buat akun, ganti password, reset password,
 --         dan setiap login sukses (self-healing).
+--
+-- FIX (v2.2.1 — PASSWORD TIDAK BERUBAH & SESUAI KOLOM password_plain):
+--   Masalah yang dilaporkan: "password harusnya tidak berubah, harus sesuai
+--   dengan kolom password_plain di tabel admin_users — selalu saja gagal".
+--   Penyebab: verifikasi login/RPC dulu HANYA memeriksa password_hash, dan
+--   setiap login sukses MENIMPA password_plain sehingga nilai di Table Editor
+--   berubah sendiri dan tidak pernah cocok untuk login.
+--   Perbaikan:
+--   O.  Helper bersama _admin_check_password(): password dianggap BENAR bila
+--       cocok dengan password_hash (bcrypt / teks) ATAU dengan kolom
+--       password_plain. Kolom yang terlihat admin = password yang berlaku.
+--   P.  Saat login cocok lewat password_plain, hash di-sync otomatis
+--       (self-healing) sehingga hash & plain tidak pernah berbeda.
+--   Q.  Login sukses TIDAK LAGI menimpa password_plain yang sudah terisi —
+--       nilai di tabel tidak berubah sendiri.
+--   R.  TRIGGER trg_admin_users_sync_plain: mengedit kolom password_plain
+--       langsung di Supabase Table Editor (min. 6 karakter) OTOMATIS menjadi
+--       password baru (hash ikut di-crypt ulang). WYSIWYG: isi kolom = password.
+--   S.  Semua RPC verifikasi (profil, avatar, ubah username, ganti password,
+--       manajemen akun) memakai helper yang sama → tidak ada lagi "password
+--       benar tapi ditolak".
+--   T.  Bucket storage "foto" + policy-nya dipastikan ada (idempotent)
+--       supaya upload foto profil tidak gagal karena bucket/policy kurang.
 -- ============================================================================
 
 
@@ -102,7 +125,8 @@ alter table public.admin_users add column if not exists failed_login_count     i
 alter table public.admin_users add column if not exists locked_until           timestamptz;
 alter table public.admin_users add column if not exists avatar_url             text;
 -- Password dalam bentuk teks (arsip tampilan khusus admin — lihat catatan v2.2 di atas).
--- Login TETAP memverifikasi password_hash (bcrypt); kolom ini tidak dipakai untuk autentikasi.
+-- Sejak v2.2.1 kolom ini juga dipakai untuk verifikasi & menjadi sumber kebenaran
+-- password yang tampil: edit di Table Editor (min 6 karakter) = ganti password.
 alter table public.admin_users add column if not exists password_plain         text;
 
 -- Backfill: bila password akun default BELUM pernah diganti (masih admin123 /
@@ -151,29 +175,111 @@ where username = 'operator';
 
 
 -- ---------------------------------------------------------------------------
--- C. FUNGSI LOGIN VERSI AMAN (dengan lockout & audit)
+-- C. HELPER BERSAMA VERIFIKASI PASSWORD (dipakai login & semua RPC) — v2.2.1
+--    Password dianggap cocok bila:
+--      1. cocok dengan password_hash bcrypt ($2...)  → crypt()
+--      2. cocok dengan password_hash teks biasa     → perbandingan literal
+--      3. cocok dengan password_plain               → perbandingan literal
+--    Menerima NULL pada argumen hash/plain (yang NULL dilewati).
+--    Fungsi INTERNAL (tanpa grant) — hanya dipanggil fungsi lain.
 -- ---------------------------------------------------------------------------
--- BEHAVIOR PASSWORD HASH (PENTING — baca sebelum mengubah):
+create or replace function public._admin_check_password(
+  p_password_hash text,
+  p_password_plain text,
+  p_password text
+)
+returns boolean
+language plpgsql
+stable
+set search_path = public, extensions
+as $$
+begin
+  if p_password is null or p_password = '' then
+    return false;
+  end if;
+
+  -- 1. Hash bcrypt (path normal)
+  if p_password_hash is not null and left(p_password_hash, 3) = '$2' then
+    return p_password_hash = crypt(p_password, p_password_hash);
+  end if;
+
+  -- 2. Hash teks biasa (hasil edit manual di Table Editor)
+  if p_password_hash is not null and p_password_hash <> '' then
+    if p_password_hash = p_password then
+      return true;
+    end if;
+  end if;
+
+  -- 3. Kolom password_plain (arsip yang terlihat admin — v2.2.1)
+  if p_password_plain is not null and p_password_plain <> '' then
+    return p_password_plain = p_password;
+  end if;
+
+  return false;
+end;
+$$;
+
+
+-- ---------------------------------------------------------------------------
+-- C2. TRIGGER SINKRONISASI password_plain → password_hash (v2.2.1)
+--     Mengedit kolom password_plain langsung di Supabase Table Editor
+--     OTOMATIS menjadi password baru: hash di-crypt ulang dari nilai baru.
+--     Aturan:
+--       - Hanya berlaku bila NILAI password_plain BENAR-BENAR BERUBAH.
+--       - Minimal 6 karakter (sama dengan aturan aplikasi) — bila kurang,
+--         perubahan diabaikan (hash tidak diubah) agar tidak ada lockout.
+--       - NULL/kosong = tidak ada perubahan password (hash dibiarkan).
+--       - password_hash / password_plain yang diubah lewat RPC selalu
+--         konsisten berpasangan, sehingga trigger tidak mengubah apa pun
+--         (nilainya sudah sama).
+-- ---------------------------------------------------------------------------
+create or replace function public._sync_password_plain()
+returns trigger
+language plpgsql
+set search_path = public, extensions
+as $$
+begin
+  if new.password_plain is not null
+     and btrim(new.password_plain) <> ''
+     and length(btrim(new.password_plain)) >= 6
+     and (tg_op = 'INSERT' or new.password_plain is distinct from old.password_plain)
+     and (new.password_hash is null
+          or not public._admin_check_password(new.password_hash, null, btrim(new.password_plain))) then
+    new.password_hash := crypt(btrim(new.password_plain), gen_salt('bf'));
+    new.updated_at    := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_admin_users_sync_plain on public.admin_users;
+create trigger trg_admin_users_sync_plain
+before insert or update on public.admin_users
+for each row execute function public._sync_password_plain();
+
+
+-- ---------------------------------------------------------------------------
+-- D. FUNGSI LOGIN VERSI AMAN (dengan lockout & audit)
+-- ---------------------------------------------------------------------------
+-- BEHAVIOR PASSWORD (v2.2.1 — BACA SEBELUM MENGUBAH):
 --
---   1. Bila password_hash diawali '$2' (format bcrypt) → verifikasi pakai
---      crypt(p_password, password_hash). Hash TIDAK diubah. Password tetap
---      sama. Ini kondisi normal setelah akun dibuat lewat aplikasi.
+--   Password dianggap BENAR bila cocok dengan SALAH SATU dari:
+--     1. password_hash bcrypt ($2...)     → verifikasi crypt() — path normal.
+--     2. password_hash teks biasa         → perbandingan literal (lalu di-
+--       (hasil edit manual di Table Editor)  upgrade sekali ke bcrypt).
+--     3. kolom password_plain             → perbandingan literal; bila ini
+--       (arsip yang terlihat admin)          yang cocok, password_hash di-
+--                                            sync otomatis ke nilai tersebut
+--                                            (self-healing, password SAMA).
 --
---   2. Bila password_hash TIDAK diawali '$2' (teks biasa — biasanya dari
---      edit manual di Supabase Table Editor) → verifikasi pakai perbandingan
---      literal. Bila cocok, hash di-UPGRADE sekali ke bcrypt. Password
---      tetap sama — hanya format penyimpanan yang berubah jadi aman.
---      Setelah upgrade, login berikutnya pakai path (1) dan hash tidak
---      berubah lagi.
+--   Dengan begitu: password yang terlihat di kolom password_plain (Table
+--   Editor & tab Manajemen Akun) SELALU merupakan password yang berlaku.
 --
---   3. Password TIDAK PERNAH diubah tanpa instruksi eksplisit user/admin:
---      - admin_change_password() → ganti password sendiri (verifikasi old)
---      - admin_reset_user_password() → admin reset password akun lain
---      - Bagian Z (RESET PASSWORD) di akhir file ini → HARUS di-uncomment
---        manual, by-default commented out agar aman.
---
---   4. INSERT seed admin/operator pakai ON CONFLICT DO NOTHING → bila akun
---      sudah ada (password sudah diganti), TIDAK di-overwrite.
+--   Password TIDAK PERNAH berubah sendiri:
+--     - Login sukses hanya MENGOSONGAN counter gagal & mencatat waktu.
+--     - password_plain TIDAK ditimpa bila sudah terisi (hanya diisi bila
+--       masih kosong, sebagai backfill akun lama).
+--     - Seed default pakai ON CONFLICT DO NOTHING → password lama aman.
 -- ---------------------------------------------------------------------------
 create or replace function public.admin_login(p_username text, p_password text)
 returns table (id uuid, username text, nama text, role text)
@@ -183,7 +289,8 @@ set search_path = public, extensions
 as $$
 declare
   v_row            public.admin_users;
-  v_cocok          boolean := false;
+  v_cocok_hash     boolean := false;
+  v_cocok_plain    boolean := false;
   v_max_attempts   integer := 5;
   v_lock_minutes   integer := 15;
 begin
@@ -210,7 +317,7 @@ begin
     return;
   end if;
 
-  -- Jika lock sudah lewat, reset counter (TIDAK ubah password_hash)
+  -- Jika lock sudah lewat, reset counter (TIDAK ubah password)
   if v_row.locked_until is not null and v_row.locked_until <= now() then
     update public.admin_users
     set failed_login_count = 0, locked_until = null
@@ -219,33 +326,29 @@ begin
     v_row.locked_until := null;
   end if;
 
-  -- Cocokkan password:
-  --   Path A: hash bcrypt ($2...) → verifikasi dengan crypt()
-  --   Path B: teks biasa → perbandingan literal (lalu upgrade sekali)
-  if left(v_row.password_hash, 3) = '$2' then
-    v_cocok := (v_row.password_hash = crypt(p_password, v_row.password_hash));
-  else
-    v_cocok := (v_row.password_hash = p_password);
-  end if;
+  -- Cocokkan password dengan helper bersama (hash bcrypt / teks / password_plain)
+  v_cocok_hash  := public._admin_check_password(v_row.password_hash, null, p_password);
+  v_cocok_plain := not v_cocok_hash
+                   and public._admin_check_password(null, v_row.password_plain, p_password);
 
-  if v_cocok then
-    -- UPGRADE SEKALI: teks biasa → bcrypt. Password tetap sama.
-    -- Setelah ini, hash sudah bcrypt → login berikutnya pakai Path A.
-    -- Hash tidak akan berubah lagi selama user tidak ganti password.
-    if left(v_row.password_hash, 3) <> '$2' then
+  if v_cocok_hash or v_cocok_plain then
+    -- SELF-HEALING: bila yang cocok hanya password_plain (hash tidak cocok),
+    -- sinkronkan hash ke password tersebut. PASSWORD TETAP SAMA — hanya
+    -- memastikan hash & plain tidak pernah berbeda.
+    if v_cocok_plain then
       update public.admin_users
       set password_hash = crypt(p_password, gen_salt('bf'))
       where admin_users.id = v_row.id;
     end if;
 
-    -- Reset counter & catat login terakhir (TIDAK ubah password_hash)
-    -- Sekalian: sinkronkan password_plain dengan password yang baru saja
-    -- terbukti benar (self-healing — arsip tampilan selalu akurat).
+    -- Reset counter & catat login terakhir (TIDAK ubah password).
+    -- password_plain hanya diisi bila masih kosong (backfill akun lama);
+    -- nilai yang sudah ada TIDAK PERNAH ditimpa → tidak berubah sendiri.
     update public.admin_users
     set failed_login_count = 0,
         locked_until       = null,
         last_login_at      = now(),
-        password_plain     = p_password
+        password_plain     = coalesce(nullif(v_row.password_plain, ''), p_password)
     where admin_users.id = v_row.id;
 
     return query select v_row.id, v_row.username, v_row.nama, v_row.role;
@@ -253,7 +356,7 @@ begin
   end if;
 
   -- Password salah → tambah counter, kunci bila mencapai batas
-  -- (TIDAK ubah password_hash)
+  -- (TIDAK ubah password_hash / password_plain)
   update public.admin_users
   set failed_login_count = failed_login_count + 1,
       locked_until = case
@@ -273,7 +376,7 @@ grant execute on function public.admin_login(text, text) to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------------
--- D. FUNGSI GET PROFIL SENDIRI (untuk modal "Akun Saya")
+-- D2. FUNGSI GET PROFIL SENDIRI (untuk modal "Akun Saya")
 --    Mengembalikan info profil SENDIRI berdasarkan username di session.
 --    TIDAK mengembalikan password_hash.
 -- ---------------------------------------------------------------------------
@@ -322,7 +425,6 @@ set search_path = public, extensions
 as $$
 declare
   v_row   public.admin_users;
-  v_cocok boolean := false;
 begin
   -- Qualifier "au." wajib untuk hindari ambiguous column reference
   select au.* into v_row
@@ -335,13 +437,8 @@ begin
     return false;
   end if;
 
-  if left(v_row.password_hash, 3) = '$2' then
-    v_cocok := (v_row.password_hash = crypt(p_password, v_row.password_hash));
-  else
-    v_cocok := (v_row.password_hash = p_password);
-  end if;
-
-  if not v_cocok then
+  -- v2.2.1: verifikasi via helper bersama (hash / teks / password_plain)
+  if not public._admin_check_password(v_row.password_hash, v_row.password_plain, p_password) then
     return false;
   end if;
 
@@ -395,14 +492,8 @@ begin
     return false;
   end if;
 
-  -- Cek password
-  if left(v_row.password_hash, 3) = '$2' then
-    v_cocok := (v_row.password_hash = crypt(p_password, v_row.password_hash));
-  else
-    v_cocok := (v_row.password_hash = p_password);
-  end if;
-
-  if not v_cocok then
+  -- Cek password (v2.2.1: helper bersama — hash / teks / password_plain)
+  if not public._admin_check_password(v_row.password_hash, v_row.password_plain, p_password) then
     return false;
   end if;
 
@@ -459,23 +550,18 @@ begin
     return false;
   end if;
 
-  if left(v_row.password_hash, 3) = '$2' then
-    v_cocok := (v_row.password_hash = crypt(p_password_lama, v_row.password_hash));
-  else
-    v_cocok := (v_row.password_hash = p_password_lama);
+  -- Verifikasi password lama (v2.2.1: helper bersama — hash / teks / password_plain)
+  if not public._admin_check_password(v_row.password_hash, v_row.password_plain, p_password_lama) then
+    return false;
   end if;
 
-  if v_cocok then
-    update public.admin_users
-    set password_hash            = crypt(p_password_baru, gen_salt('bf')),
-        password_plain           = p_password_baru,  -- arsip tampilan admin tetap sinkron
-        last_password_change_at  = now(),
-        password_changed_by      = p_username
-    where admin_users.id = v_row.id;
-    return true;
-  end if;
-
-  return false;
+  update public.admin_users
+  set password_hash            = crypt(p_password_baru, gen_salt('bf')),
+      password_plain           = p_password_baru,  -- arsip tampilan admin tetap sinkron
+      last_password_change_at  = now(),
+      password_changed_by      = p_username
+  where admin_users.id = v_row.id;
+  return true;
 end;
 $$;
 
@@ -497,7 +583,6 @@ set search_path = public, extensions
 as $$
 declare
   v_row   public.admin_users;
-  v_cocok boolean := false;
 begin
   select au.* into v_row
   from public.admin_users au
@@ -513,13 +598,8 @@ begin
     return false;
   end if;
 
-  if left(v_row.password_hash, 3) = '$2' then
-    v_cocok := (v_row.password_hash = crypt(p_requester_password, v_row.password_hash));
-  else
-    v_cocok := (v_row.password_hash = p_requester_password);
-  end if;
-
-  return v_cocok;
+  -- v2.2.1: verifikasi via helper bersama (hash / teks / password_plain)
+  return public._admin_check_password(v_row.password_hash, v_row.password_plain, p_requester_password);
 end;
 $$;
 
@@ -847,6 +927,27 @@ grant execute on function public.admin_unlock_user(text, text, uuid) to anon, au
 
 
 -- ---------------------------------------------------------------------------
+-- T. PASTIKAN BUCKET STORAGE "foto" & POLICY-NYA ADA (v2.2.1 — idempotent)
+--    Upload foto profil menyimpan file ke bucket "foto" sebelum menyimpan URL
+--    via RPC admin_set_my_avatar. Bila bucket/policy belum ada (mis. schema.sql
+--    versi lama), upload akan gagal. Bagian ini memastikan semuanya siap.
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('foto', 'foto', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "foto_public_read"   on storage.objects;
+drop policy if exists "foto_public_write"  on storage.objects;
+drop policy if exists "foto_public_update" on storage.objects;
+drop policy if exists "foto_public_delete" on storage.objects;
+
+create policy "foto_public_read"   on storage.objects for select to anon, authenticated using  (bucket_id = 'foto');
+create policy "foto_public_write"  on storage.objects for insert to anon, authenticated with check (bucket_id = 'foto');
+create policy "foto_public_update" on storage.objects for update to anon, authenticated using  (bucket_id = 'foto') with check (bucket_id = 'foto');
+create policy "foto_public_delete" on storage.objects for delete to anon, authenticated using  (bucket_id = 'foto');
+
+
+-- ---------------------------------------------------------------------------
 -- N. VERIFIKASI (dijalankan otomatis)
 -- ---------------------------------------------------------------------------
 -- Harus mengembalikan 2 baris (admin + operator) jika sukses.
@@ -890,7 +991,9 @@ order by au.role, au.username;
 -- Q: "Saya lupa password admin, bagaimana reset?"
 -- A: Uncomment bagian Z (RESET PASSWORD) di bawah, ganti passwordnya, run,
 --    lalu comment kembali. ATAU minta admin lain reset lewat tab
---    "Manajemen Akun" di aplikasi.
+--    "Manajemen Akun" di aplikasi. ATAU (v2.2.1) cukup edit kolom
+--    password_plain akun tersebut di Supabase Table Editor (min. 6 karakter)
+--    — hash otomatis di-sync lewat trigger, password langsung berlaku.
 --
 -- Q: "Kenapa hash password berubah setelah login pertama?"
 -- A: Bila password sebelumnya tersimpan sebagai teks biasa (mis. dari edit
@@ -898,6 +1001,18 @@ order by au.role, au.username;
 --    saat login pertama yang berhasil. PASSWORD TETAP SAMA — hanya format
 --    penyimpanan yang berubah jadi aman. Setelah upgrade, hash tidak berubah
 --    lagi selama user tidak ganti password.
+--
+-- Q: "Login dengan password yang terlihat di kolom password_plain selalu gagal?"
+-- A: Itu bug versi lama (v2.2). Sejak v2.2.1 kolom password_plain ikut
+--    diverifikasi saat login: password yang terlihat di tabel = password
+--    yang berlaku. Pastikan Anda sudah menjalankan file ini (v2.2.1).
+--
+-- Q: "Upload foto profil selalu gagal?"
+-- A: Dua penyebab lama sudah diperbaiki: (1) verifikasi password RPC kini
+--    menerima password_plain, dan (2) aplikasi menyimpan password verifikasi
+--    di sessionStorage sehingga tetap ada setelah halaman di-refresh.
+--    Pastikan file ini (v2.2.1) sudah di-run dan assets/js/admin.js versi
+--    terbaru sudah ter-deploy.
 -- ============================================================================
 
 
@@ -915,9 +1030,10 @@ order by au.role, au.username;
 --   4. Login dengan password baru
 --   5. Setelah berhasil, COMMENT kembali baris-baris ini agar aman
 --
--- -- Reset password admin:
+-- Reset password admin:
 -- update public.admin_users
 -- set password_hash       = crypt('PASSWORD_BARU_ANDA', gen_salt('bf')),
+--     password_plain      = 'PASSWORD_BARU_ANDA',
 --     failed_login_count  = 0,
 --     locked_until        = null,
 --     aktif               = true
@@ -926,6 +1042,7 @@ order by au.role, au.username;
 -- -- Reset password operator:
 -- update public.admin_users
 -- set password_hash       = crypt('PASSWORD_BARU_ANDA', gen_salt('bf')),
+--     password_plain      = 'PASSWORD_BARU_ANDA',
 --     failed_login_count  = 0,
 --     locked_until        = null,
 --     aktif               = true

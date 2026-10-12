@@ -164,8 +164,13 @@ function getAdminSession(){
   try{
     var s = JSON.parse(sessionStorage.getItem('mantafSession'));
     if(!s) return null;
-    /* sesi kedaluwarsa setelah 60 menit */
-    if(Date.now() - s.loginTime > 60 * 60 * 1000){ sessionStorage.removeItem('mantafSession'); return null; }
+    /* sesi kedaluwarsa setelah 60 menit — ikutkan hapus password RPC agar
+       tidak tertinggal di storage (sinkron dengan clearAdminRpcPass) */
+    if(Date.now() - s.loginTime > 60 * 60 * 1000){
+      sessionStorage.removeItem('mantafSession');
+      sessionStorage.removeItem('mantafRpcPass');
+      return null;
+    }
     return s;
   }catch(e){ return null; }
 }
