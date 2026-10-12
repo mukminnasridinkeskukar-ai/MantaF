@@ -799,3 +799,40 @@ margin-bottom:14px;
 font-size:18px;color:#d97706;flex-shrink:0;
 }
 .role-viewonly-banner b{color:#78350f}
+
+/* ============================================================
+   KOLOM PASSWORD — TAB MANAJEMEN AKUN (v2.2, KHUSUS ADMIN)
+   Password ter-masker secara default; tombol mata untuk
+   menampilkan, tombol salin untuk menyalin ke clipboard.
+   ============================================================ */
+.adm-pass-wrap{
+display:inline-flex;align-items:center;gap:6px;
+}
+.adm-pass-value{
+display:inline-block;
+min-width:88px;
+font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+font-size:12.5px;
+letter-spacing:2px;
+background:#f1f5f9;
+border:1px solid #e2e8f0;
+border-radius:8px;
+padding:4px 10px;
+color:#334155;
+white-space:nowrap;
+user-select:none;
+}
+.adm-pass-value.is-shown{
+letter-spacing:.5px;
+background:#fff7ed;
+border-color:#fed7aa;
+color:#9a3412;
+user-select:text;
+}
+.adm-pass-btn{
+width:26px !important;height:26px !important;
+font-size:11px !important;
+}
+.adm-pass-unknown{
+font-size:11.5px;color:#94a3b8;
+}

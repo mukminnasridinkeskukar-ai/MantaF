@@ -179,8 +179,8 @@
       <div class="admin-table-wrap">
         <table>
           <thead><tr>
-            <th>Username</th><th>Nama</th><th>Role</th><th>Status</th>
-            <th>Login Terakhir</th><th>Password Terakhir</th><th>Aksi</th>
+            <th>Username</th><th>Password</th><th>Nama</th><th>Role</th><th>Status</th>
+            <th>Login Terakhir</th><th>Password Diubah</th><th>Aksi</th>
           </tr></thead>
           <tbody id="admAkunBody"></tbody>
         </table>
@@ -189,6 +189,13 @@
         <b>Admin</b> dapat mengelola semua akun (admin &amp; operator): tambah, ubah nama/role/status,
         reset password, buka kunci, dan hapus. <b>Operator</b> hanya dapat mengelola akunnya sendiri
         lewat tombol <b>Akun Saya</b>. Akun otomatis terkunci 15 menit setelah 5 kali gagal login.
+      </div></div>
+      <div class="csv-hintbox" style="margin-top:10px"><i class="fas fa-key"></i><div>
+        <b>Username &amp; password</b> hanya terlihat di tab ini (khusus <b>Admin</b>) dan juga tersimpan
+        pada kolom <code>password_plain</code> tabel <code>admin_users</code> di Supabase
+        (Table Editor). Password ter-masker secara default — gunakan tombol <i class="fas fa-eye"></i> untuk
+        menampilkan dan <i class="fas fa-copy"></i> untuk menyalin. Password lama yang belum pernah
+        login/diubah/direset sejak fitur ini aktif tampil sebagai <i>Belum tercatat</i>.
       </div></div>
     </div>
 

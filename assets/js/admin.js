@@ -171,8 +171,9 @@ function logoutAdmin(){
     clearAdminSession();
     clearAdminRpcPass();
     _adminAvatarUrl = '';
-    /* bersihkan cache data agar tidak tertinggal di memori setelah logout */
+    /* bersihkan cache data & status tampil password agar tidak tertinggal di memori setelah logout */
     admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null; admAkunCache = null;
+    _admPassVisible = {};
     admPesPage = 1;
     document.getElementById('adminDataSection').style.display = 'none';
     document.getElementById('adminLoginSection').style.display = 'block';
@@ -1050,12 +1051,21 @@ function admDeletePetunjuk(id){
    - openMyAccount()           : modal profil sendiri (lihat info + 2 tombol aksi)
    - openChangeUsername()      : ubah username sendiri (verifikasi password)
    - openChangePassword()      : ganti password sendiri (versi baru dgn info keamanan)
-   - renderAdmAkun()           : render tabel di tab Manajemen Akun (admin only)
+   - renderAdmAkun()           : render tabel di tab Manajemen Akun (admin only,
+                                 termasuk kolom Username & Password — v2.2)
+   - admToggleAkunPass()       : tampilkan/sembunyikan password di tabel (admin only)
+   - admCopyAkunPass()         : salin password ke clipboard (admin only)
    - openAkunForm()            : tambah/edit akun (admin only)
    - admDeleteAkun()           : hapus akun (admin only)
    - admResetAkunPassword()    : reset password akun lain (admin only)
    - admUnlockAkun()           : buka kunci akun yang terkunci (admin only)
    ============================================================ */
+
+/* Status tampil/sembunyi password per baris (id akun → boolean).
+   Default: SEMUA password ter-masker. Hanya dipakai di tab Manajemen Akun
+   yang sudah guard admin-only (tab disembunyikan untuk operator + RPC
+   admin_list_users menolak non-admin di sisi database). */
+let _admPassVisible = {};
 
 /* ---------- AKUN SAYA: lihat profil sendiri ---------- */
 async function openMyAccount(){
@@ -1392,8 +1402,18 @@ function openChangePassword(){
 function renderAdmAkun(){
   const body = document.getElementById('admAkunBody');
   if(!body) return;
+
+  /* GUARD ADMIN-ONLY: username & password hanya boleh tampil untuk admin.
+     Operator/pengunjung tidak pernah mendapatkan data ini (RPC admin_list_users
+     juga menolak non-admin di sisi database — lapis kedua). */
+  if(!isAdmin()){
+    admAkunCache = null;
+    body.innerHTML = '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-lock"></i>Username &amp; password hanya dapat dilihat oleh <b>Admin</b>.</td></tr>';
+    return;
+  }
+
   if(!admAkunCache){
-    body.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/akun-security.sql</code> sudah dijalankan.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/akun-security.sql</code> versi terbaru sudah dijalankan.</td></tr>';
     return;
   }
   const session = getAdminSession();
@@ -1422,8 +1442,22 @@ function renderAdmAkun(){
     const lastLogin = u.last_login_at ? formatDateTimeId(u.last_login_at) : '<span style="color:#94a3b8">Belum pernah</span>';
     const lastPass  = u.last_password_change_at ? formatDateTimeId(u.last_password_change_at) : '<span style="color:#94a3b8">Belum pernah</span>';
 
+    /* ----- KOLOM PASSWORD (v2.2 — khusus admin) -----
+       Password asli diambil dari password_plain (arsip tampilan yang disinkronkan
+       RPC saat buat akun / ganti password / reset password / login sukses).
+       Nilai TIDAK diletakkan di atribut DOM — dibaca dari admAkunCache saat toggle. */
+    const shown = !!(_admPassVisible[u.id] && u.password_plain);
+    const passCell = u.password_plain
+      ? '<div class="adm-pass-wrap">' +
+          '<code class="adm-pass-value' + (shown ? ' is-shown' : '') + '">' + (shown ? escapeHtml(u.password_plain) : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') + '</code>' +
+          '<button class="act-btn act-edit adm-pass-btn" title="' + (shown ? 'Sembunyikan password' : 'Tampilkan password') + '" onclick="admToggleAkunPass(\'' + u.id + '\')"><i class="fas fa-' + (shown ? 'eye-slash' : 'eye') + '"></i></button>' +
+          '<button class="act-btn act-edit adm-pass-btn" title="Salin password" onclick="admCopyAkunPass(\'' + u.id + '\')"><i class="fas fa-copy"></i></button>' +
+        '</div>'
+      : '<span class="adm-pass-unknown" title="Password akan tercatat otomatis begitu akun ini login, mengganti password, atau di-reset oleh admin"><i>Belum tercatat</i></span>';
+
     html += '<tr>' +
       '<td><code style="font-weight:600">' + escapeHtml(u.username) + '</code>' + (isSelf ? ' <span style="color:#0f766e;font-size:11px">(Anda)</span>' : '') + '</td>' +
+      '<td>' + passCell + '</td>' +
       '<td>' + escapeHtml(u.nama) + '</td>' +
       '<td>' + roleBadge + '</td>' +
       '<td>' + statusBadge + lockBadge + '</td>' +
@@ -1439,7 +1473,40 @@ function renderAdmAkun(){
       '</div></td>' +
       '</tr>';
   });
-  body.innerHTML = html || '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-users-slash"></i>Tidak ada akun yang cocok. Klik "Tambah Akun" untuk membuat baru.</td></tr>';
+  body.innerHTML = html || '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-users-slash"></i>Tidak ada akun yang cocok. Klik "Tambah Akun" untuk membuat baru.</td></tr>';
+}
+
+/* ---------- TOGGLE TAMPIL/SEMBUNYI PASSWORD (admin only) ---------- */
+function admToggleAkunPass(id){
+  if(!isAdmin()){ showToast('Akses ditolak: hanya Admin dapat melihat password', 'error'); return; }
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u || !u.password_plain){ return; }
+  _admPassVisible[id] = !_admPassVisible[id];
+  renderAdmAkun();
+}
+
+/* ---------- SALIN PASSWORD KE CLIPBOARD (admin only) ---------- */
+function admCopyAkunPass(id){
+  if(!isAdmin()){ showToast('Akses ditolak: hanya Admin dapat menyalin password', 'error'); return; }
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u || !u.password_plain){ showToast('Password belum tercatat', 'info'); return; }
+  const done = function(){ showToast('Password ' + u.username + ' disalin ke clipboard', 'success'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(u.password_plain).then(done).catch(function(){ _copyFallback(u.password_plain, done); });
+  }else{
+    _copyFallback(u.password_plain, done);
+  }
+}
+function _copyFallback(text, cb){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    ta.remove();
+    cb && cb();
+  }catch(e){ showToast('Gagal menyalin password', 'error'); }
 }
 
 /* ---------- FORM TAMBAH / EDIT AKUN ---------- */

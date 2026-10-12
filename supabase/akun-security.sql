@@ -33,6 +33,16 @@
 --   K.  RPC admin_reset_user_password(...)           → reset password akun lain (admin only).
 --   L.  RPC admin_delete_user(...)                   → hapus akun (admin only).
 --   M.  RPC admin_unlock_user(...)                   → buka kunci manual (admin only).
+--
+-- BARU (v2.2 — PASSWORD TERLIHAT OLEH ADMIN):
+--   N.  Kolom password_plain pada admin_users: password tersimpan juga dalam
+--       bentuk teks sehingga MUNCUL di tabel profil akun (Supabase Table
+--       Editor) dan dapat dilihat ADMIN lewat tab Manajemen Akun.
+--       - Operator & publik TIDAK BISA melihat (RLS + verifikasi admin di RPC).
+--       - Kolom password_hash (bcrypt) tetap menjadi kredensial login yang
+--         sebenarnya; password_plain hanyalah arsip tampilan.
+--       - Diisi otomatis saat: buat akun, ganti password, reset password,
+--         dan setiap login sukses (self-healing).
 -- ============================================================================
 
 
@@ -91,6 +101,23 @@ alter table public.admin_users add column if not exists password_changed_by     
 alter table public.admin_users add column if not exists failed_login_count     integer not null default 0;
 alter table public.admin_users add column if not exists locked_until           timestamptz;
 alter table public.admin_users add column if not exists avatar_url             text;
+-- Password dalam bentuk teks (arsip tampilan khusus admin — lihat catatan v2.2 di atas).
+-- Login TETAP memverifikasi password_hash (bcrypt); kolom ini tidak dipakai untuk autentikasi.
+alter table public.admin_users add column if not exists password_plain         text;
+
+-- Backfill: bila password akun default BELUM pernah diganti (masih admin123 /
+-- operator123 — diverifikasi lewat crypt), catat juga dalam bentuk teks.
+update public.admin_users
+set password_plain = 'admin123'
+where lower(username) = 'admin'
+  and (password_plain is null or password_plain = '')
+  and password_hash = crypt('admin123', password_hash);
+
+update public.admin_users
+set password_plain = 'operator123'
+where lower(username) = 'operator'
+  and (password_plain is null or password_plain = '')
+  and password_hash = crypt('operator123', password_hash);
 
 -- Pastikan role mendukung 'operator' (constraint tidak ditambahkan agar fleksibel;
 -- pengecekan nilai dilakukan di RPC).
@@ -212,10 +239,13 @@ begin
     end if;
 
     -- Reset counter & catat login terakhir (TIDAK ubah password_hash)
+    -- Sekalian: sinkronkan password_plain dengan password yang baru saja
+    -- terbukti benar (self-healing — arsip tampilan selalu akurat).
     update public.admin_users
     set failed_login_count = 0,
         locked_until       = null,
-        last_login_at      = now()
+        last_login_at      = now(),
+        password_plain     = p_password
     where admin_users.id = v_row.id;
 
     return query select v_row.id, v_row.username, v_row.nama, v_row.role;
@@ -438,6 +468,7 @@ begin
   if v_cocok then
     update public.admin_users
     set password_hash            = crypt(p_password_baru, gen_salt('bf')),
+        password_plain           = p_password_baru,  -- arsip tampilan admin tetap sinkron
         last_password_change_at  = now(),
         password_changed_by      = p_username
     where admin_users.id = v_row.id;
@@ -503,6 +534,7 @@ create or replace function public.admin_list_users(
 returns table (
   id uuid,
   username text,
+  password_plain text,
   nama text,
   role text,
   aktif boolean,
@@ -519,12 +551,14 @@ security definer
 set search_path = public, extensions
 as $$
 begin
+  -- HANYA admin yang bisa memanggil RPC ini → password_plain tidak pernah
+  -- bocor ke operator maupun publik.
   if not public._admin_verify_requester(p_requester_username, p_requester_password) then
     return;
   end if;
 
   return query
-  select au.id, au.username, au.nama, au.role, au.aktif, au.avatar_url,
+  select au.id, au.username, au.password_plain, au.nama, au.role, au.aktif, au.avatar_url,
          au.last_login_at, au.last_password_change_at,
          au.failed_login_count, au.locked_until,
          au.created_at, au.updated_at
@@ -594,9 +628,9 @@ begin
     return;
   end if;
 
-  insert into public.admin_users (username, password_hash, nama, role,
+  insert into public.admin_users (username, password_hash, password_plain, nama, role,
                                   last_password_change_at, password_changed_by)
-  values (trim(p_username), crypt(p_password, gen_salt('bf')), v_nama, v_role,
+  values (trim(p_username), crypt(p_password, gen_salt('bf')), p_password, v_nama, v_role,
           now(), p_requester_username)
   returning id into v_newid;
 
@@ -705,6 +739,7 @@ begin
 
   update public.admin_users
   set password_hash            = crypt(p_password_baru, gen_salt('bf')),
+      password_plain           = p_password_baru,  -- arsip tampilan admin tetap sinkron
       last_password_change_at  = now(),
       password_changed_by      = p_requester_username,
       failed_login_count       = 0,
@@ -815,7 +850,9 @@ grant execute on function public.admin_unlock_user(text, text, uuid) to anon, au
 -- N. VERIFIKASI (dijalankan otomatis)
 -- ---------------------------------------------------------------------------
 -- Harus mengembalikan 2 baris (admin + operator) jika sukses.
-select au.username, au.nama, au.role, au.aktif
+-- Kolom password_plain ikut ditampilkan untuk memastikan arsip password
+-- (teks, khusus dilihat admin di Supabase Table Editor) sudah terisi.
+select au.username, au.nama, au.role, au.aktif, au.password_plain
 from public.admin_users au
 where lower(au.username) in ('admin', 'operator')
 order by au.role, au.username;
@@ -830,10 +867,20 @@ order by au.role, au.username;
 -- 2. Operator hanya bisa akses tab data (Pengumuman/Bezetting/Peserta/Petunjuk)
 --    dan mengelola akunnya sendiri (Akun Saya → Ubah Username & Ganti Password).
 -- 3. Admin punya tambahan tab "Manajemen Akun" untuk CRUD semua akun +
---    reset password + unlock akun yang terkunci otomatis.
+--    reset password + unlock akun yang terkunci otomatis + MELIHAT username
+--    & password semua akun (kolom Password, bawaan v2.2).
 -- 4. Setelah 5x gagal login berturut-turut, akun otomatis terkunci 15 menit.
 -- 5. Tabel admin_users tetap dilindungi RLS (tidak bisa dibaca langsung dari
---    client); semua akses lewat RPC security definer di atas.
+--    client); semua akses lewat RPC security definer di atas. Hanya ADMIN
+--    yang bisa mengambil daftar akun beserta password-nya (password_plain).
+--
+-- PERINGATAN KEAMANAN (v2.2):
+-- Password kini tersimpan dua kali: password_hash (bcrypt, aman, dipakai
+-- login) dan password_plain (teks, arsip tampilan khusus admin). Ini
+-- permintaan eksplisit agar admin dapat melihat kembali password akun.
+-- Konsekuensinya: siapa pun yang bisa membuka Supabase Dashboard (owner)
+-- dapat membaca semua password. JANGAN pernah membagikan akses dashboard,
+-- dan tetap gunakan password yang kuat untuk tiap akun.
 --
 -- FAQ PASSWORD:
 -- Q: "Saya sudah ganti password, tapi setelah run SQL ini password kembali ke default?"

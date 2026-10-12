@@ -40,6 +40,7 @@ alter table public.admin_users add column if not exists password_changed_by     
 alter table public.admin_users add column if not exists failed_login_count       integer not null default 0;
 alter table public.admin_users add column if not exists locked_until             timestamptz;
 alter table public.admin_users add column if not exists avatar_url               text;
+alter table public.admin_users add column if not exists password_plain           text;
 
 
 -- ---------------------------------------------------------------------------
@@ -47,11 +48,12 @@ alter table public.admin_users add column if not exists avatar_url              
 --    (bila akun belum ada, dibuat; bila sudah ada, di-overwrite passwordnya)
 -- ---------------------------------------------------------------------------
 -- >>> GANTI 'admin123' DI BAWAH JIKA INGIN PASSWORD LAIN <<<
-insert into public.admin_users (username, password_hash, nama, role, aktif,
+insert into public.admin_users (username, password_hash, password_plain, nama, role, aktif,
                                 failed_login_count, locked_until,
                                 last_password_change_at, password_changed_by)
 values ('admin',
         crypt('admin123', gen_salt('bf')),
+        'admin123',
         'Administrator MantaF',
         'admin',
         true,
@@ -61,6 +63,7 @@ values ('admin',
         'system-reset')
 on conflict (username) do update
   set password_hash            = crypt('admin123', gen_salt('bf')),
+      password_plain           = 'admin123',
       aktif                    = true,
       failed_login_count       = 0,
       locked_until             = null,
@@ -72,11 +75,12 @@ on conflict (username) do update
 -- 3. RESET PASSWORD OPERATOR → operator123 + UNLOCK + AKTIFKAN
 -- ---------------------------------------------------------------------------
 -- >>> GANTI 'operator123' DI BAWAH JIKA INGIN PASSWORD LAIN <<<
-insert into public.admin_users (username, password_hash, nama, role, aktif,
+insert into public.admin_users (username, password_hash, password_plain, nama, role, aktif,
                                 failed_login_count, locked_until,
                                 last_password_change_at, password_changed_by)
 values ('operator',
         crypt('operator123', gen_salt('bf')),
+        'operator123',
         'Operator MantaF',
         'operator',
         true,
@@ -86,6 +90,7 @@ values ('operator',
         'system-reset')
 on conflict (username) do update
   set password_hash            = crypt('operator123', gen_salt('bf')),
+      password_plain           = 'operator123',
       aktif                    = true,
       failed_login_count       = 0,
       locked_until             = null,
@@ -102,7 +107,8 @@ select au.username,
        au.aktif,
        au.failed_login_count,
        au.locked_until,
-       au.last_password_change_at
+       au.last_password_change_at,
+       au.password_plain
 from public.admin_users au
 where lower(au.username) in ('admin', 'operator')
 order by au.role, au.username;
