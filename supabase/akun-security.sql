@@ -110,13 +110,13 @@ insert into public.admin_users (username, password_hash, nama, role)
 values ('operator', crypt('operator123', gen_salt('bf')), 'Operator MantaF', 'operator')
 on conflict (username) do nothing;
 
--- Pastikan akun admin punya role 'admin' & aktif (fix bila row ada tapi role salah)
+-- Pastikan akun admin punya role 'admin' & aktif (TIDAK ubah password_hash)
 update public.admin_users
 set role  = 'admin',
     aktif = true
 where username = 'admin';
 
--- Pastikan akun operator punya role 'operator' & aktif
+-- Pastikan akun operator punya role 'operator' & aktif (TIDAK ubah password_hash)
 update public.admin_users
 set role  = 'operator',
     aktif = true
@@ -125,9 +125,28 @@ where username = 'operator';
 
 -- ---------------------------------------------------------------------------
 -- C. FUNGSI LOGIN VERSI AMAN (dengan lockout & audit)
---    Menggantikan fungsi admin_login sebelumnya (yang hanya cek crypt).
---    Tetap menerima teks biasa lama (sisa editan Table Editor) lalu
---    meng-upgrade-nya ke bcrypt otomatis — kompatibel dengan versi lama.
+-- ---------------------------------------------------------------------------
+-- BEHAVIOR PASSWORD HASH (PENTING — baca sebelum mengubah):
+--
+--   1. Bila password_hash diawali '$2' (format bcrypt) → verifikasi pakai
+--      crypt(p_password, password_hash). Hash TIDAK diubah. Password tetap
+--      sama. Ini kondisi normal setelah akun dibuat lewat aplikasi.
+--
+--   2. Bila password_hash TIDAK diawali '$2' (teks biasa — biasanya dari
+--      edit manual di Supabase Table Editor) → verifikasi pakai perbandingan
+--      literal. Bila cocok, hash di-UPGRADE sekali ke bcrypt. Password
+--      tetap sama — hanya format penyimpanan yang berubah jadi aman.
+--      Setelah upgrade, login berikutnya pakai path (1) dan hash tidak
+--      berubah lagi.
+--
+--   3. Password TIDAK PERNAH diubah tanpa instruksi eksplisit user/admin:
+--      - admin_change_password() → ganti password sendiri (verifikasi old)
+--      - admin_reset_user_password() → admin reset password akun lain
+--      - Bagian Z (RESET PASSWORD) di akhir file ini → HARUS di-uncomment
+--        manual, by-default commented out agar aman.
+--
+--   4. INSERT seed admin/operator pakai ON CONFLICT DO NOTHING → bila akun
+--      sudah ada (password sudah diganti), TIDAK di-overwrite.
 -- ---------------------------------------------------------------------------
 create or replace function public.admin_login(p_username text, p_password text)
 returns table (id uuid, username text, nama text, role text)
@@ -164,7 +183,7 @@ begin
     return;
   end if;
 
-  -- Jika lock sudah lewat, reset counter
+  -- Jika lock sudah lewat, reset counter (TIDAK ubah password_hash)
   if v_row.locked_until is not null and v_row.locked_until <= now() then
     update public.admin_users
     set failed_login_count = 0, locked_until = null
@@ -173,7 +192,9 @@ begin
     v_row.locked_until := null;
   end if;
 
-  -- Cocokkan password (bcrypt ATAU teks biasa lama)
+  -- Cocokkan password:
+  --   Path A: hash bcrypt ($2...) → verifikasi dengan crypt()
+  --   Path B: teks biasa → perbandingan literal (lalu upgrade sekali)
   if left(v_row.password_hash, 3) = '$2' then
     v_cocok := (v_row.password_hash = crypt(p_password, v_row.password_hash));
   else
@@ -181,14 +202,16 @@ begin
   end if;
 
   if v_cocok then
-    -- Upgrade teks biasa → bcrypt
+    -- UPGRADE SEKALI: teks biasa → bcrypt. Password tetap sama.
+    -- Setelah ini, hash sudah bcrypt → login berikutnya pakai Path A.
+    -- Hash tidak akan berubah lagi selama user tidak ganti password.
     if left(v_row.password_hash, 3) <> '$2' then
       update public.admin_users
       set password_hash = crypt(p_password, gen_salt('bf'))
       where admin_users.id = v_row.id;
     end if;
 
-    -- Reset counter & catat login terakhir
+    -- Reset counter & catat login terakhir (TIDAK ubah password_hash)
     update public.admin_users
     set failed_login_count = 0,
         locked_until       = null,
@@ -200,6 +223,7 @@ begin
   end if;
 
   -- Password salah → tambah counter, kunci bila mencapai batas
+  -- (TIDAK ubah password_hash)
   update public.admin_users
   set failed_login_count = failed_login_count + 1,
       locked_until = case
@@ -802,7 +826,7 @@ order by au.role, au.username;
 -- 1. Setelah script ini dijalankan, login dengan:
 --      Admin    → username: admin     | password: admin123
 --      Operator → username: operator  | password: operator123
---    SEGERA ganti password keduanya lewat tombol "Ganti Password" di Panel Admin.
+--    SEGERA ganti password keduanya lewat tombol "Akun Saya → Ganti Password".
 -- 2. Operator hanya bisa akses tab data (Pengumuman/Bezetting/Peserta/Petunjuk)
 --    dan mengelola akunnya sendiri (Akun Saya → Ubah Username & Ganti Password).
 -- 3. Admin punya tambahan tab "Manajemen Akun" untuk CRUD semua akun +
@@ -810,4 +834,56 @@ order by au.role, au.username;
 -- 4. Setelah 5x gagal login berturut-turut, akun otomatis terkunci 15 menit.
 -- 5. Tabel admin_users tetap dilindungi RLS (tidak bisa dibaca langsung dari
 --    client); semua akses lewat RPC security definer di atas.
+--
+-- FAQ PASSWORD:
+-- Q: "Saya sudah ganti password, tapi setelah run SQL ini password kembali ke default?"
+-- A: TIDAK. Bagian B pakai ON CONFLICT DO NOTHING → bila akun sudah ada,
+--    password TIDAK di-overwrite. Password Anda tetap aman.
+--
+-- Q: "Saya lupa password admin, bagaimana reset?"
+-- A: Uncomment bagian Z (RESET PASSWORD) di bawah, ganti passwordnya, run,
+--    lalu comment kembali. ATAU minta admin lain reset lewat tab
+--    "Manajemen Akun" di aplikasi.
+--
+-- Q: "Kenapa hash password berubah setelah login pertama?"
+-- A: Bila password sebelumnya tersimpan sebagai teks biasa (mis. dari edit
+--    manual di Table Editor), sistem akan meng-UPGRADE-nya sekali ke bcrypt
+--    saat login pertama yang berhasil. PASSWORD TETAP SAMA — hanya format
+--    penyimpanan yang berubah jadi aman. Setelah upgrade, hash tidak berubah
+--    lagi selama user tidak ganti password.
 -- ============================================================================
+
+
+-- ---------------------------------------------------------------------------
+-- Z. RESET PASSWORD — HANYA UNTUK RECOVERY (COMMENTED OUT BY DEFAULT)
+-- ---------------------------------------------------------------------------
+-- BAGIAN INI DIMATIKAN SECARA DEFAULT agar tidak meng-overwrite password
+-- yang sudah user ganti. Hanya uncomment bila BENAR-BENAR lupa password
+-- dan tidak ada admin lain yang bisa reset.
+--
+-- CARA PAKAI:
+--   1. Hapus tanda -- di depan baris-baris di bawah
+--   2. Ganti 'PASSWORD_BARU_ANDA' dengan password baru (min. 6 karakter)
+--   3. Run script ini (atau salin bagian ini saja ke SQL Editor)
+--   4. Login dengan password baru
+--   5. Setelah berhasil, COMMENT kembali baris-baris ini agar aman
+--
+-- -- Reset password admin:
+-- update public.admin_users
+-- set password_hash       = crypt('PASSWORD_BARU_ANDA', gen_salt('bf')),
+--     failed_login_count  = 0,
+--     locked_until        = null,
+--     aktif               = true
+-- where username = 'admin';
+--
+-- -- Reset password operator:
+-- update public.admin_users
+-- set password_hash       = crypt('PASSWORD_BARU_ANDA', gen_salt('bf')),
+--     failed_login_count  = 0,
+--     locked_until        = null,
+--     aktif               = true
+-- where username = 'operator';
+--
+-- -- Verifikasi (harus muncul 1 baris):
+-- select username, nama, role from public.admin_login('admin', 'PASSWORD_BARU_ANDA');
+-- ---------------------------------------------------------------------------

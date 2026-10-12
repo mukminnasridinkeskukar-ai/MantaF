@@ -56,7 +56,6 @@ mantaf/
 └── supabase/
     ├── schema.sql            ← SQL skema utama (tabel lama)
     ├── tryout-schema.sql     ← SQL tambahan Try Out (tabel baru saja, additive-only)
-    ├── perbaikan-login-admin.sql  ← Perbaikan login admin (versi toleran)
     └── akun-security.sql     ← ⚙️ KEAMANAN AKUN v2.1 (admin + operator + manajemen akun)
 ```
 
@@ -304,6 +303,9 @@ Semua RPC admin-only memverifikasi `username + password` requester lewat fungsi 
 | Tombol Akun Saya error "Gagal memuat profil" | Jalankan `supabase/akun-security.sql` di SQL Editor Supabase. |
 | Tidak bisa hapus akun admin | Sistem melarang hapus admin terakhir & hapus diri sendiri. |
 | Reset password admin lain gagal | Pastikan password Anda (admin) benar di sesi — logout & login ulang bila ragu. |
+| Lupa password admin (tidak ada admin lain) | Buka `supabase/akun-security.sql` → bagian **Z. RESET PASSWORD** di akhir file → uncomment, ganti password, run, lalu comment kembali. |
+| Password berubah sendiri setelah run SQL | TIDAK MUNGKIN. Bagian B pakai `ON CONFLICT DO NOTHING` → password yang sudah diganti tidak di-overwrite. Bila terjadi, cek apakah ada admin lain yang reset, atau apakah Anda menjalankan SQL dari sumber lain. |
+| Hash password berubah setelah login pertama | Ini **normal**. Bila password sebelumnya teks biasa (dari edit Table Editor), sistem upgrade sekali ke bcrypt. Password tetap sama, hanya format penyimpanan yang berubah jadi aman. |
 
 ---
 
