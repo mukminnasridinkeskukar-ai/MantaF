@@ -780,3 +780,22 @@ border-radius:10px;
 .avatar-preview-box:has(img){
 padding:0;border-style:solid;background:#fff;
 }
+
+/* ============================================================
+   BANNER "MODE LIHAT" UNTUK OPERATOR (tab view-only)
+   ============================================================ */
+.role-viewonly-banner{
+display:flex;align-items:center;gap:10px;
+background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);
+border:1px solid #f59e0b;
+color:#92400e;
+padding:11px 16px;
+border-radius:12px;
+font-size:12.5px;
+line-height:1.5;
+margin-bottom:14px;
+}
+.role-viewonly-banner i{
+font-size:18px;color:#d97706;flex-shrink:0;
+}
+.role-viewonly-banner b{color:#78350f}

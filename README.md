@@ -217,10 +217,16 @@ Sejak v2.1, sistem akun punya **2 role**: `admin` dan `operator`, dengan model k
 
 ### Role & Hak Akses
 
-| Role | Akses Data (CRUD) | Akun Saya | Manajemen Akun |
-|---|:---:|:---:|:---:|
-| **Admin** | ✅ Semua tab (Pengumuman, Bezetting, Peserta, Petunjuk) | ✅ Ubah username & password sendiri | ✅ CRUD semua akun + reset password + unlock |
-| **Operator** | ✅ Semua tab (Pengumuman, Bezetting, Peserta, Petunjuk) | ✅ Ubah username & password sendiri | ❌ Tab Manajemen Akun disembunyikan |
+| Role | Pengumuman | Bezetting | Peserta UKOM | Petunjuk | Akun Saya | Manajemen Akun |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Admin** | ✅ Full CRUD | ✅ Full CRUD | ✅ Full CRUD | ✅ Full CRUD | ✅ Ubah username, password & foto | ✅ CRUD semua akun |
+| **Operator** | 👁️ Lihat saja | 👁️ Lihat saja | ✅ Full CRUD | 👁️ Lihat saja | ✅ Ubah username, password & foto | ❌ Disembunyikan |
+
+**Catatan untuk Operator:**
+- Tab **Pengumuman**, **Bezetting**, **Petunjuk** → tombol Tambah, Edit, Hapus, dan Import CSV disembunyikan; muncul banner **"Mode Lihat"** di atas tabel.
+- Tab **Peserta UKOM** → full akses (tambah/edit/hapus peserta, ubah status verifikasi, upload berkas, import CSV).
+- Bila operator mencoba mengakses fungsi terlarang via console/dev-tools, fungsi tetap di-guard di sisi JS (`canManagePengumuman()` dst.) dan menampilkan toast "Akses ditolak".
+- **Keamanan tingkat database:** karena RLS saat ini terbuka untuk anon (agar aplikasi statis jalan), operator secara teknis masih bisa query langsung ke tabel via Supabase client. Untuk produksi ketat, aktifkan Supabase Auth dan ubah policy tulis ke `to authenticated` (lihat **Catatan Keamanan**).
 
 ### Akun Saya (lihat & ubah profil sendiri)
 

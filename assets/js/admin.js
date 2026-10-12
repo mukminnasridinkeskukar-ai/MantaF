@@ -18,6 +18,21 @@ let adminInited = false;
    modal Akun Saya bisa menampilkan tanpa fetch ulang). */
 let _adminAvatarUrl = '';
 
+/* ---------- HELPER HAK AKSES PER ROLE ----------
+   - Admin        → full CRUD di semua tab
+   - Operator     → full CRUD HANYA di Peserta UKOM
+                    Pengumuman, Bezetting, Petunjuk → view-only (lihat saja) */
+function _canManage(menu){
+  /* menu: 'pengumuman' | 'bezetting' | 'peserta' | 'petunjuk' */
+  if(isAdmin()) return true;
+  if(isOperator() && menu === 'peserta') return true;
+  return false;
+}
+function canManagePengumuman(){ return _canManage('pengumuman'); }
+function canManageBezetting(){  return _canManage('bezetting'); }
+function canManagePeserta(){    return _canManage('peserta'); }
+function canManagePetunjuk(){   return _canManage('petunjuk'); }
+
 SectionInit['admin'] = function(){
   if(adminInited) return;
   adminInited = true;
@@ -80,6 +95,10 @@ function showAdminPanel(admin){
   var tabAkun = document.querySelector('.admin-tab-akun');
   if(tabAkun) tabAkun.style.display = (admin && admin.role === 'admin') ? '' : 'none';
 
+  /* Terapkan hak akses per role: tombol Tambah & Import CSV disembunyikan
+     untuk operator pada tab Pengumuman/Bezetting/Petunjuk (view-only). */
+  applyRolePermissions();
+
   /* Refresh topbar (avatar/label) */
   if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
 
@@ -97,6 +116,54 @@ function showAdminPanel(admin){
   }
 
   adminRefreshAll();
+}
+
+/* ---------- TERAPKAN HAK AKSES PER ROLE DI UI ----------
+   Sembunyikan tombol "Tambah" & "Import CSV" untuk operator pada tab
+   Pengumuman, Bezetting, Petunjuk. Tombol di-render statis di partials/admin.html;
+   kita tandai elemen dengan atribut data-requires-manage agar mudah di-toggle. */
+function applyRolePermissions(){
+  /* 1. Sembunyikan tombol Tambah & Import CSV di toolbar setiap tab */
+  var maps = {
+    'tabBodyPengumuman': canManagePengumuman(),
+    'tabBodyBezetting':  canManageBezetting(),
+    'tabBodyPeserta':    canManagePeserta(),
+    'tabBodyPetunjuk':   canManagePetunjuk()
+  };
+  Object.keys(maps).forEach(function(bodyId){
+    var body = document.getElementById(bodyId);
+    if(!body) return;
+    var allowed = maps[bodyId];
+    /* Tombol-tombol yang menambah/mengimpor data */
+    body.querySelectorAll('[onclick*="openPengumumanForm"],' +
+                          '[onclick*="openBezettingForm"],' +
+                          '[onclick*="openPesertaForm"],' +
+                          '[onclick*="openPetunjukForm"],' +
+                          '[onclick*="openCsvImport"]').forEach(function(btn){
+      btn.style.display = allowed ? '' : 'none';
+    });
+  });
+
+  /* 2. Tambah badge "View Only" pada tab view-only untuk operator */
+  _toggleViewOnlyBanner('tabBodyPengumuman', canManagePengumuman());
+  _toggleViewOnlyBanner('tabBodyBezetting',  canManageBezetting());
+  _toggleViewOnlyBanner('tabBodyPetunjuk',   canManagePetunjuk());
+}
+
+/* Sisipkan/lepas banner "Mode Lihat" di atas tabel bila operator */
+function _toggleViewOnlyBanner(bodyId, canManage){
+  var body = document.getElementById(bodyId);
+  if(!body) return;
+  var existing = body.querySelector('.role-viewonly-banner');
+  if(canManage){
+    if(existing) existing.remove();
+    return;
+  }
+  if(existing) return;
+  var banner = document.createElement('div');
+  banner.className = 'role-viewonly-banner';
+  banner.innerHTML = '<i class="fas fa-eye"></i> <b>Mode Lihat</b> — Sebagai Operator, Anda hanya dapat melihat data tab ini. Hanya Admin yang dapat menambah, mengubah, atau menghapus. Penuh akses CRUD tersedia di tab <b>Peserta UKOM</b>.';
+  body.insertBefore(banner, body.firstChild);
 }
 
 function logoutAdmin(){
@@ -206,6 +273,7 @@ function renderAdmPengumuman(){
     return !q || String(p.judul || '').toLowerCase().indexOf(q) !== -1;
   });
 
+  const canManage = canManagePengumuman();
   const body = document.getElementById('admPengBody');
   let html = '';
   rows.forEach(function(p){
@@ -216,16 +284,20 @@ function renderAdmPengumuman(){
         ? '<span class="badge-status badge-batal">Normal</span>'
         : '<span class="badge-status badge-menunggu">' + escapeHtml(p.prioritas) + '</span>') + '</td>' +
       '<td>' + (p.aktif ? '<span class="badge-status badge-aktif">Aktif</span>' : '<span class="badge-status badge-nonaktif">Nonaktif</span>') + '</td>' +
-      '<td><div class="admin-row-actions">' +
-        '<button class="act-btn act-edit" title="Edit" onclick="openPengumumanForm(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' +
-        '<button class="act-btn act-del" title="Hapus" onclick="admDeletePengumuman(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' +
-      '</div></td>' +
+      '<td>' + (canManage
+        ? '<div class="admin-row-actions">' +
+            '<button class="act-btn act-edit" title="Edit" onclick="openPengumumanForm(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' +
+            '<button class="act-btn act-del" title="Hapus" onclick="admDeletePengumuman(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' +
+          '</div>'
+        : '<span style="color:#94a3b8;font-size:11.5px"><i class="fas fa-lock"></i> Read only</span>') +
+      '</td>' +
       '</tr>';
   });
-  body.innerHTML = html || '<tr><td colspan="5" class="empty-state" style="padding:34px"><i class="fas fa-bell-slash"></i>Tidak ada pengumuman. Klik "Tambah Pengumuman" untuk membuat.</td></tr>';
+  body.innerHTML = html || '<tr><td colspan="5" class="empty-state" style="padding:34px"><i class="fas fa-bell-slash"></i>Tidak ada pengumuman' + (canManage ? '. Klik "Tambah Pengumuman" untuk membuat.' : '.') + '</td></tr>';
 }
 
 function openPengumumanForm(id){
+  if(!canManagePengumuman()){ showToast('Akses ditolak: Operator hanya bisa melihat Pengumuman', 'error'); return; }
   const p = id ? admPengCache.find(function(x){ return x.id === id; }) : null;
   const overlay = crudModal(p ? 'Edit Pengumuman' : 'Tambah Pengumuman', 'fa-bullhorn',
     '<div class="form-grid">' +
@@ -270,6 +342,7 @@ function openPengumumanForm(id){
 }
 
 function admDeletePengumuman(id){
+  if(!canManagePengumuman()){ showToast('Akses ditolak: Operator hanya bisa melihat Pengumuman', 'error'); return; }
   const p = admPengCache.find(function(x){ return x.id === id; });
   confirmDialog('Hapus Pengumuman?', 'Pengumuman "' + (p ? p.judul : '') + '" akan dihapus permanen.', async function(){
     try{
@@ -311,6 +384,7 @@ function renderAdmBezetting(){
     return matchQ && (!fInstansi || b.instansi === fInstansi);
   });
 
+  const canManage = canManageBezetting();
   const body = document.getElementById('admBezBody');
   let html = '';
   rows.forEach(function(b){
@@ -322,16 +396,20 @@ function renderAdmBezetting(){
       '<td>' + (b.pemangku ?? 0) + '</td>' +
       '<td>' + (b.lowongan ?? 0) + '</td>' +
       '<td><span class="badge-status badge-dilimpahkan">' + (b.sisa ?? 0) + '</span></td>' +
-      '<td><div class="admin-row-actions">' +
-        '<button class="act-btn act-edit" title="Edit" onclick="openBezettingForm(\'' + b.id + '\')"><i class="fas fa-pen"></i></button>' +
-        '<button class="act-btn act-del" title="Hapus" onclick="admDeleteBezetting(\'' + b.id + '\')"><i class="fas fa-trash"></i></button>' +
-      '</div></td>' +
+      '<td>' + (canManage
+        ? '<div class="admin-row-actions">' +
+            '<button class="act-btn act-edit" title="Edit" onclick="openBezettingForm(\'' + b.id + '\')"><i class="fas fa-pen"></i></button>' +
+            '<button class="act-btn act-del" title="Hapus" onclick="admDeleteBezetting(\'' + b.id + '\')"><i class="fas fa-trash"></i></button>' +
+          '</div>'
+        : '<span style="color:#94a3b8;font-size:11.5px"><i class="fas fa-lock"></i> Read only</span>') +
+      '</td>' +
       '</tr>';
   });
-  body.innerHTML = html || '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-table-cells-large"></i>Tidak ada data. Klik "Tambah Bezetting" untuk membuat.</td></tr>';
+  body.innerHTML = html || '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-table-cells-large"></i>Tidak ada data' + (canManage ? '. Klik "Tambah Bezetting" untuk membuat.' : '.') + '</td></tr>';
 }
 
 function openBezettingForm(id){
+  if(!canManageBezetting()){ showToast('Akses ditolak: Operator hanya bisa melihat Bezetting', 'error'); return; }
   const b = id ? admBezCache.find(function(x){ return x.id === id; }) : null;
   const overlay = crudModal(b ? 'Edit Data Bezetting' : 'Tambah Data Bezetting', 'fa-table-cells-large',
     '<div class="crud-hint"><i class="fas fa-circle-info"></i> Kolom <b>Sisa</b> terisi otomatis mengikuti nilai Lowongan Formasi.</div>' +
@@ -383,6 +461,7 @@ function openBezettingForm(id){
 }
 
 function admDeleteBezetting(id){
+  if(!canManageBezetting()){ showToast('Akses ditolak: Operator hanya bisa melihat Bezetting', 'error'); return; }
   const b = admBezCache.find(function(x){ return x.id === id; });
   confirmDialog('Hapus Data Bezetting?', 'Data "' + (b ? b.instansi + ' — ' + b.jenis_jabatan : '') + '" akan dihapus permanen.', async function(){
     try{
@@ -835,10 +914,16 @@ function renderAdmPetunjuk(){
       String(p.deskripsi || '').toLowerCase().indexOf(q) !== -1;
   });
 
+  const canManage = canManagePetunjuk();
   const body = document.getElementById('admPetBody');
   let html = '';
   rows.forEach(function(p){
     const namaFile = String(p.file_url || '').split('/').pop().split('?')[0] || '-';
+    var actions = '<button class="act-btn act-view" title="Preview PDF" onclick="openPetunjukPreview(\'' + p.id + '\')"><i class="fas fa-eye"></i></button>';
+    if(canManage){
+      actions += '<button class="act-btn act-edit" title="Edit" onclick="openPetunjukForm(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' +
+                 '<button class="act-btn act-del" title="Hapus" onclick="admDeletePetunjuk(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>';
+    }
     html += '<tr>' +
       '<td style="font-weight:600;color:#0f172a">' + escapeHtml(p.judul || '') +
         '<div style="font-size:11.5px;color:#94a3b8;margin-top:3px;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(p.deskripsi || '') + '</div></td>' +
@@ -847,14 +932,12 @@ function renderAdmPetunjuk(){
         '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escAttr(p.file_url || '') + '">' + escapeHtml(namaFile) + '</span></span></td>' +
       '<td>' + escapeHtml(String(p.urutan ?? 0)) + '</td>' +
       '<td>' + (p.aktif ? '<span class="badge-status badge-aktif">Aktif</span>' : '<span class="badge-status badge-nonaktif">Nonaktif</span>') + '</td>' +
-      '<td><div class="admin-row-actions">' +
-        '<button class="act-btn act-view" title="Preview PDF" onclick="openPetunjukPreview(\'' + p.id + '\')"><i class="fas fa-eye"></i></button>' +
-        '<button class="act-btn act-edit" title="Edit" onclick="openPetunjukForm(\'' + p.id + '\')"><i class="fas fa-pen"></i></button>' +
-        '<button class="act-btn act-del" title="Hapus" onclick="admDeletePetunjuk(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' +
-      '</div></td>' +
+      '<td><div class="admin-row-actions">' + actions + '</div>' +
+        (canManage ? '' : '<div style="font-size:10.5px;color:#94a3b8;margin-top:4px"><i class="fas fa-lock"></i> Read only</div>') +
+      '</td>' +
       '</tr>';
   });
-  body.innerHTML = html || '<tr><td colspan="5" class="empty-state" style="padding:34px"><i class="fas fa-book-open-reader"></i>Tidak ada dokumen. Klik "Tambah Dokumen" untuk mengunggah PDF petunjuk.</td></tr>';
+  body.innerHTML = html || '<tr><td colspan="5" class="empty-state" style="padding:34px"><i class="fas fa-book-open-reader"></i>Tidak ada dokumen' + (canManage ? '. Klik "Tambah Dokumen" untuk mengunggah PDF petunjuk.' : '.') + '</td></tr>';
 }
 
 /* Preview PDF dari panel admin (pakai popup publik di petunjuk.js) */
@@ -874,6 +957,7 @@ function openPetunjukPreview(id){
 }
 
 function openPetunjukForm(id){
+  if(!canManagePetunjuk()){ showToast('Akses ditolak: Operator hanya bisa melihat Petunjuk', 'error'); return; }
   /* aman saat data petunjuk gagal dimuat (admPetCache masih null) */
   const p = (id && admPetCache) ? admPetCache.find(function(x){ return x.id === id; }) : null;
   const overlay = crudModal(p ? 'Edit Dokumen Petunjuk' : 'Tambah Dokumen Petunjuk', 'fa-book-open-reader',
@@ -944,6 +1028,7 @@ function openPetunjukForm(id){
 }
 
 function admDeletePetunjuk(id){
+  if(!canManagePetunjuk()){ showToast('Akses ditolak: Operator hanya bisa melihat Petunjuk', 'error'); return; }
   const p = admPetCache && admPetCache.find(function(x){ return x.id === id; });
   confirmDialog('Hapus Dokumen Petunjuk?',
     'Dokumen "' + (p ? p.judul : '') + '" beserta file PDF-nya akan dihapus permanen dari storage.',

@@ -388,6 +388,13 @@ function openCsvImport(tableKey){
   if(!T){ showToast('Menu import tidak dikenal', 'error'); return; }
   if(typeof db === 'undefined' || !db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
 
+  /* Guard hak akses: operator hanya boleh import Peserta UKOM.
+     Pengumuman, Bezetting, Petunjuk → view-only untuk operator. */
+  if(typeof isOperator === 'function' && isOperator() && tableKey !== 'peserta'){
+    showToast('Akses ditolak: Operator hanya dapat import data Peserta UKOM', 'error');
+    return;
+  }
+
   csvImportState = { tableKey: tableKey, objects: null, result: null, mode: 'skip', truncate: false, fileName: '' };
 
   const hints = T.columns.map(function(c){
