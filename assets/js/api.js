@@ -143,6 +143,74 @@ const API = {
     db.rpc('admin_change_password', { p_username: username, p_password_lama: oldPass, p_password_baru: newPass })
   ),
 
+  /* ---------- KEAMANAN AKUN (profil & ubah username sendiri) ---------- */
+  adminGetMyProfile: (username) => sbQuery(
+    db.rpc('admin_get_my_profile', { p_username: username })
+  ),
+
+  adminChangeMyUsername: (oldUsername, newUsername, password) => sbQuery(
+    db.rpc('admin_change_my_username', {
+      p_username_lama: oldUsername,
+      p_username_baru: newUsername,
+      p_password: password
+    })
+  ),
+
+  /* ---------- MANAJEMEN AKUN (admin only) ---------- */
+  adminListUsers: (requesterUsername, requesterPassword) => sbQuery(
+    db.rpc('admin_list_users', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword
+    })
+  ),
+
+  adminCreateUser: (requesterUsername, requesterPassword, username, password, nama, role) => sbQuery(
+    db.rpc('admin_create_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_username: username,
+      p_password: password,
+      p_nama: nama,
+      p_role: role
+    })
+  ),
+
+  adminUpdateUser: (requesterUsername, requesterPassword, id, nama, role, aktif) => sbQuery(
+    db.rpc('admin_update_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id,
+      p_nama: nama,
+      p_role: role,
+      p_aktif: aktif
+    })
+  ),
+
+  adminResetUserPassword: (requesterUsername, requesterPassword, id, newPassword) => sbQuery(
+    db.rpc('admin_reset_user_password', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id,
+      p_password_baru: newPassword
+    })
+  ),
+
+  adminDeleteUser: (requesterUsername, requesterPassword, id) => sbQuery(
+    db.rpc('admin_delete_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id
+    })
+  ),
+
+  adminUnlockUser: (requesterUsername, requesterPassword, id) => sbQuery(
+    db.rpc('admin_unlock_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id
+    })
+  ),
+
   /* ================= BULK (IMPORT CSV MASSAL) ================= */
   bulkInsert: (table, rows) => sbQuery(db.from(table).insert(rows).select()),
   bulkUpdate: (table, id, row) => sbQuery(db.from(table).update(row).eq('id', id).select()),

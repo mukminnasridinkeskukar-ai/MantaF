@@ -9,6 +9,7 @@ let admPengCache = null;
 let admBezCache = null;
 let admPesCache = null;
 let admPetCache = null;
+let admAkunCache = null;
 let admPesPage = 1;
 const ADM_PES_PER_PAGE = 20;
 let adminInited = false;
@@ -37,31 +38,53 @@ async function loginAdmin(){
     const admin = await API.adminLogin(user, pass);
     if(admin){
       setAdminSession(admin);
+      /* Simpan password di memori untuk verifikasi RPC manajemen akun.
+         Hanya dipakai selama sesi aktif (hilang saat refresh/logout). */
+      setAdminRpcPass(pass);
       resultEl.innerHTML = '';
       showToast('Selamat datang, ' + admin.nama + '!', 'success');
       showAdminPanel(admin);
     }else{
-      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, silahkan coba lagi.</span>';
+      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, atau akun terkunci. Silakan coba lagi.</span>';
       /* Detail teknis HANYA di console (F12), tidak tampil di layar login. */
       console.warn('[admin] Login gagal untuk username:', JSON.stringify(user));
     }
   }catch(err){
     console.error('[admin] Error login:', err);
-    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, silahkan coba lagi.</span>';
+    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, atau akun terkunci. Silakan coba lagi.</span>';
   }
 }
 
 function showAdminPanel(admin){
   document.getElementById('adminLoginSection').style.display = 'none';
   document.getElementById('adminDataSection').style.display = 'block';
+
+  /* Atur badge & label sesuai role */
+  var badge = document.getElementById('adminRoleBadge');
+  if(badge){
+    var role = (admin && admin.role) || 'admin';
+    badge.textContent = role === 'operator' ? 'Operator' : 'Admin';
+    badge.className = 'admin-role-badge ' + (role === 'operator' ? 'role-operator' : 'role-admin');
+  }
+  var who = document.getElementById('adminWho');
+  if(who){
+    who.querySelector('span').textContent =
+      (admin && admin.nama ? admin.nama : 'Pengguna') +
+      ' (' + (admin && admin.username ? admin.username : '') + ')';
+  }
+  /* Tab Manajemen Akun hanya untuk admin */
+  var tabAkun = document.querySelector('.admin-tab-akun');
+  if(tabAkun) tabAkun.style.display = (admin && admin.role === 'admin') ? '' : 'none';
+
   adminRefreshAll();
 }
 
 function logoutAdmin(){
   confirmDialog('Keluar dari Panel Admin?', 'Sesi Anda akan diakhiri dan kembali ke halaman login.', function(){
     clearAdminSession();
+    clearAdminRpcPass();
     /* bersihkan cache data agar tidak tertinggal di memori setelah logout */
-    admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null;
+    admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null; admAkunCache = null;
     admPesPage = 1;
     document.getElementById('adminDataSection').style.display = 'none';
     document.getElementById('adminLoginSection').style.display = 'block';
@@ -82,6 +105,22 @@ async function adminRefreshAll(){
     ['peserta',    API.getPesertaUkom(),     v => { admPesCache = v;  document.getElementById('cntTabPeserta').textContent    = v.length; renderAdmPeserta(); }],
     ['petunjuk',   API.getPetunjuk(false),   v => { admPetCache = v;  document.getElementById('cntTabPetunjuk').textContent   = v.length; renderAdmPetunjuk(); }]
   ];
+
+  /* Tab Manajemen Akun hanya dimuat untuk admin (membutuhkan verifikasi password) */
+  const session = getAdminSession();
+  if(session && session.role === 'admin'){
+    jobs.push(['akun',
+      API.adminListUsers(session.username, _getAdminPassForRpc()).catch(function(){ return null; }),
+      v => {
+        if(v === null){ /* verifikasi gagal / RPC belum ada */ admAkunCache = null; }
+        else { admAkunCache = v; }
+        const el = document.getElementById('cntTabAkun');
+        if(el) el.textContent = (admAkunCache || []).length;
+        renderAdmAkun();
+      }
+    ]);
+  }
+
   const results = await Promise.allSettled(jobs.map(j => j[1]));
   const gagal = [];
   results.forEach(function(res, i){
@@ -95,6 +134,17 @@ async function adminRefreshAll(){
       (gagal.includes('petunjuk') ? 'Jalankan ulang supabase/schema.sql terbaru untuk membuat tabel & bucket petunjuk.' : ''), 'error');
   }
 }
+
+/* ---------- PENYIMPANAN SEMENTARA PASSWORD UNTUK VERIFIKASI RPC ----------
+   RPC manajemen akun (list/create/update/delete/reset) memerlukan password
+   requester sebagai verifikasi. Karena kita tidak menyimpan password di
+   session, password ditahan dalam memori (var module) hanya selama sesi
+   aktif & hilang saat refresh/logout. Ini trade-off UX vs keamanan; setelah
+   60 menit (sesi kedaluwarsa) password otomatis hilang. */
+let _adminRpcPass = '';
+function setAdminRpcPass(pass){ _adminRpcPass = pass; }
+function _getAdminPassForRpc(){ return _adminRpcPass || ''; }
+function clearAdminRpcPass(){ _adminRpcPass = ''; }
 
 /* ================= TABS ================= */
 function switchAdminTab(tab, el){
@@ -887,16 +937,139 @@ function admDeletePetunjuk(id){
     { icon:'fa-file-pdf', yesText:'Ya, Hapus Dokumen', yesClass:'btn-danger' });
 }
 
-/* ---------- GANTI PASSWORD ---------- */
+/* ============================================================
+   KEAMANAN AKUN — AKUN SAYA & MANAJEMEN AKUN
+   ============================================================
+   - openMyAccount()           : modal profil sendiri (lihat info + 2 tombol aksi)
+   - openChangeUsername()      : ubah username sendiri (verifikasi password)
+   - openChangePassword()      : ganti password sendiri (versi baru dgn info keamanan)
+   - renderAdmAkun()           : render tabel di tab Manajemen Akun (admin only)
+   - openAkunForm()            : tambah/edit akun (admin only)
+   - admDeleteAkun()           : hapus akun (admin only)
+   - admResetAkunPassword()    : reset password akun lain (admin only)
+   - admUnlockAkun()           : buka kunci akun yang terkunci (admin only)
+   ============================================================ */
+
+/* ---------- AKUN SAYA: lihat profil sendiri ---------- */
+async function openMyAccount(){
+  const session = getAdminSession();
+  if(!session){ showToast('Sesi tidak ditemukan, silakan login ulang', 'error'); return; }
+
+  const overlay = crudModal('Akun Saya', 'fa-id-card',
+    '<div id="myAcctBody"><div style="padding:30px;text-align:center"><i class="fas fa-spinner fa-spin"></i> Memuat profil…</div></div>',
+    '<button class="btn btn-ghost" data-close>Tutup</button>' +
+    '<button class="btn" id="myAcctChangeUname"><i class="fas fa-user-pen"></i> Ubah Username</button>' +
+    '<button class="btn" id="myAcctChangePass"><i class="fas fa-key"></i> Ganti Password</button>'
+  );
+
+  /* Tombol aksi */
+  overlay.querySelector('#myAcctChangeUname').addEventListener('click', function(){
+    overlay.remove();
+    openChangeUsername();
+  });
+  overlay.querySelector('#myAcctChangePass').addEventListener('click', function(){
+    overlay.remove();
+    openChangePassword();
+  });
+
+  /* Muat profil terbaru dari server */
+  try{
+    const rows = await API.adminGetMyProfile(session.username);
+    const p = (rows && rows.length) ? rows[0] : null;
+    if(!p){
+      overlay.querySelector('#myAcctBody').innerHTML =
+        '<div style="padding:24px;color:#dc2626"><i class="fas fa-circle-xmark"></i> Profil tidak ditemukan. Silakan login ulang.</div>';
+      return;
+    }
+    const lastLogin = p.last_login_at ? formatDateTimeId(p.last_login_at) : 'Belum pernah';
+    const lastPass  = p.last_password_change_at ? formatDateTimeId(p.last_password_change_at) : 'Belum pernah';
+    const roleBadge = p.role === 'operator'
+      ? '<span class="admin-role-badge role-operator">Operator</span>'
+      : '<span class="admin-role-badge role-admin">Admin</span>';
+    const statusBadge = p.aktif
+      ? '<span class="badge-status badge-aktif">Aktif</span>'
+      : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
+
+    overlay.querySelector('#myAcctBody').innerHTML =
+      '<div class="my-acct-grid">' +
+        '<div class="my-acct-row"><label>Username</label><div class="my-acct-value"><code>' + escapeHtml(p.username) + '</code></div></div>' +
+        '<div class="my-acct-row"><label>Nama Lengkap</label><div class="my-acct-value">' + escapeHtml(p.nama) + '</div></div>' +
+        '<div class="my-acct-row"><label>Role</label><div class="my-acct-value">' + roleBadge + '</div></div>' +
+        '<div class="my-acct-row"><label>Status Akun</label><div class="my-acct-value">' + statusBadge + '</div></div>' +
+        '<div class="my-acct-row"><label>Login Terakhir</label><div class="my-acct-value">' + escapeHtml(lastLogin) + '</div></div>' +
+        '<div class="my-acct-row"><label>Password Terakhir Diubah</label><div class="my-acct-value">' + escapeHtml(lastPass) + '</div></div>' +
+        '<div class="my-acct-row"><label>Akun Dibuat</label><div class="my-acct-value">' + escapeHtml(formatDateTimeId(p.created_at)) + '</div></div>' +
+      '</div>' +
+      '<div class="csv-hintbox" style="margin-top:18px"><i class="fas fa-shield-halved"></i><div>' +
+        'Anda dapat mengubah <b>username</b> dan <b>password</b> sendiri kapan saja. ' +
+        'Kedua aksi memerlukan konfirmasi password saat ini sebagai verifikasi keamanan. ' +
+        'Password baru minimal <b>6 karakter</b>; username baru 3–50 karakter (huruf, angka, titik, underscore, strip).' +
+      '</div></div>';
+  }catch(err){
+    console.error('[admin] getMyProfile error:', err);
+    overlay.querySelector('#myAcctBody').innerHTML =
+      '<div style="padding:24px;color:#dc2626"><i class="fas fa-circle-xmark"></i> Gagal memuat profil: ' + escapeHtml(err.message) + '<br>' +
+      '<span style="font-size:12px;color:#64748b">Pastikan <code>supabase/akun-security.sql</code> sudah dijalankan.</span></div>';
+  }
+}
+
+/* ---------- UBAH USERNAME SENDIRI ---------- */
+function openChangeUsername(){
+  const session = getAdminSession();
+  if(!session){ showToast('Sesi tidak ditemukan, silakan login ulang', 'error'); return; }
+
+  const overlay = crudModal('Ubah Username', 'fa-user-pen',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Username Saat Ini</label><input type="text" value="' + escAttr(session.username) + '" disabled></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Username Baru <span style="color:#dc2626">*</span></label>' +
+      '<input type="text" id="fUnameBaru" maxlength="50" autocomplete="off" placeholder="3-50 karakter (huruf/angka/._-)"></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Password Saat Ini (verifikasi) <span style="color:#dc2626">*</span></label>' +
+      '<input type="password" id="fUnamePass" autocomplete="current-password"></div>' +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn" id="fUnameSave"><i class="fas fa-check"></i> Simpan Username</button>'
+  );
+
+  overlay.querySelector('#fUnameSave').addEventListener('click', async function(){
+    const baru = sanitizeInput(overlay.querySelector('#fUnameBaru').value, 50);
+    const pass = overlay.querySelector('#fUnamePass').value;
+    if(!baru){ showToast('Username baru wajib diisi', 'error'); return; }
+    if(baru.length < 3){ showToast('Username baru minimal 3 karakter', 'error'); return; }
+    if(!/^[a-zA-Z0-9._-]+$/.test(baru)){ showToast('Username hanya boleh huruf, angka, titik, underscore, strip', 'error'); return; }
+    if(baru.toLowerCase() === String(session.username).toLowerCase()){ showToast('Username baru sama dengan yang lama', 'error'); return; }
+    if(!pass){ showToast('Password wajib diisi untuk verifikasi', 'error'); return; }
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
+    try{
+      const ok = await API.adminChangeMyUsername(session.username, baru, pass);
+      if(ok){
+        /* Update session & memori RPC */
+        updateAdminSession({ username: baru });
+        setAdminRpcPass(pass); /* password tetap sama, simpan ulang utk RPC */
+        /* Update label "siapa login" */
+        var who = document.getElementById('adminWho');
+        if(who) who.querySelector('span').textContent = (session.nama || 'Pengguna') + ' (' + baru + ')';
+        showToast('Username berhasil diubah menjadi "' + baru + '"', 'success');
+        overlay.remove();
+      }else{
+        showToast('Gagal: password salah, username sudah dipakai, atau format tidak valid', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Username';
+      }
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Username'; }
+  });
+}
+
+/* ---------- GANTI PASSWORD SENDIRI (versi baru) ---------- */
 function openChangePassword(){
   const session = getAdminSession();
   if(!session){ showToast('Sesi tidak ditemukan, silakan login ulang', 'error'); return; }
 
   const overlay = crudModal('Ganti Password', 'fa-key',
     '<div class="form-grid">' +
-      '<div class="form-group" style="grid-column:1/-1"><label>Password Lama</label><input type="password" id="fPassLama"></div>' +
-      '<div class="form-group"><label>Password Baru (min. 6 karakter)</label><input type="password" id="fPassBaru"></div>' +
-      '<div class="form-group"><label>Ulangi Password Baru</label><input type="password" id="fPassBaru2"></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Password Saat Ini <span style="color:#dc2626">*</span></label><input type="password" id="fPassLama" autocomplete="current-password"></div>' +
+      '<div class="form-group"><label>Password Baru <span style="color:#dc2626">*</span></label><input type="password" id="fPassBaru" autocomplete="new-password">' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Minimal 6 karakter.</div></div>' +
+      '<div class="form-group"><label>Ulangi Password Baru <span style="color:#dc2626">*</span></label><input type="password" id="fPassBaru2" autocomplete="new-password"></div>' +
     '</div>',
     '<button class="btn btn-ghost" data-close>Batal</button>' +
     '<button class="btn" id="fPassSave"><i class="fas fa-check"></i> Simpan Password</button>'
@@ -906,14 +1079,217 @@ function openChangePassword(){
     const lama = overlay.querySelector('#fPassLama').value;
     const baru = overlay.querySelector('#fPassBaru').value;
     const baru2 = overlay.querySelector('#fPassBaru2').value;
+    if(!lama){ showToast('Password saat ini wajib diisi', 'error'); return; }
     if(baru.length < 6){ showToast('Password baru minimal 6 karakter', 'error'); return; }
     if(baru !== baru2){ showToast('Konfirmasi password tidak sama', 'error'); return; }
+    if(baru === lama){ showToast('Password baru harus berbeda dari yang lama', 'error'); return; }
     const btn = this;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
     try{
       const ok = await API.adminChangePassword(session.username, lama, baru);
-      if(ok){ showToast('Password berhasil diubah', 'success'); overlay.remove(); }
-      else{ showToast('Password lama salah', 'error'); btn.disabled = false; }
-    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; }
+      if(ok){
+        /* Update password di memori untuk RPC manajemen akun */
+        setAdminRpcPass(baru);
+        showToast('Password berhasil diubah', 'success');
+        overlay.remove();
+      }else{
+        showToast('Password saat ini salah', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Password';
+      }
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Password'; }
   });
+}
+
+/* ============================================================
+   MANAJEMEN AKUN (admin only) — CRUD semua akun
+   ============================================================ */
+
+/* ---------- RENDER TABEL AKUN ---------- */
+function renderAdmAkun(){
+  const body = document.getElementById('admAkunBody');
+  if(!body) return;
+  if(!admAkunCache){
+    body.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/akun-security.sql</code> sudah dijalankan.</td></tr>';
+    return;
+  }
+  const session = getAdminSession();
+  const q = (document.getElementById('admAkunSearch').value || '').toLowerCase();
+  const roleFilter = document.getElementById('admAkunFilterRole').value;
+  const rows = admAkunCache.filter(function(u){
+    if(roleFilter && u.role !== roleFilter) return false;
+    if(!q) return true;
+    return String(u.username || '').toLowerCase().indexOf(q) !== -1
+        || String(u.nama || '').toLowerCase().indexOf(q) !== -1;
+  });
+
+  let html = '';
+  rows.forEach(function(u){
+    const isSelf = session && u.username === session.username;
+    const roleBadge = u.role === 'operator'
+      ? '<span class="admin-role-badge role-operator">Operator</span>'
+      : '<span class="admin-role-badge role-admin">Admin</span>';
+    const statusBadge = u.aktif
+      ? '<span class="badge-status badge-aktif">Aktif</span>'
+      : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
+    const locked = u.locked_until && new Date(u.locked_until) > new Date();
+    const lockBadge = locked
+      ? ' <span class="badge-status badge-ditolak" title="Terkunci sampai ' + escapeHtml(formatDateTimeId(u.locked_until)) + '"><i class="fas fa-lock"></i> Terkunci</span>'
+      : '';
+    const lastLogin = u.last_login_at ? formatDateTimeId(u.last_login_at) : '<span style="color:#94a3b8">Belum pernah</span>';
+    const lastPass  = u.last_password_change_at ? formatDateTimeId(u.last_password_change_at) : '<span style="color:#94a3b8">Belum pernah</span>';
+
+    html += '<tr>' +
+      '<td><code style="font-weight:600">' + escapeHtml(u.username) + '</code>' + (isSelf ? ' <span style="color:#0f766e;font-size:11px">(Anda)</span>' : '') + '</td>' +
+      '<td>' + escapeHtml(u.nama) + '</td>' +
+      '<td>' + roleBadge + '</td>' +
+      '<td>' + statusBadge + lockBadge + '</td>' +
+      '<td>' + lastLogin + '</td>' +
+      '<td>' + lastPass + '</td>' +
+      '<td><div class="admin-row-actions">' +
+        '<button class="act-btn act-edit" title="Edit Akun" onclick="openAkunForm(\'' + u.id + '\')"><i class="fas fa-pen"></i></button>' +
+        '<button class="act-btn act-edit" title="Reset Password" onclick="admResetAkunPassword(\'' + u.id + '\')"><i class="fas fa-key"></i></button>' +
+        (locked ? '<button class="act-btn act-edit" title="Buka Kunci" onclick="admUnlockAkun(\'' + u.id + '\')"><i class="fas fa-lock-open"></i></button>' : '') +
+        (isSelf
+          ? '<button class="act-btn act-del" title="Tidak bisa hapus diri sendiri" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-trash"></i></button>'
+          : '<button class="act-btn act-del" title="Hapus Akun" onclick="admDeleteAkun(\'' + u.id + '\')"><i class="fas fa-trash"></i></button>') +
+      '</div></td>' +
+      '</tr>';
+  });
+  body.innerHTML = html || '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-users-slash"></i>Tidak ada akun yang cocok. Klik "Tambah Akun" untuk membuat baru.</td></tr>';
+}
+
+/* ---------- FORM TAMBAH / EDIT AKUN ---------- */
+function openAkunForm(id){
+  const u = id ? (admAkunCache || []).find(function(x){ return x.id === id; }) : null;
+  const isEdit = !!u;
+  const session = getAdminSession();
+  if(!session){ showToast('Sesi tidak ditemukan', 'error'); return; }
+
+  const overlay = crudModal(isEdit ? 'Edit Akun' : 'Tambah Akun', isEdit ? 'fa-user-pen' : 'fa-user-plus',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Username ' + (isEdit ? '<span style="color:#64748b">(tidak dapat diubah)</span>' : '<span style="color:#dc2626">*</span>') + '</label>' +
+      (isEdit
+        ? '<input type="text" value="' + escAttr(u.username) + '" disabled>'
+        : '<input type="text" id="fAkunUname" maxlength="50" autocomplete="off" placeholder="3-50 karakter (huruf/angka/._-)">') +
+      '</div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Nama Lengkap <span style="color:#dc2626">*</span></label>' +
+      '<input type="text" id="fAkunNama" maxlength="100" value="' + escAttr(u ? u.nama : '') + '"></div>' +
+      '<div class="form-group"><label>Role</label><select id="fAkunRole">' +
+        '<option value="admin"' + (u && u.role === 'admin' ? ' selected' : '') + '>Admin (akses penuh + kelola akun)</option>' +
+        '<option value="operator"' + (u && u.role === 'operator' ? ' selected' : (!u ? ' selected' : '')) + '>Operator (akses data saja)</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label>Status</label><select id="fAkunAktif">' +
+        '<option value="true"' + (!u || u.aktif ? ' selected' : '') + '>Aktif</option>' +
+        '<option value="false"' + (u && !u.aktif ? ' selected' : '') + '>Nonaktif</option>' +
+      '</select></div>' +
+      (isEdit
+        ? ''
+        : '<div class="form-group" style="grid-column:1/-1"><label>Password Awal <span style="color:#dc2626">*</span></label>' +
+          '<input type="password" id="fAkunPass" autocomplete="new-password" placeholder="Minimal 6 karakter">' +
+          '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Password bisa diubah oleh pengguna sendiri atau di-reset oleh admin lain.</div></div>') +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn" id="fAkunSave"><i class="fas fa-floppy-disk"></i> Simpan</button>'
+  );
+
+  overlay.querySelector('#fAkunSave').addEventListener('click', async function(){
+    const nama = sanitizeInput(overlay.querySelector('#fAkunNama').value, 100);
+    const role = overlay.querySelector('#fAkunRole').value;
+    const aktif = overlay.querySelector('#fAkunAktif').value === 'true';
+    if(!nama){ showToast('Nama lengkap wajib diisi', 'error'); return; }
+
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
+    try{
+      if(isEdit){
+        const ok = await API.adminUpdateUser(session.username, _getAdminPassForRpc(), u.id, nama, role, aktif);
+        if(!ok){ showToast('Gagal: tidak bisa mengubah akun. Mungkin menonaktifkan admin terakhir.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        showToast('Akun diperbarui', 'success');
+      }else{
+        const uname = sanitizeInput(overlay.querySelector('#fAkunUname').value, 50);
+        const pass  = overlay.querySelector('#fAkunPass').value;
+        if(!uname){ showToast('Username wajib diisi', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        if(uname.length < 3 || !/^[a-zA-Z0-9._-]+$/.test(uname)){ showToast('Username min 3 karakter, hanya huruf/angka/._-', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        if(pass.length < 6){ showToast('Password minimal 6 karakter', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        const result = await API.adminCreateUser(session.username, _getAdminPassForRpc(), uname, pass, nama, role);
+        if(!result || !result.length){ showToast('Gagal: username sudah dipakai atau input tidak valid', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        showToast('Akun "' + uname + '" ditambahkan', 'success');
+      }
+      overlay.remove();
+      adminRefreshAll();
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; }
+  });
+}
+
+/* ---------- RESET PASSWORD AKUN LAIN ---------- */
+function admResetAkunPassword(id){
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u){ return; }
+  const session = getAdminSession();
+
+  const overlay = crudModal('Reset Password — ' + u.username, 'fa-key',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Password Baru untuk <b>' + escapeHtml(u.username) + '</b> <span style="color:#dc2626">*</span></label>' +
+      '<input type="password" id="fResetPass" autocomplete="new-password" placeholder="Minimal 6 karakter"></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Ulangi Password <span style="color:#dc2626">*</span></label>' +
+      '<input type="password" id="fResetPass2" autocomplete="new-password"></div>' +
+      '<div class="csv-hintbox" style="grid-column:1/-1"><i class="fas fa-circle-info"></i><div>' +
+        'Password lama akun ini tidak perlu diketahui. Setelah di-reset, akun langsung bisa login dengan password baru. ' +
+        'Counter gagal login juga ikut direset.' +
+      '</div></div>' +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn btn-danger" id="fResetSave"><i class="fas fa-check"></i> Reset Password</button>'
+  );
+
+  overlay.querySelector('#fResetSave').addEventListener('click', async function(){
+    const baru = overlay.querySelector('#fResetPass').value;
+    const baru2 = overlay.querySelector('#fResetPass2').value;
+    if(baru.length < 6){ showToast('Password baru minimal 6 karakter', 'error'); return; }
+    if(baru !== baru2){ showToast('Konfirmasi password tidak sama', 'error'); return; }
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mereset…';
+    try{
+      const ok = await API.adminResetUserPassword(session.username, _getAdminPassForRpc(), u.id, baru);
+      if(ok){ showToast('Password "' + u.username + '" berhasil di-reset', 'success'); overlay.remove(); adminRefreshAll(); }
+      else{ showToast('Gagal mereset password', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Reset Password'; }
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Reset Password'; }
+  });
+}
+
+/* ---------- UNLOCK AKUN ---------- */
+function admUnlockAkun(id){
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u){ return; }
+  const session = getAdminSession();
+  confirmDialog('Buka Kunci Akun?',
+    'Akun <b>' + escapeHtml(u.username) + '</b> akan dibuka dari status terkunci. Counter gagal login juga direset.',
+    async function(){
+      try{
+        const ok = await API.adminUnlockUser(session.username, _getAdminPassForRpc(), u.id);
+        if(ok){ showToast('Akun "' + u.username + '" dibuka', 'success'); adminRefreshAll(); }
+        else showToast('Gagal membuka kunci', 'error');
+      }catch(err){ showToast('Gagal: ' + err.message, 'error'); }
+    },
+    { icon:'fa-lock-open', yesText:'Ya, Buka Kunci', yesClass:'btn' });
+}
+
+/* ---------- HAPUS AKUN ---------- */
+function admDeleteAkun(id){
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u){ return; }
+  const session = getAdminSession();
+  if(u.username === session.username){ showToast('Tidak bisa menghapus akun sendiri', 'error'); return; }
+
+  confirmDialog('Hapus Akun?',
+    'Akun <b>' + escapeHtml(u.username) + '</b> (' + escapeHtml(u.nama) + ') akan dihapus permanen. ' +
+    'Tindakan ini tidak dapat dibatalkan.',
+    async function(){
+      try{
+        const ok = await API.adminDeleteUser(session.username, _getAdminPassForRpc(), u.id);
+        if(ok){ showToast('Akun dihapus', 'success'); adminRefreshAll(); }
+        else showToast('Gagal: tidak bisa menghapus (admin terakhir tidak boleh dihapus)', 'error');
+      }catch(err){ showToast('Gagal: ' + err.message, 'error'); }
+    },
+    { icon:'fa-trash', yesText:'Ya, Hapus Akun', yesClass:'btn-danger' });
 }

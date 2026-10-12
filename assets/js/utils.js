@@ -155,7 +155,7 @@ function confirmDialog(title, message, onYes, opts){
 /* ---------- SESSION ADMIN ---------- */
 function setAdminSession(data){
   sessionStorage.setItem('mantafSession', JSON.stringify({
-    username: data.username, nama: data.nama, role: data.role,
+    id: data.id, username: data.username, nama: data.nama, role: data.role || 'admin',
     loginTime: Date.now()
   }));
 }
@@ -171,6 +171,18 @@ function getAdminSession(){
 }
 
 function clearAdminSession(){ sessionStorage.removeItem('mantafSession'); }
+
+/* Update sebagian field session tanpa reset loginTime (mis. setelah ubah username/nama) */
+function updateAdminSession(patch){
+  var s = getAdminSession();
+  if(!s) return;
+  Object.keys(patch || {}).forEach(function(k){ s[k] = patch[k]; });
+  sessionStorage.setItem('mantafSession', JSON.stringify(s));
+}
+
+/* Helper cek role: admin = akses penuh, operator = akses data saja */
+function isAdmin(){ var s = getAdminSession(); return !!(s && s.role === 'admin'); }
+function isOperator(){ var s = getAdminSession(); return !!(s && s.role === 'operator'); }
 
 /* ---------- FILE HELPERS ---------- */
 function fileToDataUrl(file){

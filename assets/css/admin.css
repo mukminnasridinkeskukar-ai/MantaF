@@ -616,3 +616,114 @@ transition:all .15s;
   .csv-stats{grid-template-columns:repeat(2,1fr)}
   .csv-drop{padding:20px 10px}
 }
+
+/* ============================================================
+   KEAMANAN AKUN — BADGE ROLE, LABEL SIAPA LOGIN, AKUN SAYA
+   ============================================================ */
+
+/* Badge role di header panel */
+.admin-role-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11.5px;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:999px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  margin-left:8px;
+  vertical-align:middle;
+}
+.admin-role-badge::before{
+  content:'\f132'; /* fa-user-shield */
+  font-family:'Font Awesome 6 Free';
+  font-weight:900;
+  font-size:10px;
+}
+.admin-role-badge.role-admin{
+  background:rgba(15,118,110,.18);
+  color:#0f766e;
+  border:1px solid rgba(15,118,110,.35);
+}
+.admin-role-badge.role-operator{
+  background:rgba(37,99,235,.15);
+  color:#1d4ed8;
+  border:1px solid rgba(37,99,235,.30);
+}
+
+/* Label "siapa yang login" di kanan header */
+.admin-who{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:12.5px;
+  color:rgba(255,255,255,.92);
+  background:rgba(255,255,255,.10);
+  padding:5px 11px;
+  border-radius:9px;
+  margin-right:4px;
+  max-width:240px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.admin-who i{color:#5eead4}
+.admin-who span{overflow:hidden;text-overflow:ellipsis}
+
+/* Tab Manajemen Akun — bedakan warna */
+.admin-tab-akun.active{
+  border-bottom-color:#7c3aed !important;
+  color:#7c3aed !important;
+}
+.admin-tab-akun.active i{color:#7c3aed !important}
+
+/* ---------- MODAL AKUN SAYA (profil) ---------- */
+.my-acct-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  background:#fff;
+}
+.my-acct-row{
+  display:grid;
+  grid-template-columns:180px 1fr;
+  gap:14px;
+  padding:13px 18px;
+  border-bottom:1px solid var(--line);
+  align-items:center;
+}
+.my-acct-row:last-child{border-bottom:none}
+.my-acct-row label{
+  font-size:12.5px;
+  font-weight:600;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  margin:0;
+}
+.my-acct-row .my-acct-value{
+  font-size:14px;
+  color:#0f172a;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.my-acct-row .my-acct-value code{
+  background:rgba(15,118,110,.10);
+  color:#0f766e;
+  padding:3px 9px;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+  font-family:'JetBrains Mono','Consolas',monospace;
+}
+
+@media (max-width:640px){
+  .my-acct-row{grid-template-columns:1fr;gap:4px}
+  .admin-who{display:none}  /* sembunyikan di mobile agar tombol muat */
+}

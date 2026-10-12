@@ -1,10 +1,12 @@
-# MantaF v2.0 — Supabase Edition
+# MantaF v2.1 — Supabase Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
 
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
+
+> **v2.1** — Tambahan: keamanan akun untuk **admin & operator**, panel **Akun Saya** (lihat profil, ubah username & password sendiri), tab **Manajemen Akun** (CRUD semua akun oleh admin), **auto-lockout** 5x gagal login, audit login terakhir & perubahan password.
 
 ---
 
@@ -53,7 +55,9 @@ mantaf/
 │   └── template-petunjuk.csv
 └── supabase/
     ├── schema.sql            ← SQL skema utama (tabel lama)
-    └── tryout-schema.sql     ← SQL tambahan Try Out (tabel baru saja, additive-only)
+    ├── tryout-schema.sql     ← SQL tambahan Try Out (tabel baru saja, additive-only)
+    ├── perbaikan-login-admin.sql  ← Perbaikan login admin (versi toleran)
+    └── akun-security.sql     ← ⚙️ KEAMANAN AKUN v2.1 (admin + operator + manajemen akun)
 ```
 
 ---
@@ -71,8 +75,17 @@ mantaf/
 4. Salin **seluruh isi** `supabase/tryout-schema.sql` → klik **Run** (untuk Try Out CAT BKN).
    - Tabel baru: `tryout_categories`, `tryout_questions`, `tryout_attempts` + seed 150 soal
    - **Additive-only**: tidak mengubah/menghapus tabel & data yang sudah ada; idempotent (aman di-run ulang)
-5. Login admin default → username: `admin` · password: `admin123`
-   ⚠️ **Segera ganti** lewat Panel Admin → tombol **Ganti Password**.
+5. **(BARU v2.1)** Salin **seluruh isi** `supabase/akun-security.sql` → klik **Run**.
+   - Menambahkan kolom audit (`last_login_at`, `last_password_change_at`, `failed_login_count`, `locked_until`)
+   - Mengganti RPC `admin_login` dengan versi auto-lockout (5x gagal → kunci 15 menit)
+   - Menambahkan RPC: `admin_get_my_profile`, `admin_change_my_username`, `admin_list_users`, `admin_create_user`, `admin_update_user`, `admin_reset_user_password`, `admin_delete_user`, `admin_unlock_user`
+   - Menambahkan role `operator` + seed akun default
+   - **Additive-only & idempotent** — aman di-run ulang
+6. Login default:
+   - **Admin**    → username: `admin`     · password: `admin123`
+   - **Operator** → username: `operator`  · password: `operator123`
+
+   ⚠️ **Segera ganti** lewat Panel Admin → tombol **Akun Saya**.
 
 ### 2️⃣ Hubungkan Frontend
 
@@ -198,6 +211,74 @@ Storage: bucket **foto** (foto 4x6, sertifikat), **dokumen** (PDF persyaratan) &
 - Secara default RLS tabel data dibuka untuk `anon` agar aplikasi statis langsung jalan. Untuk produksi ketat: aktifkan **Supabase Auth**, ubah policy tulis menjadi `to authenticated`, dan batasi policy select `peserta_ukom`.
 - Ganti password admin default segera.
 
+## 🛡️ Keamanan Akun (v2.1) — Admin & Operator
+
+Sejak v2.1, sistem akun punya **2 role**: `admin` dan `operator`, dengan model keamanan berlapis.
+
+### Role & Hak Akses
+
+| Role | Akses Data (CRUD) | Akun Saya | Manajemen Akun |
+|---|:---:|:---:|:---:|
+| **Admin** | ✅ Semua tab (Pengumuman, Bezetting, Peserta, Petunjuk) | ✅ Ubah username & password sendiri | ✅ CRUD semua akun + reset password + unlock |
+| **Operator** | ✅ Semua tab (Pengumuman, Bezetting, Peserta, Petunjuk) | ✅ Ubah username & password sendiri | ❌ Tab Manajemen Akun disembunyikan |
+
+### Akun Saya (lihat & ubah profil sendiri)
+
+Tombol **Akun Saya** di kanan atas Panel Admin membuka modal profil yang menampilkan:
+- Username (kode), nama lengkap, role, status akun
+- **Login terakhir** (timestamp)
+- **Password terakhir diubah** (timestamp)
+- Tanggal akun dibuat
+
+Dari modal ini, pengguna dapat:
+- **Ubah Username** — username baru (3–50 karakter; huruf/angka/._-). Wajib verifikasi password saat ini. Username harus unik (case-insensitive).
+- **Ganti Password** — password lama, password baru (min. 6 karakter), konfirmasi. Password baru harus berbeda dari lama. Setelah berhasil, sesi & memori RPC ikut diperbarui.
+
+### Manajemen Akun (admin only)
+
+Tab ke-5 **Manajemen Akun** (hanya muncul untuk admin) berisi:
+- **Daftar akun** dengan kolom: Username, Nama, Role, Status (Aktif/Nonaktif/Terkunci), Login Terakhir, Password Terakhir, Aksi.
+- **Tambah Akun** — username, nama, role (admin/operator), status, password awal.
+- **Edit Akun** — ubah nama, role, status (username tidak dapat diubah demi integritas referensi).
+- **Reset Password** — admin dapat mereset password akun lain tanpa perlu tahu password lamanya.
+- **Buka Kunci** — manual unlock akun yang terkunci karena 5x gagal login.
+- **Hapus Akun** — tidak bisa hapus diri sendiri & tidak bisa hapus **admin terakhir**.
+
+### Auto-Lockout (perlindungan brute force)
+
+- Setiap upaya login gagal → counter `failed_login_count` bertambah.
+- Setelah **5x gagal berturut-turut** → akun otomatis **terkunci 15 menit** (`locked_until`).
+- Login yang berhasil → counter direset & `last_login_at` diupdate.
+- Admin dapat membuka kunci manual kapan saja lewat tab Manajemen Akun.
+
+### Audit Trail
+
+Kolom baru pada tabel `admin_users`:
+| Kolom | Isi |
+|---|---|
+| `last_login_at` | Timestamp login terakhir yang berhasil |
+| `last_password_change_at` | Timestamp password terakhir diubah |
+| `password_changed_by` | Siapa yang mengubah (untuk reset oleh admin: username admin) |
+| `failed_login_count` | Jumlah gagal login sejak sukses terakhir |
+| `locked_until` | Timestamp kunci berakhir (NULL bila tidak terkunci) |
+
+### RPC Baru (di `akun-security.sql`)
+
+| RPC | Akses | Fungsi |
+|---|---|---|
+| `admin_login(p_username, p_password)` | publik | Login + lockout + catat `last_login_at` |
+| `admin_get_my_profile(p_username)` | publik | Profil sendiri (tanpa `password_hash`) |
+| `admin_change_my_username(p_username_lama, p_username_baru, p_password)` | publik | Ubah username sendiri (verifikasi password) |
+| `admin_change_password(p_username, p_password_lama, p_password_baru)` | publik | Ganti password sendiri (versi diperbarui) |
+| `admin_list_users(p_requester_username, p_requester_password)` | admin | Daftar semua akun |
+| `admin_create_user(...)` | admin | Buat akun baru |
+| `admin_update_user(...)` | admin | Ubah nama/role/aktif |
+| `admin_reset_user_password(...)` | admin | Reset password akun lain |
+| `admin_delete_user(...)` | admin | Hapus akun (proteksi diri sendiri & admin terakhir) |
+| `admin_unlock_user(...)` | admin | Buka kunci manual |
+
+Semua RPC admin-only memverifikasi `username + password` requester lewat fungsi internal `_admin_verify_requester` (cek role=admin, aktif, tidak terkunci, password benar).
+
 ## ❓ Troubleshooting
 
 | Masalah | Solusi |
@@ -212,6 +293,11 @@ Storage: bucket **foto** (foto 4x6, sertifikat), **dokumen** (PDF persyaratan) &
 | Foto tidak tampil | Foto diupload ke bucket publik; cek URL di kolom `file_foto` |
 | PDF petunjuk tidak terbuka | Pastikan file PDF ada di bucket `petunjuk` dan URL di kolom `file_url` valid; gunakan tombol *Tab Baru* |
 | Tambah Dokumen Petunjuk gagal | Pastikan bucket `petunjuk` sudah dibuat (re-run schema.sql terbaru); PDF maksimal 2MB |
+| Tab Manajemen Akun tidak muncul | Hanya muncul untuk role `admin`. Login sebagai admin, bukan operator. |
+| Login gagal padahal password benar | Akun mungkin terkunci (5x gagal). Tunggu 15 menit atau minta admin lain membuka kunci. |
+| Tombol Akun Saya error "Gagal memuat profil" | Jalankan `supabase/akun-security.sql` di SQL Editor Supabase. |
+| Tidak bisa hapus akun admin | Sistem melarang hapus admin terakhir & hapus diri sendiri. |
+| Reset password admin lain gagal | Pastikan password Anda (admin) benar di sesi — logout & login ulang bila ragu. |
 
 ---
 
