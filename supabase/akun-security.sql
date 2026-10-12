@@ -125,9 +125,11 @@ declare
   v_lock_minutes   integer := 15;
 begin
   -- Normalisasi username (case-insensitive, trim)
-  select * into v_row
-  from public.admin_users
-  where lower(username) = lower(trim(p_username))
+  -- Penting: qualifier "au." wajib karena output column "username" bentrok
+  -- dengan kolom tabel "username" → "column reference ambiguous" error.
+  select au.* into v_row
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_username))
   limit 1;
 
   -- Username tidak ditemukan → return kosong (jangan bocorkan info)
@@ -149,7 +151,7 @@ begin
   if v_row.locked_until is not null and v_row.locked_until <= now() then
     update public.admin_users
     set failed_login_count = 0, locked_until = null
-    where id = v_row.id;
+    where admin_users.id = v_row.id;
     v_row.failed_login_count := 0;
     v_row.locked_until := null;
   end if;
@@ -166,7 +168,7 @@ begin
     if left(v_row.password_hash, 3) <> '$2' then
       update public.admin_users
       set password_hash = crypt(p_password, gen_salt('bf'))
-      where id = v_row.id;
+      where admin_users.id = v_row.id;
     end if;
 
     -- Reset counter & catat login terakhir
@@ -174,7 +176,7 @@ begin
     set failed_login_count = 0,
         locked_until       = null,
         last_login_at      = now()
-    where id = v_row.id;
+    where admin_users.id = v_row.id;
 
     return query select v_row.id, v_row.username, v_row.nama, v_row.role;
     return;
@@ -188,7 +190,7 @@ begin
           then now() + (v_lock_minutes || ' minutes')::interval
         else locked_until
       end
-  where id = v_row.id;
+  where admin_users.id = v_row.id;
 
   return;
 end;
@@ -221,11 +223,11 @@ language sql
 security definer
 set search_path = public, extensions
 as $$
-  select id, username, nama, role, aktif, avatar_url,
-         last_login_at, last_password_change_at,
-         created_at, updated_at
-  from public.admin_users
-  where lower(username) = lower(trim(p_username))
+  select au.id, au.username, au.nama, au.role, au.aktif, au.avatar_url,
+         au.last_login_at, au.last_password_change_at,
+         au.created_at, au.updated_at
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_username))
   limit 1;
 $$;
 
@@ -251,10 +253,11 @@ declare
   v_row   public.admin_users;
   v_cocok boolean := false;
 begin
-  select * into v_row
-  from public.admin_users
-  where lower(username) = lower(trim(p_username))
-    and aktif = true
+  -- Qualifier "au." wajib untuk hindari ambiguous column reference
+  select au.* into v_row
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_username))
+    and au.aktif = true
   limit 1;
 
   if v_row.id is null then
@@ -274,7 +277,7 @@ begin
   -- NULL atau string kosong = hapus avatar
   update public.admin_users
   set avatar_url = nullif(trim(coalesce(p_avatar_url, '')), '')
-  where id = v_row.id;
+  where admin_users.id = v_row.id;
 
   return true;
 end;
@@ -311,10 +314,10 @@ begin
     return false;
   end if;
 
-  select * into v_row
-  from public.admin_users
-  where lower(username) = lower(trim(p_username_lama))
-    and aktif = true
+  select au.* into v_row
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_username_lama))
+    and au.aktif = true
   limit 1;
 
   if v_row.id is null then
@@ -334,9 +337,9 @@ begin
 
   -- Cek unik (kecuali diri sendiri)
   if exists (
-    select 1 from public.admin_users
-    where lower(username) = v_uname
-      and id <> v_row.id
+    select 1 from public.admin_users au2
+    where lower(au2.username) = v_uname
+      and au2.id <> v_row.id
   ) then
     return false;
   end if;
@@ -344,7 +347,7 @@ begin
   -- Update username
   update public.admin_users
   set username = trim(p_username_baru)
-  where id = v_row.id;
+  where admin_users.id = v_row.id;
 
   return true;
 end;
@@ -375,10 +378,10 @@ begin
     return false;
   end if;
 
-  select * into v_row
-  from public.admin_users
-  where lower(username) = lower(trim(p_username))
-    and aktif = true
+  select au.* into v_row
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_username))
+    and au.aktif = true
   limit 1;
 
   if v_row.id is null then
@@ -396,7 +399,7 @@ begin
     set password_hash            = crypt(p_password_baru, gen_salt('bf')),
         last_password_change_at  = now(),
         password_changed_by      = p_username
-    where id = v_row.id;
+    where admin_users.id = v_row.id;
     return true;
   end if;
 
@@ -424,10 +427,10 @@ declare
   v_row   public.admin_users;
   v_cocok boolean := false;
 begin
-  select * into v_row
-  from public.admin_users
-  where lower(username) = lower(trim(p_requester_username))
-    and aktif = true
+  select au.* into v_row
+  from public.admin_users au
+  where lower(au.username) = lower(trim(p_requester_username))
+    and au.aktif = true
   limit 1;
 
   if v_row.id is null or v_row.role <> 'admin' then
@@ -480,14 +483,14 @@ begin
   end if;
 
   return query
-  select id, username, nama, role, aktif, avatar_url,
-         last_login_at, last_password_change_at,
-         failed_login_count, locked_until,
-         created_at, updated_at
-  from public.admin_users
+  select au.id, au.username, au.nama, au.role, au.aktif, au.avatar_url,
+         au.last_login_at, au.last_password_change_at,
+         au.failed_login_count, au.locked_until,
+         au.created_at, au.updated_at
+  from public.admin_users au
   order by
-    case when role = 'admin' then 0 else 1 end,
-    username asc;
+    case when au.role = 'admin' then 0 else 1 end,
+    au.username asc;
 end;
 $$;
 
@@ -546,7 +549,7 @@ begin
   end if;
 
   -- Cek unik
-  if exists (select 1 from public.admin_users where lower(username) = v_uname) then
+  if exists (select 1 from public.admin_users au where lower(au.username) = v_uname) then
     return;
   end if;
 
@@ -590,7 +593,7 @@ begin
     return false;
   end if;
 
-  select * into v_target from public.admin_users where id = p_id;
+  select au.* into v_target from public.admin_users au where au.id = p_id;
   if v_target.id is null then
     return false;
   end if;
@@ -607,8 +610,8 @@ begin
   -- Jika akan menurunkan/menonaktifkan admin → pastikan masih ada minimal 1 admin aktif lain
   if v_target.role = 'admin' and (v_role <> 'admin' or p_aktif = false) then
     select count(*) into v_admin_cnt
-    from public.admin_users
-    where role = 'admin' and aktif = true and id <> v_target.id;
+    from public.admin_users au
+    where au.role = 'admin' and au.aktif = true and au.id <> v_target.id;
 
     if v_admin_cnt < 1 then
       return false;  -- tidak boleh hapus admin terakhir
@@ -619,7 +622,7 @@ begin
   set nama  = v_nama,
       role  = v_role,
       aktif = coalesce(p_aktif, v_target.aktif)
-  where id = v_target.id;
+  where admin_users.id = v_target.id;
 
   return true;
 end;
@@ -654,7 +657,7 @@ begin
     return false;
   end if;
 
-  select * into v_target from public.admin_users where id = p_id;
+  select au.* into v_target from public.admin_users au where au.id = p_id;
   if v_target.id is null then
     return false;
   end if;
@@ -665,7 +668,7 @@ begin
       password_changed_by      = p_requester_username,
       failed_login_count       = 0,
       locked_until             = null
-  where id = v_target.id;
+  where admin_users.id = v_target.id;
 
   return true;
 end;
@@ -697,15 +700,15 @@ begin
     return false;
   end if;
 
-  select * into v_target from public.admin_users where id = p_id;
+  select au.* into v_target from public.admin_users au where au.id = p_id;
   if v_target.id is null then
     return false;
   end if;
 
   -- Ambil data requester untuk cek diri sendiri
-  select * into v_requester
-  from public.admin_users
-  where lower(username) = lower(trim(p_requester_username))
+  select au2.* into v_requester
+  from public.admin_users au2
+  where lower(au2.username) = lower(trim(p_requester_username))
   limit 1;
 
   if v_target.id = v_requester.id then
@@ -715,14 +718,14 @@ begin
   -- Tidak boleh hapus admin terakhir
   if v_target.role = 'admin' then
     select count(*) into v_admin_cnt
-    from public.admin_users
-    where role = 'admin' and aktif = true and id <> v_target.id;
+    from public.admin_users au3
+    where au3.role = 'admin' and au3.aktif = true and au3.id <> v_target.id;
     if v_admin_cnt < 1 then
       return false;
     end if;
   end if;
 
-  delete from public.admin_users where id = v_target.id;
+  delete from public.admin_users where admin_users.id = v_target.id;
   return true;
 end;
 $$;
@@ -750,7 +753,7 @@ begin
     return false;
   end if;
 
-  select * into v_target from public.admin_users where id = p_id;
+  select au.* into v_target from public.admin_users au where au.id = p_id;
   if v_target.id is null then
     return false;
   end if;
@@ -758,7 +761,7 @@ begin
   update public.admin_users
   set failed_login_count = 0,
       locked_until       = null
-  where id = v_target.id;
+  where admin_users.id = v_target.id;
 
   return true;
 end;
@@ -771,10 +774,10 @@ grant execute on function public.admin_unlock_user(text, text, uuid) to anon, au
 -- N. VERIFIKASI (dijalankan otomatis)
 -- ---------------------------------------------------------------------------
 -- Harus mengembalikan 2 baris (admin + operator) jika sukses.
-select username, nama, role, aktif
-from public.admin_users
-where lower(username) in ('admin', 'operator')
-order by role, username;
+select au.username, au.nama, au.role, au.aktif
+from public.admin_users au
+where lower(au.username) in ('admin', 'operator')
+order by au.role, au.username;
 
 
 -- ============================================================================
