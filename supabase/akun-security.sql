@@ -4,13 +4,16 @@
 -- File ini ADDITIVE & IDEMPOTENT — aman dijalankan ulang.
 -- Dapat dijalankan SETELAH schema.sql / perbaikan-login-admin.sql.
 --
--- PENTING (v2.1.1 — fix):
---   Bila sebelumnya Anda mendapat error "column nama of relation admin_users
---   does not exist" atau RPC `admin_login` / `admin_list_users` tidak ditemukan,
---   file ini sudah diperbaiki dengan:
---     1. DROP semua function lama di awal (cascade) → memastikan recreate bersih
---        tanpa konflik language (sql vs plpgsql) atau return type.
---     2. ALTER TABLE add column `nama`, `role`, `aktif` sebelum INSERT/SELECT.
+-- PENTING (v2.1.3 — fix terbaru):
+--   Bila sebelumnya Anda mengalami salah satu masalah berikut, file ini sudah diperbaiki:
+--     1. Error "column nama of relation admin_users does not exist"
+--        → Fix: ALTER TABLE add column nama/role/aktif sebelum INSERT.
+--     2. Error "column reference 'username' is ambiguous" saat login
+--        → Fix: semua kolom di-qualify dengan alias tabel (au.username, au.id, dst).
+--     3. RPC admin_login / admin_list_users tidak ditemukan
+--        → Fix: DROP function lama di awal + GRANT EXECUTE ke anon/authenticated.
+--     4. Output verifikasi hanya muncul "operator" (admin tidak ada)
+--        → Fix: INSERT admin default bila belum ada (on conflict do nothing).
 --
 -- Yang ditambahkan:
 --   0a. DROP function lama (cascade) supaya recreate bersih.
@@ -94,16 +97,30 @@ alter table public.admin_users add column if not exists avatar_url             t
 
 
 -- ---------------------------------------------------------------------------
--- B. SEED AKUN OPERATOR DEFAULT (password: operator123) — GANTI SETELAH LOGIN!
+-- B. SEED AKUN DEFAULT (admin + operator) — GANTI PASSWORD SETELAH LOGIN!
 -- ---------------------------------------------------------------------------
+-- Akun admin default (password: admin123) — dibuat bila belum ada.
+-- Bila sudah ada (mis. password sudah diganti), tidak diubah (on conflict do nothing).
+insert into public.admin_users (username, password_hash, nama, role)
+values ('admin', crypt('admin123', gen_salt('bf')), 'Administrator MantaF', 'admin')
+on conflict (username) do nothing;
+
+-- Akun operator default (password: operator123) — dibuat bila belum ada.
 insert into public.admin_users (username, password_hash, nama, role)
 values ('operator', crypt('operator123', gen_salt('bf')), 'Operator MantaF', 'operator')
 on conflict (username) do nothing;
 
--- Pastikan akun admin default tetap ada dengan role 'admin'
+-- Pastikan akun admin punya role 'admin' & aktif (fix bila row ada tapi role salah)
 update public.admin_users
-set role = coalesce(nullif(role, ''), 'admin')
+set role  = 'admin',
+    aktif = true
 where username = 'admin';
+
+-- Pastikan akun operator punya role 'operator' & aktif
+update public.admin_users
+set role  = 'operator',
+    aktif = true
+where username = 'operator';
 
 
 -- ---------------------------------------------------------------------------
