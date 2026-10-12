@@ -7,13 +7,13 @@
     <h1 id="pesertaCount">0</h1>
   </div>
 
-  <div class="card">
+  <div class="card dash-card-clickable" onclick="showInstansiModal()" title="Klik untuk lihat daftar instansi">
     <div class="card-icon"><i class="fas fa-hospital"></i></div>
     <h3>Total Instansi</h3>
     <h1 id="instansiCount">0</h1>
   </div>
 
-  <div class="card">
+  <div class="card dash-card-clickable" onclick="showLowonganModal()" title="Klik untuk lihat rincian lowongan">
     <div class="card-icon"><i class="fas fa-briefcase"></i></div>
     <h3>Total Lowongan</h3>
     <h1 id="lowonganCount">0</h1>
@@ -22,7 +22,7 @@
   <div class="card">
     <div class="card-icon"><i class="fas fa-code-branch"></i></div>
     <h3>Status Sistem</h3>
-    <h1 style="font-size:20px;line-height:1.5">Pengembangan<br>Versi 2.0</h1>
+    <h1 style="font-size:20px;line-height:1.5">Pengembangan<br>Versi 2.3</h1>
   </div>
 </div>
 
@@ -71,6 +71,64 @@
       </div>
     </div>
     <div id="jabfungLegend" style="margin-top:15px;font-size:11px;max-height:120px;overflow-y:auto;text-align:left"></div>
+  </div>
+
+  <!-- Donut Status UKOM (klik status → pop up data peserta) -->
+  <div class="card" style="text-align:center">
+    <h3 style="margin-bottom:15px">Status UKOM</h3>
+    <div style="position:relative;width:150px;height:150px;margin:0 auto">
+      <svg id="ukomChart" viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+        <g id="ukomSegments"></g>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+        <div style="font-size:12px;color:#64748b">Peserta</div>
+        <div id="ukomTotal" style="font-size:24px;font-weight:700;color:#0f172a">0</div>
+      </div>
+    </div>
+    <div class="dash-status-list" id="ukomStatusList">
+      <div class="dash-status-item"><span style="color:#94a3b8;font-size:12px">Memuat data…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TREN PENDAFTARAN PER BULAN ==================== -->
+<div class="panel" style="margin-top:25px">
+  <h2><i class="fas fa-chart-line"></i> Tren Pendaftaran per Bulan</h2>
+  <p style="font-size:13px;color:#64748b;margin-top:6px">
+    <i class="fas fa-hand-pointer"></i> Klik titik pada grafik untuk melihat pop up daftar peserta yang mendaftar pada bulan tersebut.
+  </p>
+  <div id="trenChartWrap" class="dash-trend-wrap">
+    <div class="dash-cat-empty"><i class="fas fa-inbox"></i> Memuat data…</div>
+  </div>
+  <div id="trenChartInfo" style="font-size:12px;color:#64748b;margin-top:10px"></div>
+</div>
+
+<!-- ==================== KARTU KATEGORI (klik → pop up) ==================== -->
+<div class="panel" style="margin-top:25px">
+  <h2><i class="fas fa-chart-simple"></i> Rincian Peserta per Kategori</h2>
+  <p style="font-size:13px;color:#64748b;margin-top:6px">
+    <i class="fas fa-hand-pointer"></i> Klik kartu untuk melihat pop up daftar peserta sesuai kategori — data diambil langsung dari Supabase.
+  </p>
+
+  <div class="dash-cat-group">
+    <div class="dash-cat-title"><i class="fas fa-layer-group"></i> Berdasarkan Jenis UKOM</div>
+    <div class="dash-cat-grid" id="catJenisUkom"></div>
+  </div>
+
+  <div class="dash-cat-group">
+    <div class="dash-cat-title"><i class="fas fa-id-badge"></i> Berdasarkan Jabfung Saat Ini</div>
+    <div class="dash-cat-grid" id="catJabfung"></div>
+  </div>
+
+  <div class="dash-cat-group">
+    <div class="dash-cat-title"><i class="fas fa-calendar-days"></i> Berdasarkan Periode</div>
+    <div class="dash-cat-grid" id="catPeriode"></div>
+  </div>
+
+  <div class="dash-cat-group" style="margin-bottom:0">
+    <div class="dash-cat-title"><i class="fas fa-hospital"></i> Berdasarkan Unit Kerja</div>
+    <div class="dash-cat-grid" id="catUnit"></div>
   </div>
 </div>
 

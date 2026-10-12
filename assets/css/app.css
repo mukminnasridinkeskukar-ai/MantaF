@@ -486,6 +486,99 @@ transition:all .15s;
 
 .dash-modal table{min-width:760px}
 
+/* ---------- DASHBOARD KARTU KATEGORI (klik → pop up) ---------- */
+.dash-cat-group{margin-bottom:22px}
+
+.dash-cat-title{
+display:flex;align-items:center;gap:8px;
+font-size:13px;font-weight:700;color:var(--dark);
+margin:18px 0 10px;
+text-transform:uppercase;letter-spacing:.4px;
+}
+
+.dash-cat-title i{color:var(--secondary)}
+
+.dash-cat-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+gap:12px;
+}
+
+.dash-cat-card{
+background:#f8fafc;
+border:1.5px solid var(--line);
+border-radius:14px;
+padding:14px 16px;
+cursor:pointer;
+transition:all .15s;
+display:flex;flex-direction:column;gap:10px;
+}
+
+.dash-cat-card:hover{
+background:#fff;
+border-color:rgba(20,184,166,.45);
+transform:translateY(-2px);
+box-shadow:0 8px 20px rgba(15,118,110,.1);
+}
+
+.dash-cat-icon{
+width:36px;height:36px;
+border-radius:10px;
+display:flex;align-items:center;justify-content:center;
+font-size:15px;flex-shrink:0;
+}
+
+.dash-cat-name{
+font-size:13px;font-weight:600;color:var(--dark);
+line-height:1.45;word-break:break-word;
+display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+overflow:hidden;min-height:2.6em;
+}
+
+.dash-cat-foot{
+display:flex;align-items:center;justify-content:space-between;
+font-size:11.5px;color:var(--gray);font-weight:600;
+}
+
+.dash-cat-foot i{font-size:10px;color:#94a3b8;transition:all .15s}
+.dash-cat-card:hover .dash-cat-foot i{color:var(--secondary);transform:translate(1px,-1px)}
+
+.dash-cat-empty{
+grid-column:1/-1;
+text-align:center;padding:22px;
+color:#94a3b8;font-size:12.5px;
+background:#f8fafc;
+border:1.5px dashed var(--line);
+border-radius:14px;
+}
+
+.dash-cat-empty i{display:block;font-size:20px;margin-bottom:6px;opacity:.5}
+
+/* ---------- SEARCH DALAM MODAL DASHBOARD ---------- */
+.dash-search{
+width:100%;
+padding:10px 14px;
+border:1.5px solid var(--line);
+border-radius:11px;
+font-size:13px;font-family:inherit;
+margin-bottom:10px;outline:none;
+color:var(--dark);background:#fff;
+transition:border-color .15s,box-shadow .15s;
+}
+
+.dash-search:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(20,184,166,.12)}
+.dash-search::placeholder{color:#94a3b8}
+
+.dash-modal-info{font-size:11.5px;color:var(--gray);margin-bottom:10px;font-weight:500}
+
+/* ---------- TREN PENDAFTARAN PER BULAN ---------- */
+.dash-trend-wrap{margin-top:8px}
+
+.dash-trend-svg{width:100%;height:auto;display:block}
+
+.dash-trend-dot{cursor:pointer;transition:stroke-width .15s}
+.dash-trend-dot:hover{stroke-width:4.5}
+
 /* ---------- RESPONSIVE ---------- */
 @media(max-width:900px){
 .sidebar{

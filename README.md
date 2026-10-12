@@ -1,4 +1,4 @@
-# MantaF v2.2.1 — Supabase Edition
+# MantaF v2.3 — Supabase Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
@@ -6,6 +6,23 @@ Dinas Kesehatan Kabupaten Kutai Kartanegara
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
 
+> **v2.3 — Dashboard dikembangkan (kartu pop up):**
+> 1. **Kartu "Status UKOM"** — donut + daftar status (Lulus / Tidak Lulus / Menunggu / Belum Ada
+>    Status); klik salah satu status → **pop up daftar peserta** berstatus tersebut (dari Supabase).
+> 2. **Kartu kategori dinamis** — **Jenis UKOM**, **Jabfung Saat Ini**, dan **Periode**: jumlah
+>    peserta dihitung otomatis per nilai unik; klik kartu → pop up daftar pesertanya.
+> 3. **Kartu per Unit Kerja** — satu kartu untuk tiap unit kerja + jumlah pesertanya, klik → pop up.
+> 4. Semua pop up dilengkapi **kotak pencarian** (nama / NIK / NIP / No. peserta) agar daftar
+>    panjang tetap mudah ditelusuri. File terkait: `partials/dashboard.html`, `assets/js/dashboard.js`,
+>    `assets/css/app.css`.
+> 5. **Kartu statistik kini bisa diklik** — **Total Instansi** → pop up daftar instansi beserta
+>    jumlah pesertanya (klik nama instansi → pop up daftar peserta); **Total Lowongan** → pop up
+>    rincian bezetting (instansi, jenis jabatan, jenjang, kebutuhan, pemangku, lowongan) dengan
+>    pencarian.
+> 6. **Grafik "Tren Pendaftaran per Bulan"** — area chart SVG 12 bulan terakhir (dihitung dari
+>    tanggal daftar peserta); arahkan kursor ke titik untuk tooltip, klik titik → pop up daftar
+>    peserta yang mendaftar pada bulan tersebut.
+>
 > **v2.2.1 — FIX login password & upload foto profil:**
 > 1. **Password di kolom `password_plain` kini adalah password yang BERLAKU** — cocok dipakai
 >    login, dan mengedit kolom itu langsung di **Supabase Table Editor** (min. 6 karakter)
