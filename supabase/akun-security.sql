@@ -712,7 +712,9 @@ begin
                                   last_password_change_at, password_changed_by)
   values (trim(p_username), crypt(p_password, gen_salt('bf')), p_password, v_nama, v_role,
           now(), p_requester_username)
-  returning id into v_newid;
+  -- HOTFIX 24-10-2026: RETURNING id dikualifikasi agar tidak ambigu dgn
+  -- kolom output RETURNS TABLE(id ...) (variabel PL/pgSQL).
+  returning admin_users.id into v_newid;
 
   return query select v_newid, trim(p_username), v_nama, v_role;
 end;

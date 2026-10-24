@@ -27,6 +27,10 @@ Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat h
 >    `rejection_note`/`registered_email`, unique index NIK, RPC baru
 >    `admin_register_request`, `admin_list_pending_users`, `admin_approve_user`,
 >    `admin_reject_user`, `admin_change_username` (semua role lama tetap jalan).
+> 6. **Hotfix REVISI 2 (24-10-2026)** — bila tombol **Daftar Akun** gagal dengan error
+>    `column reference "id" is ambiguous` (HTTP 400), jalankan `supabase/hotfix-registrasi-v4.1.sql`
+>    di SQL Editor (±10 detik, idempotent) ATAU jalankan ulang `registrasi-v4.sql` versi terbaru
+>    (isi fungsi sudah diperbaiki: `RETURNING id` → `RETURNING admin_users.id`).
 
 > **v3.0.0 — MULTI-USER 5 ROLE + LOGO BARU + PWA:**
 > 1. **Sistem multi-user 5 role** — **Superadmin** (akses penuh + kelola semua akun,

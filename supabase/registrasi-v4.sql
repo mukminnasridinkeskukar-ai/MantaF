@@ -3,6 +3,17 @@
 -- Manajemen Tata Kelola Jabatan Fungsional Kesehatan
 -- Dinas Kesehatan Kabupaten Kutai Kartanegara
 -- ============================================================================
+-- REVISI 2 (HOTFIX 24-10-2026) — WAJIB DIJALANKAN ULANG bila registrasi gagal
+--   dengan error: 'column reference "id" is ambiguous' (HTTP 400).
+--   Penyebab  : kolom output RETURNS TABLE(id ...) otomatis menjadi variabel
+--               PL/pgSQL sehingga bentrok dgn kolom admin_users.id pada
+--               klausa RETURNING id (terjadi di admin_register_request dan
+--               admin_create_user).
+--   Perbaikan : 'RETURNING id' dikualifikasi menjadi 'RETURNING admin_users.id'.
+--   Cara terapkan: jalankan ulang SELURUH isi file ini di SQL Editor
+--   (idempotent — aman utk data yang sudah ada) ATAU cukup jalankan file
+--   ringkas supabase/hotfix-registrasi-v4.1.sql.
+-- ============================================================================
 -- CARA PAKAI:
 --   1. Buka Supabase Dashboard > SQL Editor > New query
 --   2. Copy SELURUH isi file ini, klik "Run"
@@ -293,7 +304,7 @@ begin
     (trim(p_username), crypt(trim(p_password), gen_salt('bf')), trim(p_password), v_nama, v_role,
      v_unit, v_nik, v_email, v_email,
      true, 'pending', '', null, '')
-  returning id into v_newid;
+  returning admin_users.id into v_newid;  -- REVISI 2: dikualifikasi agar tidak ambigu dgn variabel output fungsi
 
   return query select v_newid, trim(p_username), v_nama, v_role, 'pending'::text;
 end;
@@ -656,7 +667,7 @@ begin
   values (trim(p_username), crypt(p_password, gen_salt('bf')), p_password, v_nama, v_role,
           v_faskes, v_nik, now(), p_requester_username,
           'approved', p_requester_username, now())
-  returning id into v_newid;
+  returning admin_users.id into v_newid;  -- REVISI 2: dikualifikasi agar tidak ambigu dgn variabel output fungsi
 
   return query select v_newid, trim(p_username), v_nama, v_role;
 end;

@@ -8,6 +8,17 @@
 --   2. Copy SELURUH isi file ini, klik "Run"
 --   3. AMAN dijalankan BERULANG (idempotent & additive) — tidak menghapus data.
 --
+-- PERINGATAN (sejak v3.1): JANGAN jalankan ulang file ini SETELAH
+--   registrasi-v4.sql sudah dipasang — file ini akan menimpa kembali fungsi v4
+--   (gerbang persetujuan akun, validasi 1 NIK 1 akun, dll) dengan versi v3.
+--   Bila perlu mengulang migrasi fungsi, gunakan registrasi-v4.sql (REVISI 2)
+--   yang sudah mencakup semua fungsi v3 + fitur v3.1.
+--
+-- REVISI 2 (HOTFIX 24-10-2026): perbaiki 'column reference "id" is ambiguous'
+--   pada admin_create_user — 'RETURNING id' dikualifikasi menjadi
+--   'RETURNING admin_users.id' (kolom output RETURNS TABLE(id) bentrok dgn
+--   variabel PL/pgSQL).
+--
 -- YANG DILAKUKAN FILE INI:
 --   A. Kolom baru admin_users : unit_kerja, nik, email (+ pastikan kolom audit v2 ada)
 --   B. Migrasi role lama      : 'admin' -> 'superadmin' (akses penuh, istilah baru)
@@ -417,7 +428,7 @@ begin
                                   unit_kerja, nik, last_password_change_at, password_changed_by)
   values (trim(p_username), crypt(p_password, gen_salt('bf')), p_password, v_nama, v_role,
           v_faskes, v_nik, now(), p_requester_username)
-  returning id into v_newid;
+  returning admin_users.id into v_newid;  -- REVISI 2: dikualifikasi agar tidak ambigu dgn variabel output fungsi
 
   return query select v_newid, trim(p_username), v_nama, v_role;
 end;
