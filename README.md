@@ -1,10 +1,32 @@
-# MantaF v3.0.0 — Multi-User Edition
+# MantaF v3.1.0 — Multi-User Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
 
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
+
+> **v3.1.0 — REGISTRASI MANDIRI + PERSETUJUAN SUPERADMIN + ATURAN NIK & USERNAME:**
+> 1. **Tombol "Daftar Akun" di halaman login** — pengunjung dapat mendaftar sendiri
+>    (nama, username, password, role, unit kerja, NIK, email). Pendaftaran baru
+>    berstatus **Menunggu Persetujuan** dan **belum bisa login**.
+> 2. **Persetujuan oleh Superadmin** — tab baru **Persetujuan Akun** di Panel Admin
+>    (khusus superadmin): daftar pemohon, **Setujui** (role/unit/NIK masih dapat
+>    disesuaikan) atau **Tolak** beserta alasan. Pemohon yang mencoba login melihat
+>    statusnya dengan jelas (Menunggu / Ditolak + alasan). Akun lama otomatis berstatus
+>    disetujui — tidak ada yang terkunci setelah migrasi.
+> 3. **1 NIK hanya boleh 1 akun** — unique index pada `admin_users` + validasi di semua
+>    RPC (registrasi, tambah akun, ubah akun, setujui akun). NIK wajib untuk Pejabat
+>    Fungsional, opsional role lain (16 digit angka).
+> 4. **Username hanya dapat diubah Superadmin** — setiap akun hanya dapat mengganti
+>    **password-nya sendiri** (Akun Saya). Fitur ubah username mandiri DINONAKTIFKAN;
+>    superadmin mengubah username akun manapun dari **Manajemen Akun** (ikon user-pen)
+>    dengan verifikasi password superadmin.
+> 5. **Migrasi database** — jalankan `supabase/registrasi-v4.sql` (additive & idempotent,
+>    WAJIB setelah `multiuser-v3.sql`): kolom `approval_status`/`approved_by`/`approved_at`/
+>    `rejection_note`/`registered_email`, unique index NIK, RPC baru
+>    `admin_register_request`, `admin_list_pending_users`, `admin_approve_user`,
+>    `admin_reject_user`, `admin_change_username` (semua role lama tetap jalan).
 
 > **v3.0.0 — MULTI-USER 5 ROLE + LOGO BARU + PWA:**
 > 1. **Sistem multi-user 5 role** — **Superadmin** (akses penuh + kelola semua akun,

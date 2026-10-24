@@ -41,6 +41,93 @@ line-height:1.7;
 
 .login-hint code{background:rgba(15,118,110,.08);color:var(--primary-dark);padding:2px 7px;border-radius:6px;font-size:11.5px;font-weight:600}
 
+/* ---------- v3.1: TOMBOL DAFTAR AKUN + CATATAN PERSETUJUAN ---------- */
+.login-register-row{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+margin-top:14px;
+font-size:13px;
+color:var(--gray);
+flex-wrap:wrap;
+}
+
+.btn-register-link{
+border:none;
+background:rgba(20,184,166,.10);
+color:var(--primary-dark);
+font-size:13px;
+font-weight:700;
+padding:8px 16px;
+border-radius:10px;
+cursor:pointer;
+display:inline-flex;
+align-items:center;
+gap:7px;
+transition:all .2s;
+font-family:'Poppins',sans-serif;
+}
+.btn-register-link:hover{background:rgba(20,184,166,.18);transform:translateY(-1px)}
+.btn-register-link i{font-size:12px}
+
+.login-approval-note{
+display:flex;
+gap:9px;
+align-items:flex-start;
+margin-top:12px;
+font-size:11.5px;
+color:#7c2d12;
+background:linear-gradient(135deg,#fffbeb,#fef3c7);
+border:1px solid #fde68a;
+padding:10px 12px;
+border-radius:11px;
+line-height:1.6;
+}
+.login-approval-note i{color:#d97706;margin-top:1px}
+
+.login-status-msg{
+font-size:13px;
+padding:12px 14px;
+border-radius:11px;
+line-height:1.65;
+display:flex;
+gap:9px;
+align-items:flex-start;
+text-align:left;
+}
+.login-status-msg i{margin-top:2px}
+.login-status-pending{
+background:linear-gradient(135deg,#fffbeb,#fef3c7);
+border:1px solid #fde68a;
+color:#7c2d12;
+}
+.login-status-pending i{color:#d97706}
+.login-status-rejected{
+background:#fef2f2;
+border:1px solid #fecaca;
+color:#991b1b;
+}
+.login-status-rejected i{color:#dc2626}
+
+/* v3.1: form registrasi — 2 kolom utk password di layar lebar */
+.register-box{max-width:460px}
+.form-reg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){
+  .form-reg-row{grid-template-columns:1fr;gap:0}
+  .register-box{padding:26px 20px}
+}
+
+/* v3.1: badge menunggu persetujuan (amber) */
+.badge-menunggu{background:#fef3c7;color:#92400e}
+
+/* v3.1: tab Persetujuan Akun — aksen emerald */
+.admin-tab-persetujuan.active{
+border-bottom-color:#059669 !important;
+}
+.admin-tab-persetujuan.active i{color:#059669 !important}
+.admin-tab-persetujuan .tab-count{background:rgba(5,150,105,.12);color:#047857}
+
 /* ---------- PANEL ADMIN ---------- */
 .admin-panel{padding:0;overflow:hidden}
 

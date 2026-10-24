@@ -169,11 +169,64 @@ const API = {
     db.rpc('admin_get_my_profile', { p_username: username })
   ),
 
+  /* v3.1: ubah username mandiri DINONAKTIFKAN — username hanya dapat diubah
+     superadmin via adminChangeUsername() dari Panel Admin. Method lama dipertahankan
+     hanya agar tidak error bila masih dipanggil di cache browser lama. */
   adminChangeMyUsername: (oldUsername, newUsername, password) => sbQuery(
     db.rpc('admin_change_my_username', {
       p_username_lama: oldUsername,
       p_username_baru: newUsername,
       p_password: password
+    })
+  ),
+
+  /* ---------- REGISTRASI MANDIRI + PERSETUJUAN SUPERADMIN (v3.1) ---------- */
+  adminRegisterRequest: (username, password, nama, role, unitKerja, nik, email) => sbQuery(
+    db.rpc('admin_register_request', {
+      p_username: username,
+      p_password: password,
+      p_nama: nama,
+      p_role: role,
+      p_unit_kerja: unitKerja || '',
+      p_nik: nik || '',
+      p_email: email || ''
+    })
+  ),
+
+  adminListPendingUsers: (requesterUsername, requesterPassword) => sbQuery(
+    db.rpc('admin_list_pending_users', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword
+    })
+  ),
+
+  adminApproveUser: (requesterUsername, requesterPassword, id, role, unitKerja, nik) => sbQuery(
+    db.rpc('admin_approve_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id,
+      p_role: role || '',
+      p_unit_kerja: unitKerja || '',
+      p_nik: nik || ''
+    })
+  ),
+
+  adminRejectUser: (requesterUsername, requesterPassword, id, note) => sbQuery(
+    db.rpc('admin_reject_user', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id,
+      p_note: note || ''
+    })
+  ),
+
+  /* v3.1: ubah username akun manapun — HANYA superadmin (verifikasi password) */
+  adminChangeUsername: (requesterUsername, requesterPassword, id, newUsername) => sbQuery(
+    db.rpc('admin_change_username', {
+      p_requester_username: requesterUsername,
+      p_requester_password: requesterPassword,
+      p_id: id,
+      p_new_username: newUsername
     })
   ),
 

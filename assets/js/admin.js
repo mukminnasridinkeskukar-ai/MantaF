@@ -10,6 +10,7 @@ let admBezCache = null;
 let admPesCache = null;
 let admPetCache = null;
 let admAkunCache = null;
+let admPendingCache = null;  /* v3.1: pendaftar menunggu persetujuan */
 let admPesPage = 1;
 const ADM_PES_PER_PAGE = 20;
 let adminInited = false;
@@ -39,7 +40,22 @@ SectionInit['admin'] = function(){
   document.getElementById('adminPass').addEventListener('keydown', function(e){
     if(e.key === 'Enter') loginAdmin();
   });
+  /* v3.1: bind form registrasi — Enter utk kirim + sync field kondisional role */
+  const regRoleEl = document.getElementById('regRole');
+  if(regRoleEl){
+    regRoleEl.addEventListener('change', syncRegisterRoleFields);
+    syncRegisterRoleFields();
+  }
+  const regPass2 = document.getElementById('regPass2');
+  if(regPass2){
+    regPass2.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitRegisterForm(); });
+  }
+  /* Sembunyikan form registrasi bila sudah ada sesi login aktif */
   const session = getAdminSession();
+  if(session){
+    const regSec = document.getElementById('adminRegisterSection');
+    if(regSec) regSec.style.display = 'none';
+  }
   if(session){
     /* PULIHKAN password verifikasi RPC dari sessionStorage (v2.2.1).
        Tanpa ini, setelah refresh halaman semua RPC (upload foto profil,
@@ -57,6 +73,36 @@ SectionInit['admin'] = function(){
 };
 
 /* ================= LOGIN / LOGOUT ================= */
+
+/* ---------- v3.1: TOGGLE LOGIN <-> DAFTAR AKUN ---------- */
+function showRegisterForm(){
+  document.getElementById('adminLoginSection').style.display = 'none';
+  document.getElementById('adminRegisterSection').style.display = 'block';
+  document.getElementById('adminResult').innerHTML = '';
+  const r = document.getElementById('regResult');
+  if(r) r.innerHTML = '';
+  try{ document.getElementById('regNama').focus(); }catch(e){}
+}
+function showLoginForm(){
+  document.getElementById('adminRegisterSection').style.display = 'none';
+  document.getElementById('adminLoginSection').style.display = 'block';
+  const r = document.getElementById('regResult');
+  if(r) r.innerHTML = '';
+  try{ document.getElementById('adminUser').focus(); }catch(e){}
+}
+
+/* ---------- v3.1: PESAN RAMAH utk error login berkode ---------- */
+function friendlyLoginError(msg){
+  const m = String(msg || '');
+  if(m.indexOf('AKUN_PENDING:') !== -1)
+    return m.split('AKUN_PENDING:')[1].trim();
+  if(m.indexOf('AKUN_DITOLAK:') !== -1)
+    return m.split('AKUN_DITOLAK:')[1].trim();
+  if(m.indexOf('AKUN_NONAKTIF:') !== -1)
+    return m.split('AKUN_NONAKTIF:')[1].trim();
+  return '';
+}
+
 async function loginAdmin(){
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
   const user = sanitizeInput(document.getElementById('adminUser').value, 50);
@@ -89,8 +135,88 @@ async function loginAdmin(){
     }
   }catch(err){
     console.error('[admin] Error login:', err);
+    /* v3.1: tampilkan alasan jelas utk akun PENDING / DITOLAK / NONAKTIF */
+    const ramah = friendlyLoginError(err && err.message);
+    if(ramah){
+      const isPending = String(err.message).indexOf('AKUN_PENDING:') !== -1;
+      resultEl.innerHTML = '<div class="login-status-msg ' + (isPending ? 'login-status-pending' : 'login-status-rejected') + '">' +
+        '<i class="fas ' + (isPending ? 'fa-hourglass-half' : 'fa-ban') + '"></i> <span>' + escapeHtml(ramah) + '</span></div>';
+      return;
+    }
     resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, atau akun terkunci. Silakan coba lagi.</span>';
   }
+}
+
+/* ================= v3.1: DAFTAR AKUN BARU ================= */
+async function submitRegisterForm(){
+  if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
+  const nama    = sanitizeInput(document.getElementById('regNama').value, 100);
+  const uname   = sanitizeInput(document.getElementById('regUsername').value, 50).toLowerCase();
+  const pass    = document.getElementById('regPass').value;
+  const pass2   = document.getElementById('regPass2').value;
+  const role    = document.getElementById('regRole').value;
+  const unit    = sanitizeInput(document.getElementById('regUnit') ? document.getElementById('regUnit').value : '', 120);
+  const nik     = sanitizeInput(document.getElementById('regNik') ? document.getElementById('regNik').value : '', 16).replace(/[^0-9]/g, '');
+  const email   = sanitizeInput(document.getElementById('regEmail') ? document.getElementById('regEmail').value : '', 120);
+  const resultEl = document.getElementById('regResult');
+
+  /* Validasi sisi klien (server memvalidasi ulang) */
+  if(!nama){ showToast('Nama lengkap wajib diisi', 'error'); return; }
+  if(!uname || uname.length < 3 || !/^[a-z0-9._-]+$/.test(uname)){
+    showToast('Username min 3 karakter, hanya huruf kecil/angka/._-', 'error'); return;
+  }
+  if(pass.length < 6){ showToast('Password minimal 6 karakter', 'error'); return; }
+  if(pass !== pass2){ showToast('Konfirmasi password tidak sama', 'error'); return; }
+  if(role === 'pimpinan_faskes' && !unit){ showToast('Unit Kerja / Faskes wajib diisi untuk Pimpinan Faskes', 'error'); return; }
+  if(nik && nik.length !== 16){ showToast('NIK harus tepat 16 digit angka', 'error'); return; }
+  if(role === 'pejabat_fungsional' && !nik){ showToast('NIK (16 digit) wajib diisi untuk Pejabat Fungsional', 'error'); return; }
+  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showToast('Format email tidak valid', 'error'); return; }
+
+  resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim pendaftaran...';
+  try{
+    const res = await API.adminRegisterRequest(uname, pass, nama, role, unit, nik, email);
+    if(res && res.length){
+      resultEl.innerHTML =
+        '<div class="login-status-msg login-status-pending" style="text-align:left">' +
+          '<i class="fas fa-circle-check" style="color:#059669"></i> <b>Pendaftaran terkirim!</b><br>' +
+          '<span style="font-size:12.5px">Akun <b>' + escapeHtml(uname) + '</b> berstatus <b>Menunggu Persetujuan</b>. ' +
+          'Silakan login setelah Superadmin menyetujui pendaftaran Anda.</span></div>';
+      showToast('Pendaftaran terkirim — menunggu persetujuan superadmin', 'success');
+      document.getElementById('regNama').value = '';
+      document.getElementById('regUsername').value = '';
+      document.getElementById('regPass').value = '';
+      document.getElementById('regPass2').value = '';
+      document.getElementById('regNik').value = '';
+      document.getElementById('regEmail').value = '';
+      if(document.getElementById('regUnit')) document.getElementById('regUnit').value = '';
+    }else{
+      resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Pendaftaran gagal. Periksa kembali isian Anda.</span>';
+    }
+  }catch(err){
+    console.error('[admin] Register error:', err);
+    const m = String(err && err.message || '');
+    let pesan = m.replace(/^REG_GAGAL:\s*/i, '');
+    if(m.indexOf('admin_register_request') !== -1 && m.indexOf('schema cache') !== -1){
+      pesan = 'Fitur registrasi belum aktif di server. Minta superadmin menjalankan supabase/registrasi-v4.sql.';
+    }
+    resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px;display:block;text-align:left"><i class="fas fa-circle-xmark"></i> ' + escapeHtml(pesan) + '</span>';
+    showToast('Pendaftaran gagal', 'error');
+  }
+}
+
+/* ---------- v3.1: SYNC FORM REGISTRASI SESUAI ROLE ---------- */
+function syncRegisterRoleFields(){
+  const roleEl = document.getElementById('regRole');
+  const descEl = document.getElementById('regRoleDesc');
+  const wrapUnit = document.getElementById('regWrapUnit');
+  const nikStar = document.getElementById('regNikStar');
+  const nikHint = document.getElementById('regNikHintWajib');
+  if(!roleEl || !MANTAF_ROLES) return;
+  const r = MANTAF_ROLES[roleEl.value];
+  if(descEl && r) descEl.textContent = r.desc;
+  if(wrapUnit) wrapUnit.style.display = (roleEl.value === 'pimpinan_faskes') ? '' : 'none';
+  if(nikStar) nikStar.style.display = (roleEl.value === 'pejabat_fungsional') ? '' : 'none';
+  if(nikHint) nikHint.style.display = (roleEl.value === 'pejabat_fungsional') ? '' : 'none';
 }
 
 function showAdminPanel(admin){
@@ -112,9 +238,12 @@ function showAdminPanel(admin){
       (admin && admin.nama ? admin.nama : 'Pengguna') +
       ' (' + (admin && admin.username ? admin.username : '') + ')';
   }
-  /* Tab Manajemen Akun hanya untuk superadmin (legacy 'admin' tetap diterima) */
+  /* Tab Manajemen Akun + Persetujuan Akun hanya untuk superadmin (legacy 'admin' tetap diterima) */
+  var isSuper = admin && ['admin','superadmin'].indexOf(String(admin.role).toLowerCase()) !== -1;
   var tabAkun = document.querySelector('.admin-tab-akun');
-  if(tabAkun) tabAkun.style.display = (admin && ['admin','superadmin'].indexOf(String(admin.role).toLowerCase()) !== -1) ? '' : 'none';
+  if(tabAkun) tabAkun.style.display = isSuper ? '' : 'none';
+  var tabPersetujuan = document.querySelector('.admin-tab-persetujuan');
+  if(tabPersetujuan) tabPersetujuan.style.display = isSuper ? '' : 'none';
 
   /* Terapkan hak akses per role: tombol Tambah & Import CSV disembunyikan
      untuk operator pada tab Pengumuman/Bezetting/Petunjuk (view-only). */
@@ -193,11 +322,12 @@ function logoutAdmin(){
     clearAdminRpcPass();
     _adminAvatarUrl = '';
     /* bersihkan cache data & status tampil password agar tidak tertinggal di memori setelah logout */
-    admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null; admAkunCache = null;
+    admPengCache = null; admBezCache = null; admPesCache = null; admPetCache = null; admAkunCache = null; admPendingCache = null;
     _admPassVisible = {};
     admPesPage = 1;
     document.getElementById('adminDataSection').style.display = 'none';
     document.getElementById('adminLoginSection').style.display = 'block';
+    document.getElementById('adminRegisterSection').style.display = 'none';
     document.getElementById('adminUser').value = '';
     document.getElementById('adminPass').value = '';
     if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
@@ -236,6 +366,16 @@ async function adminRefreshAll(){
         const el = document.getElementById('cntTabAkun');
         if(el) el.textContent = (admAkunCache || []).length;
         renderAdmAkun();
+      }
+    ]);
+    /* v3.1: daftar pendaftar menunggu persetujuan (superadmin) */
+    jobs.push(['persetujuan',
+      API.adminListPendingUsers(session.username, _getAdminPassForRpc()).catch(function(){ return null; }),
+      v => {
+        admPendingCache = (v === null) ? null : (v || []);
+        const el2 = document.getElementById('cntTabPersetujuan');
+        if(el2) el2.textContent = (admPendingCache || []).length;
+        renderAdmPending();
       }
     ]);
   }
@@ -1124,7 +1264,6 @@ async function openMyAccount(){
     '<div id="myAcctBody"><div style="padding:30px;text-align:center"><i class="fas fa-spinner fa-spin"></i> Memuat profil…</div></div>',
     '<button class="btn btn-ghost" data-close>Tutup</button>' +
     '<button class="btn" id="myAcctChangeAvatar"><i class="fas fa-camera"></i> Ganti Foto</button>' +
-    '<button class="btn" id="myAcctChangeUname"><i class="fas fa-user-pen"></i> Ubah Username</button>' +
     '<button class="btn" id="myAcctChangePass"><i class="fas fa-key"></i> Ganti Password</button>'
   );
 
@@ -1135,10 +1274,9 @@ async function openMyAccount(){
       openMyAccount();
     });
   });
-  overlay.querySelector('#myAcctChangeUname').addEventListener('click', function(){
-    overlay.remove();
-    openChangeUsername();
-  });
+  /* v3.1: tombol "Ubah Username" DIHAPUS — username hanya dapat diubah
+     oleh Superadmin melalui Panel Admin > Manajemen Akun. Setiap akun
+     hanya mengganti password-nya sendiri di sini. */
   overlay.querySelector('#myAcctChangePass').addEventListener('click', function(){
     overlay.remove();
     openChangePassword();
@@ -1164,6 +1302,12 @@ async function openMyAccount(){
     const statusBadge = p.aktif
       ? '<span class="badge-status badge-aktif">Aktif</span>'
       : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
+    /* v3.1: badge status persetujuan */
+    const apprBadge = (p.approval_status === 'pending')
+      ? ' <span class="badge-status badge-menunggu">Menunggu Persetujuan</span>'
+      : (p.approval_status === 'rejected'
+        ? ' <span class="badge-status badge-ditolak">Ditolak</span>'
+        : '');
 
     /* Blok avatar — bangun tanpa inline onerror (lebih aman & bersih) */
     const initial = (p.nama || p.username || 'A').trim().charAt(0).toUpperCase();
@@ -1190,15 +1334,17 @@ async function openMyAccount(){
         (p.nik
           ? '<div class="my-acct-row"><label>NIK</label><div class="my-acct-value"><code>' + escapeHtml(p.nik) + '</code></div></div>'
           : '') +
-        '<div class="my-acct-row"><label>Status Akun</label><div class="my-acct-value">' + statusBadge + '</div></div>' +
+        '<div class="my-acct-row"><label>Status Akun</label><div class="my-acct-value">' + statusBadge + apprBadge + '</div></div>' +
         '<div class="my-acct-row"><label>Login Terakhir</label><div class="my-acct-value">' + escapeHtml(lastLogin) + '</div></div>' +
         '<div class="my-acct-row"><label>Password Terakhir Diubah</label><div class="my-acct-value">' + escapeHtml(lastPass) + '</div></div>' +
         '<div class="my-acct-row"><label>Akun Dibuat</label><div class="my-acct-value">' + escapeHtml(formatDateTimeId(p.created_at)) + '</div></div>' +
       '</div>' +
       '<div class="csv-hintbox" style="margin-top:18px"><i class="fas fa-shield-halved"></i><div>' +
-        'Anda dapat mengubah <b>foto profil</b>, <b>username</b>, dan <b>password</b> sendiri kapan saja. ' +
-        'Perubahan username &amp; password memerlukan konfirmasi password saat ini sebagai verifikasi keamanan. ' +
-        'Password baru minimal <b>6 karakter</b>; username baru 3–50 karakter (huruf, angka, titik, underscore, strip).' +
+        'Anda dapat mengubah <b>foto profil</b> dan <b>password</b> sendiri kapan saja. ' +
+        'Penggantian password memerlukan konfirmasi password saat ini sebagai verifikasi keamanan; ' +
+        'password baru minimal <b>6 karakter</b>. ' +
+        '<b>Username tidak dapat diubah sendiri</b> — perubahan username hanya dapat dilakukan oleh ' +
+        '<b>Superadmin</b> melalui Panel Admin &gt; Manajemen Akun.' +
       '</div></div>';
 
     /* Isi lingkaran avatar (dengan fallback onerror yang aman) */
@@ -1367,46 +1513,59 @@ function openChangeAvatar(onSuccess){
   });
 }
 
-/* ---------- UBAH USERNAME SENDIRI ---------- */
-function openChangeUsername(){
+/* ---------- v3.1: UBAH USERNAME — KHUSUS SUPERADMIN ----------
+   Kebijakan baru: setiap akun hanya bisa mengganti PASSWORD-nya sendiri.
+   USERNAME akun manapun (termasuk milik superadmin) hanya dapat diubah
+   oleh SUPERADMIN melalui Panel Admin > Manajemen Akun (ikon user-pen),
+   dengan verifikasi password superadmin. */
+function admChangeUsername(id){
+  const u = (admAkunCache || []).find(function(x){ return x.id === id; });
+  if(!u){ return; }
   const session = getAdminSession();
-  if(!session){ showToast('Sesi tidak ditemukan, silakan login ulang', 'error'); return; }
+  if(!isSuperadmin()){ showToast('Akses ditolak: hanya Superadmin dapat mengubah username', 'error'); return; }
 
-  const overlay = crudModal('Ubah Username', 'fa-user-pen',
+  const overlay = crudModal('Ubah Username — ' + u.username, 'fa-user-pen',
     '<div class="form-grid">' +
-      '<div class="form-group" style="grid-column:1/-1"><label>Username Saat Ini</label><input type="text" value="' + escAttr(session.username) + '" disabled></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Akun</label>' +
+      '<input type="text" value="' + escAttr(u.nama + ' (' + u.username + ')') + '" disabled></div>' +
       '<div class="form-group" style="grid-column:1/-1"><label>Username Baru <span style="color:#dc2626">*</span></label>' +
-      '<input type="text" id="fUnameBaru" maxlength="50" autocomplete="off" placeholder="3-50 karakter (huruf/angka/._-)"></div>' +
-      '<div class="form-group" style="grid-column:1/-1"><label>Password Saat Ini (verifikasi) <span style="color:#dc2626">*</span></label>' +
-      '<input type="password" id="fUnamePass" autocomplete="current-password"></div>' +
+      '<input type="text" id="fAdmUnameBaru" maxlength="50" autocomplete="off" placeholder="3-50 karakter (huruf/angka/._-)">' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Pemilik akun akan memakai username baru ini pada login berikutnya. Username akun TIDAK dapat diubah oleh pemiliknya sendiri.</div></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Password Superadmin (verifikasi) <span style="color:#dc2626">*</span></label>' +
+      '<input type="password" id="fAdmUnamePass" autocomplete="current-password"></div>' +
     '</div>',
     '<button class="btn btn-ghost" data-close>Batal</button>' +
-    '<button class="btn" id="fUnameSave"><i class="fas fa-check"></i> Simpan Username</button>'
+    '<button class="btn" id="fAdmUnameSave"><i class="fas fa-check"></i> Simpan Username</button>'
   );
 
-  overlay.querySelector('#fUnameSave').addEventListener('click', async function(){
-    const baru = sanitizeInput(overlay.querySelector('#fUnameBaru').value, 50);
-    const pass = overlay.querySelector('#fUnamePass').value;
+  /* Pra-isi password verifikasi dari sesi (bila tersedia) */
+  const passInput = overlay.querySelector('#fAdmUnamePass');
+  if(_getAdminPassForRpc()) passInput.value = _getAdminPassForRpc();
+
+  overlay.querySelector('#fAdmUnameSave').addEventListener('click', async function(){
+    const baru = sanitizeInput(overlay.querySelector('#fAdmUnameBaru').value, 50);
+    const pass = overlay.querySelector('#fAdmUnamePass').value;
     if(!baru){ showToast('Username baru wajib diisi', 'error'); return; }
     if(baru.length < 3){ showToast('Username baru minimal 3 karakter', 'error'); return; }
     if(!/^[a-zA-Z0-9._-]+$/.test(baru)){ showToast('Username hanya boleh huruf, angka, titik, underscore, strip', 'error'); return; }
-    if(baru.toLowerCase() === String(session.username).toLowerCase()){ showToast('Username baru sama dengan yang lama', 'error'); return; }
-    if(!pass){ showToast('Password wajib diisi untuk verifikasi', 'error'); return; }
+    if(baru.toLowerCase() === String(u.username).toLowerCase()){ showToast('Username baru sama dengan yang lama', 'error'); return; }
+    if(!pass){ showToast('Password superadmin wajib diisi untuk verifikasi', 'error'); return; }
     const btn = this;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
     try{
-      const ok = await API.adminChangeMyUsername(session.username, baru, pass);
+      const ok = await API.adminChangeUsername(session.username, pass, u.id, baru);
       if(ok){
-        /* Update session & memori RPC */
-        updateAdminSession({ username: baru });
-        setAdminRpcPass(pass); /* password tetap sama, simpan ulang utk RPC */
-        /* Update label "siapa login" */
-        var who = document.getElementById('adminWho');
-        if(who) who.querySelector('span').textContent = (session.nama || 'Pengguna') + ' (' + baru + ')';
+        /* Bila target = akun sendiri → perbarui sesi & password RPC tetap sama */
+        if(String(session.username).toLowerCase() === String(u.username).toLowerCase()){
+          updateAdminSession({ username: baru });
+          var who = document.getElementById('adminWho');
+          if(who) who.querySelector('span').textContent = (session.nama || 'Pengguna') + ' (' + baru + ')';
+        }
         showToast('Username berhasil diubah menjadi "' + baru + '"', 'success');
         overlay.remove();
+        adminRefreshAll();
       }else{
-        showToast('Gagal: password salah, username sudah dipakai, atau format tidak valid', 'error');
+        showToast('Gagal: password superadmin salah, username sudah dipakai, atau format tidak valid', 'error');
         btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Username';
       }
     }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Simpan Username'; }
@@ -1473,7 +1632,7 @@ function renderAdmAkun(){
   }
 
   if(!admAkunCache){
-    body.innerHTML = '<tr><td colspan="10" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/multiuser-v3.sql</code> sudah dijalankan.</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/multiuser-v3.sql</code> &amp; <code>supabase/registrasi-v4.sql</code> sudah dijalankan.</td></tr>';
     return;
   }
   const session = getAdminSession();
@@ -1493,6 +1652,11 @@ function renderAdmAkun(){
     const unitNik = [];
     if(u.unit_kerja) unitNik.push('<i class="fas fa-hospital" style="color:#0f766e"></i> ' + escapeHtml(u.unit_kerja));
     if(u.nik) unitNik.push('<span style="font-family:monospace">' + escapeHtml(u.nik) + '</span>');
+    /* v3.1: badge status persetujuan (pending/ditolak) + alasan penolakan */
+    const appr = String(u.approval_status || 'approved');
+    const apprBadge =
+      appr === 'pending' ? ' <span class="badge-status badge-menunggu" title="Belum disetujui — akun belum bisa login"><i class="fas fa-hourglass-half"></i> Menunggu</span>' :
+      appr === 'rejected' ? ' <span class="badge-status badge-ditolak" title="' + escAttr(u.rejection_note || 'Ditolak superadmin') + '"><i class="fas fa-ban"></i> Ditolak</span>' : '';
     const statusBadge = u.aktif
       ? '<span class="badge-status badge-aktif">Aktif</span>'
       : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
@@ -1522,12 +1686,14 @@ function renderAdmAkun(){
       '<td>' + escapeHtml(u.nama) + '</td>' +
       '<td>' + roleBadge + '</td>' +
       '<td style="font-size:12px">' + (unitNik.length ? unitNik.join('<br>') : '<span style="color:#cbd5e1">—</span>') + '</td>' +
-      '<td>' + statusBadge + lockBadge + '</td>' +
+      '<td>' + statusBadge + apprBadge + lockBadge + '</td>' +
       '<td>' + lastLogin + '</td>' +
       '<td>' + lastPass + '</td>' +
       '<td><div class="admin-row-actions">' +
         '<button class="act-btn act-edit" title="Edit Akun" onclick="openAkunForm(\'' + u.id + '\')"><i class="fas fa-pen"></i></button>' +
+        '<button class="act-btn act-edit" title="Ubah Username (khusus superadmin)" onclick="admChangeUsername(\'' + u.id + '\')"><i class="fas fa-user-pen"></i></button>' +
         '<button class="act-btn act-edit" title="Reset Password" onclick="admResetAkunPassword(\'' + u.id + '\')"><i class="fas fa-key"></i></button>' +
+        (appr !== 'approved' ? '<button class="act-btn act-edit" title="Setujui Akun" onclick="approveFromAkunTab(\'' + u.id + '\')" style="color:#059669"><i class="fas fa-check"></i></button>' : '') +
         (locked ? '<button class="act-btn act-edit" title="Buka Kunci" onclick="admUnlockAkun(\'' + u.id + '\')"><i class="fas fa-lock-open"></i></button>' : '') +
         (isSelf
           ? '<button class="act-btn act-del" title="Tidak bisa hapus diri sendiri" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-trash"></i></button>'
@@ -1748,4 +1914,208 @@ function admDeleteAkun(id){
       }catch(err){ showToast('Gagal: ' + err.message, 'error'); }
     },
     { icon:'fa-trash', yesText:'Ya, Hapus Akun', yesClass:'btn-danger' });
+}
+
+/* ============================================================
+   v3.1 — PERSETUJUAN AKUN BARU (superadmin only)
+   - loadAdmPending()       : muat ulang daftar pendaftar (opsional paksa)
+   - renderAdmPending()     : render tabel tab Persetujuan Akun
+   - openApproveForm(id)    : setujui pendaftar (role/unit/NIK bisa disesuaikan)
+   - approveFromAkunTab(id) : setujui cepat dari tab Manajemen Akun
+   - openRejectForm(id)     : tolak pendaftar + alasan
+   ============================================================ */
+
+async function loadAdmPending(force){
+  const session = getAdminSession();
+  if(!session || ['admin','superadmin'].indexOf(String(session.role).toLowerCase()) === -1) return;
+  if(force || admPendingCache === null){
+    try{
+      const v = await API.adminListPendingUsers(session.username, _getAdminPassForRpc());
+      admPendingCache = v || [];
+    }catch(err){
+      console.error('[admin] load pending error:', err);
+      admPendingCache = null;
+    }
+    const el = document.getElementById('cntTabPersetujuan');
+    if(el) el.textContent = (admPendingCache || []).length;
+    renderAdmPending();
+  }
+}
+
+function renderAdmPending(){
+  const body = document.getElementById('admPendBody');
+  if(!body) return;
+
+  if(!isSuperadmin()){
+    body.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-lock"></i>Persetujuan akun hanya dapat dilakukan oleh <b>Superadmin</b>.</td></tr>';
+    return;
+  }
+  if(admPendingCache === null){
+    body.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar. Pastikan <code>supabase/registrasi-v4.sql</code> sudah dijalankan.</td></tr>';
+    return;
+  }
+
+  const q = (document.getElementById('admPendSearch')?.value || '').toLowerCase();
+  const rows = admPendingCache.filter(function(u){
+    if(!q) return true;
+    return String(u.username || '').toLowerCase().indexOf(q) !== -1
+        || String(u.nama || '').toLowerCase().indexOf(q) !== -1
+        || String(u.nik || '').indexOf(q) !== -1;
+  });
+
+  let html = '';
+  rows.forEach(function(u){
+    const roleBadge = mantafRoleBadge(u.role);
+    html += '<tr>' +
+      '<td><code style="font-weight:600">' + escapeHtml(u.username) + '</code><br>' +
+        '<span style="font-size:12.5px">' + escapeHtml(u.nama) + '</span></td>' +
+      '<td>' + roleBadge + '</td>' +
+      '<td style="font-size:12px">' + (u.unit_kerja ? escapeHtml(u.unit_kerja) : '<span style="color:#cbd5e1">—</span>') + '</td>' +
+      '<td style="font-family:monospace;font-size:12px">' + (u.nik ? escapeHtml(u.nik) : '<span style="color:#cbd5e1">—</span>') + '</td>' +
+      '<td style="font-size:12px">' + (u.registered_email ? escapeHtml(u.registered_email) : '<span style="color:#cbd5e1">—</span>') + '</td>' +
+      '<td style="font-size:12px">' + (u.created_at ? formatDateTimeId(u.created_at) : '—') + '</td>' +
+      '<td><div class="admin-row-actions">' +
+        '<button class="act-btn act-edit" title="Setujui Akun" onclick="openApproveForm(\'' + u.id + '\')" style="color:#059669"><i class="fas fa-check"></i></button>' +
+        '<button class="act-btn act-del" title="Tolak Pendaftaran" onclick="openRejectForm(\'' + u.id + '\')"><i class="fas fa-ban"></i></button>' +
+      '</div></td>' +
+      '</tr>';
+  });
+  body.innerHTML = html ||
+    '<tr><td colspan="7" class="empty-state" style="padding:34px"><i class="fas fa-inbox"></i>Tidak ada pendaftaran yang menunggu persetujuan.</td></tr>';
+}
+
+/* ---------- SETUJUI PENDAFTAR (role/unit/NIK dapat disesuaikan) ---------- */
+function openApproveForm(id){
+  const u = (admPendingCache || []).find(function(x){ return x.id === id; }) ||
+            (admAkunCache || []).find(function(x){ return x.id === id && x.approval_status !== 'approved'; });
+  if(!u){ return; }
+  const session = getAdminSession();
+  if(!isSuperadmin()){ showToast('Akses ditolak: hanya Superadmin dapat menyetujui akun', 'error'); return; }
+
+  /* Opsi role — pendaftaran mandiri hanya 4 role, tapi superadmin boleh
+     menetapkan role manapun termasuk superadmin saat persetujuan. */
+  const roleOptions = MANTAF_ROLE_ORDER.map(function(k){
+    const r = MANTAF_ROLES[k];
+    const sel = (u.role === k) ? ' selected' : '';
+    return '<option value="' + k + '"' + sel + '>' + r.label + ' — ' + r.short + '</option>';
+  }).join('');
+
+  const overlay = crudModal('Setujui Akun — ' + u.username, 'fa-user-check',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Pemohon</label>' +
+      '<input type="text" value="' + escAttr(u.nama + ' (' + u.username + ')') + '" disabled></div>' +
+      '<div class="form-group"><label>Role Aktif</label><select id="fApprRole">' + roleOptions + '</select>' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px" id="fApprRoleDesc">' + escAttr((MANTAF_ROLES[u.role] || MANTAF_ROLES.operator).desc) + '</div></div>' +
+      '<div class="form-group" id="wrapApprUnit" style="display:none"><label>Unit Kerja / Faskes <span style="color:#dc2626">*</span></label>' +
+      '<input type="text" id="fApprUnit" maxlength="120" value="' + escAttr(u.unit_kerja || '') + '" placeholder="mis. Puskesmas Tenggarong">' +
+      '<datalist id="dlUnitKerjaAppr"></datalist></div>' +
+      '<div class="form-group"><label>NIK</label>' +
+      '<input type="text" id="fApprNik" maxlength="16" inputmode="numeric" value="' + escAttr(u.nik || '') + '" placeholder="16 digit NIK">' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">1 NIK hanya boleh dipakai 1 akun — NIK ganda akan ditolak sistem.</div></div>' +
+      '<div class="csv-hintbox" style="grid-column:1/-1"><i class="fas fa-circle-check" style="color:#059669"></i><div>' +
+        'Menyetujui akan <b>mengaktifkan akun</b> — pemohon langsung dapat login. Role, unit kerja, dan NIK ' +
+        'dapat disesuaikan di sini sebelum disetujui.' +
+      '</div></div>' +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn" id="fApprSave" style="background:linear-gradient(135deg,#059669,#10b981)"><i class="fas fa-check"></i> Setujui & Aktifkan</button>'
+  );
+
+  /* Saran unit kerja dari data yang sudah ada */
+  try{
+    const dl = overlay.querySelector('#dlUnitKerjaAppr');
+    const units = new Set();
+    (admPesCache || []).forEach(function(p){ if(p.nama_unit_kerja) units.add(p.nama_unit_kerja); });
+    (admBezCache || []).forEach(function(b){ if(b.instansi) units.add(b.instansi); });
+    Array.from(units).sort().slice(0, 200).forEach(function(v){
+      dl.insertAdjacentHTML('beforeend', '<option value="' + escAttr(v) + '">');
+    });
+  }catch(e){ /* abaikan */ }
+
+  const roleSel  = overlay.querySelector('#fApprRole');
+  const wrapUnit = overlay.querySelector('#wrapApprUnit');
+  const descEl   = overlay.querySelector('#fApprRoleDesc');
+  function syncApprFields(){
+    const k = roleSel.value;
+    const r = MANTAF_ROLES[k];
+    if(descEl && r) descEl.textContent = r.desc;
+    wrapUnit.style.display = (k === 'pimpinan_faskes') ? '' : 'none';
+  }
+  roleSel.addEventListener('change', syncApprFields);
+  syncApprFields();
+
+  overlay.querySelector('#fApprSave').addEventListener('click', async function(){
+    const role = roleSel.value;
+    const unit = sanitizeInput(overlay.querySelector('#fApprUnit') ? overlay.querySelector('#fApprUnit').value : '', 120);
+    const nikv = sanitizeInput(overlay.querySelector('#fApprNik') ? overlay.querySelector('#fApprNik').value : '', 16).replace(/[^0-9]/g, '');
+    if(role === 'pimpinan_faskes' && !unit){ showToast('Unit Kerja / Faskes wajib diisi untuk Pimpinan Faskes', 'error'); return; }
+    if(nikv && nikv.length !== 16){ showToast('NIK harus tepat 16 digit angka', 'error'); return; }
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyetujui…';
+    try{
+      const ok = await API.adminApproveUser(session.username, _getAdminPassForRpc(), u.id, role, unit, nikv);
+      if(ok){
+        showToast('Akun "' + u.username + '" disetujui & aktif', 'success');
+        overlay.remove();
+        adminRefreshAll();
+      }else{
+        showToast('Gagal menyetujui: NIK mungkin sudah dipakai akun lain atau unit kerja belum lengkap', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Setujui & Aktifkan';
+      }
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Setujui & Aktifkan'; }
+  });
+}
+
+/* ---------- SETUJUI CEPAT dari tab Manajemen Akun ---------- */
+function approveFromAkunTab(id){
+  /* Pastikan data pending termuat dulu agar form bisa menampilkan data pendaftar */
+  if(admPendingCache && admPendingCache.some(function(x){ return x.id === id; })){
+    openApproveForm(id);
+  }else{
+    loadAdmPending(true).then(function(){
+      if(admPendingCache && admPendingCache.some(function(x){ return x.id === id; })){
+        openApproveForm(id);
+      }else{
+        showToast('Data pendaftar tidak ditemukan. Buka tab Persetujuan Akun.', 'error');
+      }
+    });
+  }
+}
+
+/* ---------- TOLAK PENDAFTARAN + ALASAN ---------- */
+function openRejectForm(id){
+  const u = (admPendingCache || []).find(function(x){ return x.id === id; }) ||
+            (admAkunCache || []).find(function(x){ return x.id === id && x.approval_status !== 'approved'; });
+  if(!u){ return; }
+  const session = getAdminSession();
+  if(!isSuperadmin()){ showToast('Akses ditolak: hanya Superadmin dapat menolak akun', 'error'); return; }
+
+  const overlay = crudModal('Tolak Pendaftaran — ' + u.username, 'fa-ban',
+    '<div class="form-grid">' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Pemohon</label>' +
+      '<input type="text" value="' + escAttr(u.nama + ' (' + u.username + ')') + '" disabled></div>' +
+      '<div class="form-group" style="grid-column:1/-1"><label>Alasan Penolakan</label>' +
+      '<textarea id="fRejNote" rows="3" maxlength="300" placeholder="mis. NIK tidak sesuai data kepegawaian — silakan daftar ulang dengan NIK yang benar"></textarea>' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Alasan ini akan TAMPIL pada layar login pemohon saat mencoba masuk. Akun ditolak dapat disetujui kembali kapan saja.</div></div>' +
+    '</div>',
+    '<button class="btn btn-ghost" data-close>Batal</button>' +
+    '<button class="btn btn-danger" id="fRejSave"><i class="fas fa-ban"></i> Tolak Pendaftaran</button>'
+  );
+
+  overlay.querySelector('#fRejSave').addEventListener('click', async function(){
+    const note = sanitizeInput(overlay.querySelector('#fRejNote').value, 300);
+    const btn = this;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses…';
+    try{
+      const ok = await API.adminRejectUser(session.username, _getAdminPassForRpc(), u.id, note);
+      if(ok){
+        showToast('Pendaftaran "' + u.username + '" ditolak', 'success');
+        overlay.remove();
+        adminRefreshAll();
+      }else{
+        showToast('Gagal menolak pendaftaran', 'error');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-ban"></i> Tolak Pendaftaran';
+      }
+    }catch(err){ showToast('Gagal: ' + err.message, 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-ban"></i> Tolak Pendaftaran'; }
+  });
 }
