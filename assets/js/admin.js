@@ -45,7 +45,14 @@ SectionInit['admin'] = function(){
        Tanpa ini, setelah refresh halaman semua RPC (upload foto profil,
        Manajemen Akun, dll.) terkirim dengan password kosong → gagal. */
     try{ _adminRpcPass = sessionStorage.getItem('mantafRpcPass') || ''; }catch(e){ _adminRpcPass = ''; }
-    showAdminPanel(session);
+    /* v3: hanya superadmin & operator yang membuka Panel Admin.
+       Role lain (pimpinan/observer/pejabat) diarahkan ke dashboard-nya. */
+    if(canOpenAdminPanel()){
+      showAdminPanel(session);
+    }else{
+      showToast('Role Anda tidak membuka Panel Admin — mengarahkan ke dashboard…', 'info');
+      showSection(defaultSectionForRole());
+    }
   }
 };
 
@@ -68,6 +75,12 @@ async function loginAdmin(){
       setAdminRpcPass(pass);
       resultEl.innerHTML = '';
       showToast('Selamat datang, ' + admin.nama + '!', 'success');
+      /* v3: routing per role — pimpinan/observer/pejabat tidak masuk Panel Admin */
+      if(!canOpenAdminPanel()){
+        refreshTopbarAdmin();
+        showSection(defaultSectionForRole());
+        return;
+      }
       showAdminPanel(admin);
     }else{
       resultEl.innerHTML = '<span style="color:#dc2626;font-size:13px"><i class="fas fa-circle-xmark"></i> Username atau password salah, atau akun terkunci. Silakan coba lagi.</span>';
@@ -84,12 +97,14 @@ function showAdminPanel(admin){
   document.getElementById('adminLoginSection').style.display = 'none';
   document.getElementById('adminDataSection').style.display = 'block';
 
-  /* Atur badge & label sesuai role */
+  /* Atur badge & label sesuai role (v3: 5 role) */
   var badge = document.getElementById('adminRoleBadge');
   if(badge){
-    var role = (admin && admin.role) || 'admin';
-    badge.textContent = role === 'operator' ? 'Operator' : 'Admin';
-    badge.className = 'admin-role-badge ' + (role === 'operator' ? 'role-operator' : 'role-admin');
+    var role = (admin && admin.role) || 'superadmin';
+    badge.innerHTML = '<i class="fas ' + mantafRoleIcon(role) + '"></i> ' + mantafRoleLabel(role);
+    const key = (String(role).toLowerCase() === 'admin') ? 'superadmin' : String(role);
+    const r = MANTAF_ROLES[key];
+    badge.className = 'admin-role-badge ' + (r ? r.cssClass : 'role-superadmin');
   }
   var who = document.getElementById('adminWho');
   if(who){
@@ -97,9 +112,9 @@ function showAdminPanel(admin){
       (admin && admin.nama ? admin.nama : 'Pengguna') +
       ' (' + (admin && admin.username ? admin.username : '') + ')';
   }
-  /* Tab Manajemen Akun hanya untuk admin */
+  /* Tab Manajemen Akun hanya untuk superadmin (legacy 'admin' tetap diterima) */
   var tabAkun = document.querySelector('.admin-tab-akun');
-  if(tabAkun) tabAkun.style.display = (admin && admin.role === 'admin') ? '' : 'none';
+  if(tabAkun) tabAkun.style.display = (admin && ['admin','superadmin'].indexOf(String(admin.role).toLowerCase()) !== -1) ? '' : 'none';
 
   /* Terapkan hak akses per role: tombol Tambah & Import CSV disembunyikan
      untuk operator pada tab Pengumuman/Bezetting/Petunjuk (view-only). */
@@ -115,7 +130,7 @@ function showAdminPanel(admin){
       var p = (rows && rows.length) ? rows[0] : null;
       if(p){
         _adminAvatarUrl = p.avatar_url || '';
-        updateAdminSession({ avatar_url: _adminAvatarUrl });
+        updateAdminSession({ avatar_url: _adminAvatarUrl, unit_kerja: p.unit_kerja || '', nik: p.nik || '' });
         if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
       }
     }).catch(function(){ /* abaikan — profil mungkin belum punya kolom avatar_url */ });
@@ -168,12 +183,12 @@ function _toggleViewOnlyBanner(bodyId, canManage){
   if(existing) return;
   var banner = document.createElement('div');
   banner.className = 'role-viewonly-banner';
-  banner.innerHTML = '<i class="fas fa-eye"></i> <b>Mode Lihat</b> — Sebagai Operator, Anda hanya dapat melihat data tab ini. Hanya Admin yang dapat menambah, mengubah, atau menghapus. Penuh akses CRUD tersedia di tab <b>Peserta UKOM</b>.';
+  banner.innerHTML = '<i class="fas fa-eye"></i> <b>Mode Lihat</b> — Sebagai ' + mantafRoleLabel(getAdminSession()?.role || '') + ', Anda hanya dapat melihat data tab ini. Superadmin yang dapat menambah, mengubah, atau menghapus. Operator memiliki akses CRUD penuh di tab <b>Peserta UKOM</b>.';
   body.insertBefore(banner, body.firstChild);
 }
 
 function logoutAdmin(){
-  confirmDialog('Keluar dari Panel Admin?', 'Sesi Anda akan diakhiri dan kembali ke halaman login.', function(){
+  confirmDialog('Keluar dari Platform?', 'Sesi Anda akan diakhiri dan kembali ke mode pengunjung.', function(){
     clearAdminSession();
     clearAdminRpcPass();
     _adminAvatarUrl = '';
@@ -186,6 +201,8 @@ function logoutAdmin(){
     document.getElementById('adminUser').value = '';
     document.getElementById('adminPass').value = '';
     if(typeof refreshTopbarAdmin === 'function') refreshTopbarAdmin();
+    /* v3: kembali ke dashboard publik (mode pengunjung) */
+    showSection('dashboard');
     showToast('Anda telah keluar', 'info');
   }, { icon:'fa-right-from-bracket', iconClass:'info', yesText:'Ya, Keluar', yesClass:'btn-danger' });
 }
@@ -208,9 +225,9 @@ async function adminRefreshAll(){
     ['petunjuk',   API.getPetunjuk(false),   v => { admPetCache = v;  document.getElementById('cntTabPetunjuk').textContent   = v.length; renderAdmPetunjuk(); }]
   ];
 
-  /* Tab Manajemen Akun hanya dimuat untuk admin (membutuhkan verifikasi password) */
+  /* Tab Manajemen Akun hanya dimuat untuk superadmin (membutuhkan verifikasi password) */
   const session = getAdminSession();
-  if(session && session.role === 'admin'){
+  if(session && ['admin','superadmin'].indexOf(String(session.role).toLowerCase()) !== -1){
     jobs.push(['akun',
       API.adminListUsers(session.username, _getAdminPassForRpc()).catch(function(){ return null; }),
       v => {
@@ -1143,9 +1160,7 @@ async function openMyAccount(){
 
     const lastLogin = p.last_login_at ? formatDateTimeId(p.last_login_at) : 'Belum pernah';
     const lastPass  = p.last_password_change_at ? formatDateTimeId(p.last_password_change_at) : 'Belum pernah';
-    const roleBadge = p.role === 'operator'
-      ? '<span class="admin-role-badge role-operator">Operator</span>'
-      : '<span class="admin-role-badge role-admin">Admin</span>';
+    const roleBadge = mantafRoleBadge(p.role);
     const statusBadge = p.aktif
       ? '<span class="badge-status badge-aktif">Aktif</span>'
       : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
@@ -1169,6 +1184,12 @@ async function openMyAccount(){
         '<div class="my-acct-row"><label>Username</label><div class="my-acct-value"><code>' + escapeHtml(p.username) + '</code></div></div>' +
         '<div class="my-acct-row"><label>Nama Lengkap</label><div class="my-acct-value">' + escapeHtml(p.nama) + '</div></div>' +
         '<div class="my-acct-row"><label>Role</label><div class="my-acct-value">' + roleBadge + '</div></div>' +
+        (p.unit_kerja
+          ? '<div class="my-acct-row"><label>Unit Kerja / Faskes</label><div class="my-acct-value">' + escapeHtml(p.unit_kerja) + '</div></div>'
+          : '') +
+        (p.nik
+          ? '<div class="my-acct-row"><label>NIK</label><div class="my-acct-value"><code>' + escapeHtml(p.nik) + '</code></div></div>'
+          : '') +
         '<div class="my-acct-row"><label>Status Akun</label><div class="my-acct-value">' + statusBadge + '</div></div>' +
         '<div class="my-acct-row"><label>Login Terakhir</label><div class="my-acct-value">' + escapeHtml(lastLogin) + '</div></div>' +
         '<div class="my-acct-row"><label>Password Terakhir Diubah</label><div class="my-acct-value">' + escapeHtml(lastPass) + '</div></div>' +
@@ -1447,12 +1468,12 @@ function renderAdmAkun(){
      juga menolak non-admin di sisi database — lapis kedua). */
   if(!isAdmin()){
     admAkunCache = null;
-    body.innerHTML = '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-lock"></i>Username &amp; password hanya dapat dilihat oleh <b>Admin</b>.</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" class="empty-state" style="padding:34px"><i class="fas fa-lock"></i>Username &amp; password hanya dapat dilihat oleh <b>Superadmin</b>.</td></tr>';
     return;
   }
 
   if(!admAkunCache){
-    body.innerHTML = '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/akun-security.sql</code> versi terbaru sudah dijalankan.</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" class="empty-state" style="padding:34px"><i class="fas fa-circle-exclamation"></i>Belum bisa memuat daftar akun. Pastikan <code>supabase/multiuser-v3.sql</code> sudah dijalankan.</td></tr>';
     return;
   }
   const session = getAdminSession();
@@ -1468,9 +1489,10 @@ function renderAdmAkun(){
   let html = '';
   rows.forEach(function(u){
     const isSelf = session && u.username === session.username;
-    const roleBadge = u.role === 'operator'
-      ? '<span class="admin-role-badge role-operator">Operator</span>'
-      : '<span class="admin-role-badge role-admin">Admin</span>';
+    const roleBadge = mantafRoleBadge(u.role);
+    const unitNik = [];
+    if(u.unit_kerja) unitNik.push('<i class="fas fa-hospital" style="color:#0f766e"></i> ' + escapeHtml(u.unit_kerja));
+    if(u.nik) unitNik.push('<span style="font-family:monospace">' + escapeHtml(u.nik) + '</span>');
     const statusBadge = u.aktif
       ? '<span class="badge-status badge-aktif">Aktif</span>'
       : '<span class="badge-status badge-nonaktif">Nonaktif</span>';
@@ -1499,6 +1521,7 @@ function renderAdmAkun(){
       '<td>' + passCell + '</td>' +
       '<td>' + escapeHtml(u.nama) + '</td>' +
       '<td>' + roleBadge + '</td>' +
+      '<td style="font-size:12px">' + (unitNik.length ? unitNik.join('<br>') : '<span style="color:#cbd5e1">—</span>') + '</td>' +
       '<td>' + statusBadge + lockBadge + '</td>' +
       '<td>' + lastLogin + '</td>' +
       '<td>' + lastPass + '</td>' +
@@ -1512,7 +1535,7 @@ function renderAdmAkun(){
       '</div></td>' +
       '</tr>';
   });
-  body.innerHTML = html || '<tr><td colspan="8" class="empty-state" style="padding:34px"><i class="fas fa-users-slash"></i>Tidak ada akun yang cocok. Klik "Tambah Akun" untuk membuat baru.</td></tr>';
+  body.innerHTML = html || '<tr><td colspan="10" class="empty-state" style="padding:34px"><i class="fas fa-users-slash"></i>Tidak ada akun yang cocok. Klik "Tambah Akun" untuk membuat baru.</td></tr>';
 }
 
 /* ---------- TOGGLE TAMPIL/SEMBUNYI PASSWORD (admin only) ---------- */
@@ -1555,6 +1578,14 @@ function openAkunForm(id){
   const session = getAdminSession();
   if(!session){ showToast('Sesi tidak ditemukan', 'error'); return; }
 
+  /* Opsi role v3 (legacy 'admin' ditampilkan sebagai Superadmin) */
+  const roleOptions = MANTAF_ROLE_ORDER.map(function(k){
+    const r = MANTAF_ROLES[k];
+    const sel = (u && ((u.role === k) || (k === 'superadmin' && u.role === 'admin'))) ? ' selected'
+              : (!u && k === 'operator') ? ' selected' : '';
+    return '<option value="' + k + '"' + sel + '>' + r.label + ' — ' + r.short + '</option>';
+  }).join('');
+
   const overlay = crudModal(isEdit ? 'Edit Akun' : 'Tambah Akun', isEdit ? 'fa-user-pen' : 'fa-user-plus',
     '<div class="form-grid">' +
       '<div class="form-group" style="grid-column:1/-1"><label>Username ' + (isEdit ? '<span style="color:#64748b">(tidak dapat diubah)</span>' : '<span style="color:#dc2626">*</span>') + '</label>' +
@@ -1564,36 +1595,71 @@ function openAkunForm(id){
       '</div>' +
       '<div class="form-group" style="grid-column:1/-1"><label>Nama Lengkap <span style="color:#dc2626">*</span></label>' +
       '<input type="text" id="fAkunNama" maxlength="100" value="' + escAttr(u ? u.nama : '') + '"></div>' +
-      '<div class="form-group"><label>Role</label><select id="fAkunRole">' +
-        '<option value="admin"' + (u && u.role === 'admin' ? ' selected' : '') + '>Admin (akses penuh + kelola akun)</option>' +
-        '<option value="operator"' + (u && u.role === 'operator' ? ' selected' : (!u ? ' selected' : '')) + '>Operator (akses data saja)</option>' +
-      '</select></div>' +
+      '<div class="form-group"><label>Role</label><select id="fAkunRole">' + roleOptions + '</select>' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px" id="fAkunRoleDesc">' + escAttr(MANTAF_ROLES[u ? ((u.role === 'admin') ? 'superadmin' : u.role) : 'operator'].desc) + '</div></div>' +
       '<div class="form-group"><label>Status</label><select id="fAkunAktif">' +
         '<option value="true"' + (!u || u.aktif ? ' selected' : '') + '>Aktif</option>' +
         '<option value="false"' + (u && !u.aktif ? ' selected' : '') + '>Nonaktif</option>' +
       '</select></div>' +
+      '<div class="form-group" id="wrapFakunUnit" style="display:none"><label>Unit Kerja / Faskes <span style="color:#dc2626">*</span></label>' +
+      '<input type="text" id="fAkunUnit" maxlength="120" list="dlUnitKerjaAkun" value="' + escAttr(u ? (u.unit_kerja || '') : '') + '" placeholder="mis. Puskesmas Tenggarong">' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Wajib untuk Pimpinan Faskes — dasar filter data dashboard faskes.</div>' +
+      '<datalist id="dlUnitKerjaAkun"></datalist></div>' +
+      '<div class="form-group" id="wrapFakunNik" style="display:none"><label>NIK (opsional)</label>' +
+      '<input type="text" id="fAkunNik" maxlength="16" inputmode="numeric" value="' + escAttr(u ? (u.nik || '') : '') + '" placeholder="16 digit NIK">' +
+      '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Mengaitkan akun pejabat dengan riwayat pendaftaran UKOM miliknya.</div></div>' +
       (isEdit
         ? ''
         : '<div class="form-group" style="grid-column:1/-1"><label>Password Awal <span style="color:#dc2626">*</span></label>' +
           '<input type="password" id="fAkunPass" autocomplete="new-password" placeholder="Minimal 6 karakter">' +
-          '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Password bisa diubah oleh pengguna sendiri atau di-reset oleh admin lain.</div></div>') +
+          '<div style="font-size:11.5px;color:#64748b;margin-top:4px">Password bisa diubah oleh pengguna sendiri atau di-reset oleh superadmin.</div></div>') +
     '</div>',
     '<button class="btn btn-ghost" data-close>Batal</button>' +
     '<button class="btn" id="fAkunSave"><i class="fas fa-floppy-disk"></i> Simpan</button>'
   );
 
+  /* Saran unit kerja dari data peserta/bezetting yang sudah ada */
+  try{
+    const dl = overlay.querySelector('#dlUnitKerjaAkun');
+    const units = new Set();
+    (admPesCache || []).forEach(function(p){ if(p.nama_unit_kerja) units.add(p.nama_unit_kerja); });
+    (typeof admBezCache !== 'undefined' ? (admBezCache || []) : []).forEach(function(b){ if(b.instansi) units.add(b.instansi); });
+    Array.from(units).sort().slice(0, 200).forEach(function(v){
+      dl.insertAdjacentHTML('beforeend', '<option value="' + escAttr(v) + '">');
+    });
+  }catch(e){ /* abaikan */ }
+
+  /* Tampilkan field kondisional sesuai role terpilih */
+  const roleSel  = overlay.querySelector('#fAkunRole');
+  const wrapUnit = overlay.querySelector('#wrapFakunUnit');
+  const wrapNik  = overlay.querySelector('#wrapFakunNik');
+  const descEl   = overlay.querySelector('#fAkunRoleDesc');
+  function syncRoleFields(){
+    const k = roleSel.value;
+    const r = MANTAF_ROLES[k];
+    if(descEl && r) descEl.textContent = r.desc;
+    wrapUnit.style.display = (k === 'pimpinan_faskes') ? '' : 'none';
+    wrapNik.style.display  = (k === 'pejabat_fungsional') ? '' : 'none';
+  }
+  roleSel.addEventListener('change', syncRoleFields);
+  syncRoleFields();
+
   overlay.querySelector('#fAkunSave').addEventListener('click', async function(){
     const nama = sanitizeInput(overlay.querySelector('#fAkunNama').value, 100);
     const role = overlay.querySelector('#fAkunRole').value;
     const aktif = overlay.querySelector('#fAkunAktif').value === 'true';
+    const unit = sanitizeInput(overlay.querySelector('#fAkunUnit') ? overlay.querySelector('#fAkunUnit').value : '', 120);
+    const nikv = sanitizeInput(overlay.querySelector('#fAkunNik') ? overlay.querySelector('#fAkunNik').value : '', 16);
     if(!nama){ showToast('Nama lengkap wajib diisi', 'error'); return; }
+    if(role === 'pimpinan_faskes' && !unit){ showToast('Unit Kerja / Faskes wajib diisi untuk Pimpinan Faskes', 'error'); return; }
+    if(nikv && !/^[0-9]{16}$/.test(nikv)){ showToast('NIK harus 16 digit angka', 'error'); return; }
 
     const btn = this;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan…';
     try{
       if(isEdit){
-        const ok = await API.adminUpdateUser(session.username, _getAdminPassForRpc(), u.id, nama, role, aktif);
-        if(!ok){ showToast('Gagal: tidak bisa mengubah akun. Mungkin menonaktifkan admin terakhir.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
+        const ok = await API.adminUpdateUser(session.username, _getAdminPassForRpc(), u.id, nama, role, aktif, unit, nikv);
+        if(!ok){ showToast('Gagal: tidak bisa mengubah akun. Mungkin menonaktifkan superadmin terakhir.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
         showToast('Akun diperbarui', 'success');
       }else{
         const uname = sanitizeInput(overlay.querySelector('#fAkunUname').value, 50);
@@ -1601,7 +1667,7 @@ function openAkunForm(id){
         if(!uname){ showToast('Username wajib diisi', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
         if(uname.length < 3 || !/^[a-zA-Z0-9._-]+$/.test(uname)){ showToast('Username min 3 karakter, hanya huruf/angka/._-', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
         if(pass.length < 6){ showToast('Password minimal 6 karakter', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
-        const result = await API.adminCreateUser(session.username, _getAdminPassForRpc(), uname, pass, nama, role);
+        const result = await API.adminCreateUser(session.username, _getAdminPassForRpc(), uname, pass, nama, role, unit, nikv);
         if(!result || !result.length){ showToast('Gagal: username sudah dipakai atau input tidak valid', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Simpan'; return; }
         showToast('Akun "' + uname + '" ditambahkan', 'success');
       }

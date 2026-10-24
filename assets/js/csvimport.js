@@ -388,10 +388,15 @@ function openCsvImport(tableKey){
   if(!T){ showToast('Menu import tidak dikenal', 'error'); return; }
   if(typeof db === 'undefined' || !db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
 
-  /* Guard hak akses: operator hanya boleh import Peserta UKOM.
-     Pengumuman, Bezetting, Petunjuk → view-only untuk operator. */
-  if(typeof isOperator === 'function' && isOperator() && tableKey !== 'peserta'){
-    showToast('Akses ditolak: Operator hanya dapat import data Peserta UKOM', 'error');
+  /* Guard hak akses v3: hanya superadmin & operator (khusus tab Peserta)
+     yang boleh import CSV. Pengumuman, Bezetting, Petunjuk → superadmin saja. */
+  const _canImport =
+    (tableKey === 'pengumuman' && typeof canManagePengumuman === 'function' && canManagePengumuman()) ||
+    (tableKey === 'bezetting'  && typeof canManageBezetting  === 'function' && canManageBezetting())  ||
+    (tableKey === 'peserta'    && typeof canManagePeserta    === 'function' && canManagePeserta())    ||
+    (tableKey === 'petunjuk'   && typeof canManagePetunjuk   === 'function' && canManagePetunjuk());
+  if(!_canImport){
+    showToast('Akses ditolak: import CSV hanya untuk Superadmin (dan Operator khusus Peserta UKOM)', 'error');
     return;
   }
 

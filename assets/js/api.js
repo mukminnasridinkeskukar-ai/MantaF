@@ -122,6 +122,27 @@ const API = {
     }catch(e){ /* abaikan — kegagalan hapus file tidak boleh blok simpan data */ }
   },
 
+  /* ================= DASHBOARD PRIBADI (PEJABAT FUNGSIONAL) =================
+     Riwayat pendaftaran milik akun sendiri: dicocokkan dari kolom
+     account_username (terisi otomatis saat pejabat login mengisi formulir)
+     atau NIK akun (diisi superadmin di Manajemen Akun). */
+  getMyPeserta(username, nik){
+    const u = String(username || '').replace(/[,()"]/g, '').trim();
+    const n = String(nik || '').replace(/[^0-9]/g, '').trim();
+    let q;
+    if(u && n){
+      q = db.from('peserta_ukom').select('*')
+        .or('account_username.eq.' + u + ',nik.eq.' + n);
+    }else if(u){
+      q = db.from('peserta_ukom').select('*').eq('account_username', u);
+    }else if(n){
+      q = db.from('peserta_ukom').select('*').eq('nik', n);
+    }else{
+      return Promise.resolve([]);
+    }
+    return sbQuery(q.order('created_at', { ascending:false }));
+  },
+
   /* ================= STATISTIK DASHBOARD ================= */
   async getDashboardStats(){
     const [peserta, bezetting] = await Promise.all([
@@ -173,25 +194,31 @@ const API = {
     })
   ),
 
-  adminCreateUser: (requesterUsername, requesterPassword, username, password, nama, role) => sbQuery(
+  /* v3: + unit_kerja (pimpinan faskes) & nik (pejabat fungsional) */
+  adminCreateUser: (requesterUsername, requesterPassword, username, password, nama, role, unitKerja, nik) => sbQuery(
     db.rpc('admin_create_user', {
       p_requester_username: requesterUsername,
       p_requester_password: requesterPassword,
       p_username: username,
       p_password: password,
       p_nama: nama,
-      p_role: role
+      p_role: role,
+      p_unit_kerja: unitKerja || '',
+      p_nik: nik || ''
     })
   ),
 
-  adminUpdateUser: (requesterUsername, requesterPassword, id, nama, role, aktif) => sbQuery(
+  /* v3: + unit_kerja & nik (null = tidak diubah) */
+  adminUpdateUser: (requesterUsername, requesterPassword, id, nama, role, aktif, unitKerja, nik) => sbQuery(
     db.rpc('admin_update_user', {
       p_requester_username: requesterUsername,
       p_requester_password: requesterPassword,
       p_id: id,
       p_nama: nama,
       p_role: role,
-      p_aktif: aktif
+      p_aktif: aktif,
+      p_unit_kerja: (unitKerja === undefined) ? null : unitKerja,
+      p_nik: (nik === undefined) ? null : nik
     })
   ),
 

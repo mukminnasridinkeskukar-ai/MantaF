@@ -51,12 +51,14 @@ const Loader = {
 
 /* ---------- Metadata topbar per section ---------- */
 const SECTION_META = {
-  dashboard:   { title:'Dashboard',                    subtitle:'Ringkasan aktivitas platform MantaF' },
-  petunjuk:    { title:'Petunjuk Penggunaan',          subtitle:'Panduan penggunaan platform dalam bentuk dokumen PDF' },
-  pengumuman:  { title:'Pengumuman',                   subtitle:'Informasi resmi terbaru seputar UKOM & jabfung' },
-  bezetting:   { title:'Bezetting',                    subtitle:'Data kebutuhan jabatan fungsional kesehatan' },
-  pesertaUkom: { title:'Data Peserta UKOM',            subtitle:'Rekap peserta uji kompetensi seluruh periode' },
-  ukom:        { title:'Pendaftaran UKOM',             subtitle:'Isi formulir & unggah dokumen persyaratan' },
-  status:      { title:'Cek Status',                   subtitle:'Pantau status verifikasi berkas Anda' },
-  admin:       { title:'Panel Admin',                  subtitle:'Manajemen data Pengumuman, Bezetting & Peserta UKOM' }
+  dashboard:       { title:'Dashboard',                 subtitle:'Ringkasan aktivitas platform MantaF' },
+  dashboardSaya:   { title:'Dashboard Saya',            subtitle:'Riwayat pendaftaran & status UKOM pribadi Anda' },
+  dashboardFaskes: { title:'Dashboard Faskes',          subtitle:'Monitoring peserta UKOM unit kerja / faskes Anda' },
+  petunjuk:        { title:'Petunjuk Penggunaan',       subtitle:'Panduan penggunaan platform dalam bentuk dokumen PDF' },
+  pengumuman:      { title:'Pengumuman',                subtitle:'Informasi resmi terbaru seputar UKOM & jabfung' },
+  bezetting:       { title:'Bezetting',                 subtitle:'Data kebutuhan jabatan fungsional kesehatan' },
+  pesertaUkom:     { title:'Data Peserta UKOM',         subtitle:'Rekap peserta uji kompetensi seluruh periode' },
+  ukom:            { title:'Pendaftaran UKOM',          subtitle:'Isi formulir & unggah dokumen persyaratan' },
+  status:          { title:'Cek Status',                subtitle:'Pantau status verifikasi berkas Anda' },
+  admin:           { title:'Panel Admin',               subtitle:'Manajemen data Pengumuman, Bezetting & Peserta UKOM' }
 };

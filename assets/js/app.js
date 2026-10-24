@@ -5,6 +5,8 @@
 
 const SECTION_PARTIALS = {
   dashboard:   'dashboard',
+  dashboardSaya: 'dashboard-saya',
+  dashboardFaskes: 'dashboard-faskes',
   petunjuk:    'petunjuk',
   pengumuman:  'pengumuman',
   bezetting:   'bezetting',
@@ -16,6 +18,8 @@ const SECTION_PARTIALS = {
 
 const SECTION_IDS = {
   dashboard:   'secDashboard',
+  dashboardSaya: 'secDashboardSaya',
+  dashboardFaskes: 'secDashboardFaskes',
   petunjuk:    'secPetunjuk',
   pengumuman:  'secPengumuman',
   bezetting:   'secBezetting',
@@ -108,9 +112,13 @@ function startClock(){
   setInterval(tick, 30000);
 }
 
-/* ---------- TOMBOL ADMIN DI TOPBAR ----------
-   - Belum login → label "Admin" + ikon user-shield → klik buka section admin (form login)
-   - Sudah login → tampilkan avatar (atau inisial) + label nama → klik buka section admin (panel)
+/* ---------- TOMBOL MASUK DI TOPBAR ----------
+   - Belum login → label "Masuk" → klik buka halaman login platform
+   - Sudah login → avatar/inisial + nama → klik membuka halaman default role:
+       superadmin/operator  → Panel Admin
+       pimpinan faskes      → Dashboard Faskes
+       pejabat fungsional   → Dashboard Saya
+       observer             → Dashboard
    - Dipanggil setelah login/logout/upload-avatar agar topbar selalu sinkron. */
 function refreshTopbarAdmin(){
   const btn     = document.getElementById('topbarAdminBtn');
@@ -139,18 +147,19 @@ function refreshTopbarAdmin(){
     }
     label.textContent = s.nama || s.username;
     btn.classList.add('is-logged-in');
-    btn.title = 'Panel Admin — ' + (s.nama || s.username);
+    btn.title = mantafRoleLabel(s.role) + ' — ' + (s.nama || s.username);
     }else{
     /* Belum login */
     avatar.innerHTML = '<i class="fas fa-user-shield"></i>';
-    label.textContent = 'Admin';
+    label.textContent = 'Masuk';
     btn.classList.remove('is-logged-in');
-    btn.title = 'Login Admin';
+    btn.title = 'Masuk ke Platform';
     }
   }
 
-  /* Sinkronkan juga bagian profil di sidebar (foto, nama, role) */
+  /* Sinkronkan profil sidebar + menu dinamis per role */
   refreshSidebarProfile();
+  if(typeof renderSidebarMenu === 'function') renderSidebarMenu();
 }
 
 /* ---------- PROFIL SIDEBAR ----------
@@ -160,7 +169,7 @@ function refreshTopbarAdmin(){
    - Belum login → logo MantaF + teks default.
    Dipanggil dari refreshTopbarAdmin() sehingga otomatis tersinkron setelah
    login, logout, ganti foto, dan hapus foto. */
-const MANTAF_LOGO_URL = 'https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe';
+const MANTAF_LOGO_URL = 'assets/img/logo-512.png';
 const MANTAF_LOGO_FALLBACK = 'https://ui-avatars.com/api/?name=MantaF&background=0f766e&color=fff';
 
 function refreshSidebarProfile(){
@@ -181,7 +190,7 @@ function refreshSidebarProfile(){
     img.src = url || initialUrl;
     img.alt = s.nama || s.username || 'Avatar';
     nameEl.textContent = s.nama || s.username || 'Pengguna';
-    roleEl.textContent = (s.role === 'operator') ? 'Operator' : 'Administrator';
+    roleEl.textContent = mantafRoleLabel(s.role);
   }else{
     img.onerror = function(){
       img.onerror = null;
@@ -195,7 +204,11 @@ function refreshSidebarProfile(){
 }
 
 function goAdminFromTopbar(){
-  /* Aktifkan tombol menu "admin" bila ada (kompatibilitas dengan sidebar lama) */
+  /* v3: arahkan sesuai role saat login; belum login → halaman login platform */
+  if(typeof getAdminSession === 'function' && getAdminSession()){
+    showSection(defaultSectionForRole());
+    return;
+  }
   const menuBtn = document.querySelector('.menu button[data-section="admin"]');
   if(menuBtn) showSection('admin', menuBtn);
   else showSection('admin');

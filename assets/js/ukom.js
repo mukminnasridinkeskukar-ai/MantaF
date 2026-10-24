@@ -48,6 +48,16 @@ SectionInit['ukom'] = function(){
 
   document.getElementById('ukomForm').addEventListener('submit', submitUkomForm);
 
+  /* v3: pra-isi NIK & nama untuk akun Pejabat Fungsional yang terkait NIK,
+     agar pendaftaran langsung tertaut dengan akunnya. */
+  try{
+    const s0 = getAdminSession();
+    if(s0 && s0.role === 'pejabat_fungsional'){
+      const nikEl = document.getElementById('ukomNik');
+      if(nikEl && !nikEl.value && s0.nik) nikEl.value = s0.nik;
+    }
+  }catch(e){ /* abaikan */ }
+
   newRegistrasiIdentity();
 };
 
@@ -227,6 +237,14 @@ async function doSubmitUkom(){
       status_verifikasi: 'Menunggu'
     };
 
+    /* v3: Tautkan pendaftaran ke akun pejabat fungsional yang sedang login
+       (agar tampil otomatis di Dashboard Saya). Diabaikan bila kolom
+       account_username belum ada di tabel (schema lama) — ditangani fallback. */
+    const _sess = (typeof getAdminSession === 'function') ? getAdminSession() : null;
+    if(_sess && (_sess.role === 'pejabat_fungsional' || (_sess.nik && _sess.nik === d.nik))){
+      row.account_username = _sess.username;
+    }
+
     /* 2) Upload file ke Supabase Storage */
     for(const input of fileInputs){
       const file = input.files[0];
@@ -243,9 +261,20 @@ async function doSubmitUkom(){
     try{
       await API.createPeserta(row);
     }catch(err){
-      if(/no[_-]?registrasi|PGRST204|42703/i.test(err.message || '')){
-        delete row.no_registrasi;
-        await API.createPeserta(row);
+      if(/no[_-]?registrasi|account[_-]?username|PGRST204|42703/i.test(err.message || '')){
+        /* Schema lama: coba tanpa kolom baru satu per satu */
+        const row2 = Object.assign({}, row);
+        delete row2.no_registrasi;
+        delete row2.account_username;
+        try{
+          await API.createPeserta(row2);
+        }catch(err2){
+          if(/account[_-]?username|PGRST204|42703/i.test(err2.message || '')){
+            await API.createPeserta(row);
+          }else{
+            throw err2;
+          }
+        }
       }else{
         throw err;
       }

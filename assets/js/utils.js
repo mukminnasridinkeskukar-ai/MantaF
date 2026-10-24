@@ -156,7 +156,8 @@ function confirmDialog(title, message, onYes, opts){
 function setAdminSession(data){
   sessionStorage.setItem('mantafSession', JSON.stringify({
     id: data.id, username: data.username, nama: data.nama, role: data.role || 'admin',
-    loginTime: Date.now()
+    unit_kerja: data.unit_kerja || '', nik: data.nik || '',
+    avatar_url: data.avatar_url || '', loginTime: Date.now()
   }));
 }
 
@@ -185,9 +186,10 @@ function updateAdminSession(patch){
   sessionStorage.setItem('mantafSession', JSON.stringify(s));
 }
 
-/* Helper cek role: admin = akses penuh, operator = akses data saja */
-function isAdmin(){ var s = getAdminSession(); return !!(s && s.role === 'admin'); }
-function isOperator(){ var s = getAdminSession(); return !!(s && s.role === 'operator'); }
+/* Helper cek role pindah ke roles.js (5 role v3):
+   isAdmin / isOperator / isSuperadmin / isPimpinanFaskes / isObserver /
+   isPejabatFungsional / canManage* / canOpenAdminPanel — dimuat setelah
+   utils.js sehingga definisi final berasal dari roles.js. */
 
 /* ---------- FILE HELPERS ---------- */
 function fileToDataUrl(file){

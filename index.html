@@ -4,9 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="MantaF - Manajemen Tata Kelola Jabatan Fungsional Kesehatan Dinas Kesehatan Kabupaten Kutai Kartanegara">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MantaF">
 <title>MantaF — Dinas Kesehatan Kutai Kartanegara</title>
 
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f766e'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>M</text></svg>">
+<!-- ===== LOGO & PWA (tampil elegan di Android/iPad/Tablet) ===== -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:image" content="assets/img/logo-512.png">
+<meta property="og:title" content="MantaF — Platform Jabfung Kesehatan">
+<meta property="og:description" content="Manajemen Tata Kelola Jabatan Fungsional Kesehatan Dinkes Kutai Kartanegara">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +37,7 @@
 <div id="splashScreen">
   <div class="splash-glow"></div>
   <div class="splash-logo-wrap">
-    <img class="splash-logo" src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" alt="Logo Dinkes Kukar" onerror="this.style.display='none'">
+    <img class="splash-logo" src="assets/img/logo-512.png" alt="Logo MantaF" onerror="this.style.display='none'">
   </div>
   <div class="splash-title" id="splashTitle"></div>
   <div class="splash-subtitle">Manajemen Tata Kelola Jabatan Fungsional Kesehatan<br>Dinas Kesehatan Kabupaten Kutai Kartanegara</div>
@@ -43,7 +55,7 @@
 
     <div class="profile-section" id="profileSection">
       <div class="profile-avatar">
-        <img src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=MantaF&background=0f766e&color=fff'" id="profileImg" alt="MantaF">
+        <img src="assets/img/logo-512.png" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=MantaF&background=0f766e&color=fff'" id="profileImg" alt="MantaF">
         <span class="profile-status"></span>
       </div>
       <div class="profile-name">MantaF</div>
@@ -52,50 +64,8 @@
     </div>
 
     <div class="sidebar-scroll">
-      <!-- ===== BAGIAN 1 : MENU UTAMA ===== -->
-      <div class="menu-group">
-        <div class="menu-group-label"><i class="fas fa-house-flag"></i> Menu Utama</div>
-        <nav class="menu">
-          <button class="active" data-section="dashboard" onclick="showSection('dashboard',this)">
-            <i class="fas fa-gauge-high"></i><span>Dashboard</span>
-          </button>
-          <button data-section="petunjuk" onclick="showSection('petunjuk',this)">
-            <i class="fas fa-book-open-reader"></i><span>Petunjuk Penggunaan</span>
-          </button>
-        </nav>
-      </div>
-
-      <!-- ===== BAGIAN 2 : DATA & INFORMASI ===== -->
-      <div class="menu-group">
-        <div class="menu-group-label"><i class="fas fa-database"></i> Data &amp; Informasi</div>
-        <nav class="menu">
-          <button data-section="pengumuman" onclick="showSection('pengumuman',this)">
-            <i class="fas fa-bullhorn"></i><span>Pengumuman</span>
-          </button>
-          <button data-section="bezetting" onclick="showSection('bezetting',this)">
-            <i class="fas fa-table-cells-large"></i><span>Bezetting</span>
-          </button>
-          <button data-section="pesertaUkom" onclick="showSection('pesertaUkom',this)">
-            <i class="fas fa-users"></i><span>Data Peserta UKOM</span>
-          </button>
-        </nav>
-      </div>
-
-      <!-- ===== BAGIAN 3 : LAYANAN ===== -->
-      <div class="menu-group">
-        <div class="menu-group-label"><i class="fas fa-hands-holding-circle"></i> Layanan</div>
-        <nav class="menu">
-          <button data-section="ukom" onclick="showSection('ukom',this)">
-            <i class="fas fa-file-pen"></i><span>Daftar UKOM</span>
-          </button>
-          <button data-section="status" onclick="showSection('status',this)">
-            <i class="fas fa-magnifying-glass-chart"></i><span>Cek Status</span>
-          </button>
-          <button onclick="location.href='tryoutukom.html'" title="Simulasi CAT JF Kesehatan — halaman terpisah">
-            <i class="fas fa-graduation-cap"></i><span>Try Out</span>
-          </button>
-        </nav>
-      </div>
+      <!-- Menu dirender dinamis sesuai role (roles.js → renderSidebarMenu) -->
+      <div id="sidebarMenuMount"></div>
     </div>
 
     <div class="sidebar-footer">
@@ -124,12 +94,12 @@
         <button class="btn btn-outline" onclick="openLightbox()">
           <i class="fas fa-circle-info"></i> Tentang Sistem
         </button>
-        <!-- Tombol Admin (pindah dari sidebar ke topbar) -->
-        <button class="topbar-admin-btn" id="topbarAdminBtn" onclick="goAdminFromTopbar()" title="Login / Panel Admin">
+        <!-- Tombol Masuk / Akun (topbar) — semua role -->
+        <button class="topbar-admin-btn" id="topbarAdminBtn" onclick="goAdminFromTopbar()" title="Masuk">
           <span class="topbar-admin-avatar" id="topbarAdminAvatar">
             <i class="fas fa-user-shield"></i>
           </span>
-          <span class="topbar-admin-label" id="topbarAdminLabel">Admin</span>
+          <span class="topbar-admin-label" id="topbarAdminLabel">Masuk</span>
         </button>
       </div>
     </div>
@@ -147,7 +117,7 @@
   <div class="lightbox-content">
     <span class="close" onclick="closeLightbox()">&times;</span>
     <div class="lb-logo-wrap">
-      <img src="https://drive.google.com/uc?export=view&id=1Xn9S9MtOAuFTxWsrKYpHGuKuRSKW3jFe" alt="Logo" onerror="this.style.display='none'">
+      <img src="assets/img/logo-512.png" alt="Logo MantaF" onerror="this.style.display='none'">
     </div>
     <h2>Tentang MantaF</h2>
     <p class="lb-quote">
@@ -156,7 +126,7 @@
     </p>
     <div class="lb-meta">
       <span><i class="fas fa-building"></i> Dinas Kesehatan Kab. Kutai Kartanegara</span>
-      <span><i class="fas fa-code-branch"></i> Versi 2.4.1</span>
+      <span><i class="fas fa-code-branch"></i> Versi 3.0.0</span>
       <span><i class="fas fa-user"></i> © Mukmin Nasri 2026</span>
     </div>
   </div>
@@ -215,10 +185,13 @@
 <!-- ===== JS Modular ===== -->
 <script src="assets/js/config.js"></script>
 <script src="assets/js/utils.js"></script>
+<script src="assets/js/roles.js"></script>
 <script src="assets/js/api.js"></script>
 <script src="assets/js/loader.js"></script>
 <script src="assets/js/landing.js"></script>
 <script src="assets/js/dashboard.js"></script>
+<script src="assets/js/dashboard-saya.js"></script>
+<script src="assets/js/dashboard-faskes.js"></script>
 <script src="assets/js/petunjuk.js"></script>
 <script src="assets/js/pengumuman.js"></script>
 <script src="assets/js/bezetting.js"></script>
@@ -228,6 +201,14 @@
 <script src="assets/js/admin.js"></script>
 <script src="assets/js/csvimport.js"></script>
 <script src="assets/js/app.js"></script>
+<script>
+  /* PWA service worker (cache aset statis — logo & manifest) */
+  if('serviceWorker' in navigator && location.protocol === 'https:'){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){ /* abaikan */ });
+    });
+  }
+</script>
 
 </body>
 </html>

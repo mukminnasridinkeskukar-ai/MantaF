@@ -1,0 +1,106 @@
+<!-- ==================== DASHBOARD FASKES (PIMPINAN FASKES) ==================== -->
+<div id="dfWrap">
+
+  <!-- Kartu sambutan faskes -->
+  <div class="panel" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+    <div style="width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,#14b8a6,#0f766e);display:flex;align-items:center;justify-content:center;flex:none">
+      <i class="fas fa-hospital" style="color:#fff;font-size:24px"></i>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;color:#0f172a;font-size:16px" id="dfNama">Memuat profil…</div>
+      <div style="font-size:12.5px;color:#64748b" id="dfMeta">—</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-outline" onclick="showSection('pesertaUkom')"><i class="fas fa-users"></i> Data Peserta</button>
+      <button class="btn btn-sm btn-outline" onclick="showSection('bezetting')"><i class="fas fa-table-cells-large"></i> Bezetting</button>
+    </div>
+  </div>
+
+  <!-- Statistik faskes -->
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon"><i class="fas fa-users"></i></div>
+      <h3>Peserta Faskes Saya</h3>
+      <h1 id="dfTotal">0</h1>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fas fa-hourglass-half"></i></div>
+      <h3>Menunggu Verifikasi</h3>
+      <h1 id="dfMenunggu">0</h1>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fas fa-circle-check"></i></div>
+      <h3>Disetujui</h3>
+      <h1 id="dfDisetujui">0</h1>
+    </div>
+    <div class="card">
+      <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+      <h3>Lowongan Jabfung (Semua Instansi)</h3>
+      <h1 id="dfLowongan">0</h1>
+    </div>
+  </div>
+
+  <div class="card-grid" style="margin-top:22px">
+    <!-- Donut status verifikasi faskes -->
+    <div class="card" style="text-align:center">
+      <h3 style="margin-bottom:15px">Status Verifikasi — Faskes Saya</h3>
+      <div style="position:relative;width:150px;height:150px;margin:0 auto">
+        <svg id="dfChart" viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg)">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+          <circle id="dfcDisetujui"    cx="50" cy="50" r="45" fill="none" stroke="#16a34a" stroke-width="10" stroke-dasharray="0 283" stroke-linecap="round"/>
+          <circle id="dfcDitolak"      cx="50" cy="50" r="45" fill="none" stroke="#dc2626" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+          <circle id="dfcDilimpahkan"  cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+          <circle id="dfcPerbaikan"    cx="50" cy="50" r="45" fill="none" stroke="#f97316" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+          <circle id="dfcProses"       cx="50" cy="50" r="45" fill="none" stroke="#f59e0b" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+          <circle id="dfcMenunggu"     cx="50" cy="50" r="45" fill="none" stroke="#eab308" stroke-width="10" stroke-dasharray="0 283" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+          <div style="font-size:12px;color:#64748b">Total</div>
+          <div id="dfChartTotal" style="font-size:24px;font-weight:700;color:#0f172a">0</div>
+        </div>
+      </div>
+      <div class="dash-status-list" id="dfStatusList">
+        <div class="dash-status-item"><span class="dot" style="background:#16a34a"></span><span>Disetujui</span><span class="count" id="dfCntDisetujui">0</span></div>
+        <div class="dash-status-item"><span class="dot" style="background:#f59e0b"></span><span>Proses</span><span class="count" id="dfCntProses">0</span></div>
+        <div class="dash-status-item"><span class="dot" style="background:#eab308"></span><span>Menunggu</span><span class="count" id="dfCntMenunggu">0</span></div>
+        <div class="dash-status-item"><span class="dot" style="background:#f97316"></span><span>Perbaikan</span><span class="count" id="dfCntPerbaikan">0</span></div>
+        <div class="dash-status-item"><span class="dot" style="background:#dc2626"></span><span>Ditolak</span><span class="count" id="dfCntDitolak">0</span></div>
+        <div class="dash-status-item"><span class="dot" style="background:#3b82f6"></span><span>Dilimpahkan</span><span class="count" id="dfCntDilimpahkan">0</span></div>
+      </div>
+    </div>
+
+    <!-- Distribusi jenis UKOM faskes -->
+    <div class="card">
+      <h3 style="margin-bottom:15px">Distribusi Jenis UKOM — Faskes Saya</h3>
+      <div id="dfJenisList" class="dash-status-list">
+        <div style="color:#94a3b8;font-size:13px;padding:12px 0"><i class="fas fa-spinner fa-spin"></i> Memuat…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabel peserta faskes -->
+  <div class="panel" style="margin-top:22px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <h3 style="margin:0;font-size:16px;color:#0f172a"><i class="fas fa-users" style="color:#0f766e"></i> Daftar Peserta Unit Kerja Saya</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="dfSearch" placeholder="Cari nama / NIK…" oninput="renderFaskesPeserta()"
+          style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;min-width:200px">
+        <button class="btn btn-ghost btn-sm" onclick="loadDashboardFaskes()"><i class="fas fa-rotate-right"></i> Segarkan</button>
+      </div>
+    </div>
+    <div class="admin-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Nama</th><th>NIK</th><th>Jenis UKOM</th><th>Tujuan</th><th>Periode</th><th>Status Verifikasi</th><th>Status UKOM</th>
+        </tr></thead>
+        <tbody id="dfBody"></tbody>
+      </table>
+    </div>
+    <div id="dfPag" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px"></div>
+    <div class="csv-hintbox" style="margin-top:14px"><i class="fas fa-circle-info"></i><div>
+      Daftar ini otomatis mengikuti <b>Unit Kerja / Faskes</b> yang tercatat pada akun Anda
+      (diatur oleh Superadmin melalui menu <b>Manajemen Akun</b>).
+      Hubungi Superadmin bila unit kerja faskes Anda belum sesuai.
+    </div></div>
+  </div>
+</div>

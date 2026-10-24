@@ -651,6 +651,30 @@ transition:all .15s;
   color:#1d4ed8;
   border:1px solid rgba(37,99,235,.30);
 }
+/* ---- Badge role v3 (5 role) ---- */
+.admin-role-badge.role-superadmin{
+  background:rgba(15,118,110,.18);
+  color:#0f766e;
+  border:1px solid rgba(15,118,110,.35);
+}
+.admin-role-badge.role-pimpinan{
+  background:rgba(124,58,237,.14);
+  color:#7c3aed;
+  border:1px solid rgba(124,58,237,.30);
+}
+.admin-role-badge.role-observer{
+  background:rgba(234,88,12,.14);
+  color:#ea580c;
+  border:1px solid rgba(234,88,12,.30);
+}
+.admin-role-badge.role-pejabat{
+  background:rgba(5,150,105,.14);
+  color:#059669;
+  border:1px solid rgba(5,150,105,.30);
+}
+.admin-role-badge i{
+  margin-right:4px;
+}
 
 /* Label "siapa yang login" di kanan header */
 .admin-who{

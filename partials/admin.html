@@ -1,8 +1,10 @@
-<!-- ==================== ADMIN ==================== -->
+<!-- ==================== LOGIN PLATFORM (SEMUA ROLE) ==================== -->
 <div id="adminLoginSection">
   <div class="login-box">
-    <h2><i class="fas fa-user-shield"></i> Login Admin</h2>
-    <br>
+    <h2><i class="fas fa-right-to-bracket"></i> Login Platform</h2>
+    <p style="font-size:12.5px;color:#64748b;margin:-6px 0 10px;text-align:center">
+      Superadmin · Operator · Pimpinan Faskes · Observer · Pejabat Fungsional
+    </p>
     <div class="form-group">
       <label>Username</label>
       <input type="text" id="adminUser" autocomplete="username">
@@ -14,7 +16,7 @@
     </div>
     <br>
     <button class="btn" onclick="loginAdmin()" style="width:100%">
-      <i class="fas fa-right-to-bracket"></i> Login
+      <i class="fas fa-right-to-bracket"></i> Masuk
     </button>
     <div id="adminResult" style="margin-top:16px"></div>
   </div>
@@ -26,7 +28,7 @@
 
     <div class="admin-panel-header">
       <h2><i class="fas fa-user-gear"></i> Panel Admin — Manajemen Data
-        <span class="admin-role-badge" id="adminRoleBadge">Admin</span>
+        <span class="admin-role-badge" id="adminRoleBadge">Superadmin</span>
       </h2>
       <div class="ah-right">
         <span class="admin-who" id="adminWho"><i class="fas fa-user"></i> <span></span></span>
@@ -50,7 +52,7 @@
       <button class="admin-tab" data-tab="petunjuk" onclick="switchAdminTab('petunjuk',this)">
         <i class="fas fa-book-open-reader"></i> Petunjuk <span class="tab-count" id="cntTabPetunjuk">0</span>
       </button>
-      <!-- Tab Manajemen Akun — HANYA admin (disembunyikan untuk operator) -->
+      <!-- Tab Manajemen Akun — HANYA superadmin (disembunyikan untuk role lain) -->
       <button class="admin-tab admin-tab-akun" data-tab="akun" onclick="switchAdminTab('akun',this)" style="display:none">
         <i class="fas fa-user-shield"></i> Manajemen Akun <span class="tab-count" id="cntTabAkun">0</span>
       </button>
@@ -169,8 +171,12 @@
           <label>Filter Role</label>
           <select id="admAkunFilterRole" onchange="renderAdmAkun()">
             <option value="">Semua Role</option>
-            <option value="admin">Admin</option>
+            <option value="superadmin">Superadmin</option>
+            <option value="admin">Admin (lama)</option>
             <option value="operator">Operator</option>
+            <option value="pimpinan_faskes">Pimpinan Faskes</option>
+            <option value="observer">Observer</option>
+            <option value="pejabat_fungsional">Pejabat Fungsional</option>
           </select>
         </div>
         <div class="spacer"></div>
@@ -179,16 +185,16 @@
       <div class="admin-table-wrap">
         <table>
           <thead><tr>
-            <th>Username</th><th>Password</th><th>Nama</th><th>Role</th><th>Status</th>
+            <th>Username</th><th>Password</th><th>Nama</th><th>Role</th><th>Unit Kerja / NIK</th><th>Status</th>
             <th>Login Terakhir</th><th>Password Diubah</th><th>Aksi</th>
           </tr></thead>
           <tbody id="admAkunBody"></tbody>
         </table>
       </div>
       <div class="csv-hintbox" style="margin-top:14px"><i class="fas fa-shield-halved"></i><div>
-        <b>Admin</b> dapat mengelola semua akun (admin &amp; operator): tambah, ubah nama/role/status,
-        reset password, buka kunci, dan hapus. <b>Operator</b> hanya dapat mengelola akunnya sendiri
-        lewat tombol <b>Akun Saya</b>. Akun otomatis terkunci 15 menit setelah 5 kali gagal login.
+        <b>Superadmin</b> dapat mengelola semua akun dari 5 role (superadmin, operator, pimpinan faskes,
+        observer, pejabat fungsional): tambah, ubah nama/role/status/unit kerja/NIK,
+        reset password, buka kunci, dan hapus. Akun otomatis terkunci 15 menit setelah 5 kali gagal login.
       </div></div>
       <div class="csv-hintbox" style="margin-top:10px"><i class="fas fa-key"></i><div>
         <b>Username &amp; password</b> hanya terlihat di tab ini (khusus <b>Admin</b>) dan tersimpan

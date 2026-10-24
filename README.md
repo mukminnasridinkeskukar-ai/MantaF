@@ -1,10 +1,28 @@
-# MantaF v2.4.1 — Supabase Edition
+# MantaF v3.0.0 — Multi-User Edition
 
 **Manajemen Tata Kelola Jabatan Fungsional Kesehatan**
 Dinas Kesehatan Kabupaten Kutai Kartanegara
 
 Frontend statis (untuk **GitHub Pages**) + Backend **Supabase** (Database, Auth RPC, Storage).
 Aplikasi dipecah menjadi file modular agar lebih ringan: setiap halaman dimuat hanya saat dibuka (*lazy-load*).
+
+> **v3.0.0 — MULTI-USER 5 ROLE + LOGO BARU + PWA:**
+> 1. **Sistem multi-user 5 role** — **Superadmin** (akses penuh + kelola semua akun,
+>    pengganti role "admin"), **Operator** (CRUD Peserta UKOM + Import CSV),
+>    **Pimpinan Faskes** (dashboard faskes sendiri, monitoring peserta unit kerjanya),
+>    **Observer** (memantau seluruh data, read-only), dan **Pejabat Fungsional**
+>    (dashboard pribadi riwayat pendaftaran + daftar UKOM). Menu sidebar otomatis
+>    menyesuaikan role; login satu pintu untuk semua role.
+> 2. **Logo MantaF baru yang elegan** — kuadrat rounded gradasi teal kesehatan +
+>    monogram "M" + denyut nadi EKG emas. Tersedia lengkap: favicon 16/32,
+>    ikon 64/192/512, **maskable icon** (Android adaptive), dan **apple-touch-icon 180**
+>    (iPad/iPhone) — tampil tajam & elegan di home screen Android/smartphone/iPad/tablet.
+> 3. **Siap PWA** — `manifest.webmanifest` + service worker ringan: platform dapat
+>    *Add to Home Screen* dengan ikon penuh, warna tema teal, dan tampilan standalone.
+> 4. **Migrasi database** — jalankan `supabase/multiuser-v3.sql` (additive & idempotent):
+>    kolom baru `unit_kerja`/`nik`/`email` pada `admin_users`, kolom `account_username`
+>    pada `peserta_ukom`, RPC login/profil/kelola akun v3, seed akun contoh 3 role baru.
+>    Role lama `admin` otomatis menjadi `superadmin` — password lama TIDAK berubah.
 
 > **v2.4.1 — FIX tabrakan deklarasi `bezettingCache`:**
 > 1. **Perbaiki `Uncaught SyntaxError: Identifier 'bezettingCache' has already been declared`** —
@@ -136,11 +154,23 @@ mantaf/
    - Menambahkan RPC: `admin_get_my_profile`, `admin_change_my_username`, `admin_list_users`, `admin_create_user`, `admin_update_user`, `admin_reset_user_password`, `admin_delete_user`, `admin_unlock_user`
    - Menambahkan role `operator` + seed akun default
    - **Additive-only & idempotent** — aman di-run ulang
-6. Login default:
-   - **Admin**    → username: `admin`     · password: `admin123`
-   - **Operator** → username: `operator`  · password: `operator123`
+6. **(WAJIB v3.0.0 — MULTI-USER)** Salin **seluruh isi** `supabase/multiuser-v3.sql` → klik **Run**.
+   - Kolom baru `admin_users`: `unit_kerja`, `nik`, `email` (profil per role)
+   - Kolom baru `peserta_ukom`: `account_username` (penaut pendaftaran ↔ akun pejabat)
+   - RPC v3: `admin_login` (return role/unit_kerja/nik/avatar), `admin_get_my_profile`,
+     `admin_list_users`, `admin_create_user` (+unit_kerja/nik), `admin_update_user` (+unit_kerja/nik),
+     `admin_delete_user` (proteksi superadmin terakhir) — semua mendukung 5 role
+   - Role lama `admin` → `superadmin` otomatis; helper menerima keduanya (kompatibel)
+   - **Seed 3 akun contoh**: `pimpinan/pimpinan123` · `observer/observer123` · `pejabat/pejabat123`
+   - **Additive-only & idempotent** — aman di-run ulang
+7. Login default:
+   - **Superadmin**         → username: `admin`     · password: `admin123`
+   - **Operator**           → username: `operator`  · password: `operator123`
+   - **Pimpinan Faskes**    → username: `pimpinan`  · password: `pimpinan123`
+   - **Observer**           → username: `observer`  · password: `observer123`
+   - **Pejabat Fungsional** → username: `pejabat`   · password: `pejabat123`
 
-   ⚠️ **Segera ganti** lewat Panel Admin → tombol **Akun Saya**.
+   ⚠️ **Segera ganti** semua password lewat tombol **Akun Saya**.
 
 ### 2️⃣ Hubungkan Frontend
 
@@ -265,6 +295,49 @@ Storage: bucket **foto** (foto 4x6, sertifikat), **dokumen** (PDF persyaratan) &
 - `admin_users` dilindungi RLS (tidak bisa dibaca langsung dari client).
 - Secara default RLS tabel data dibuka untuk `anon` agar aplikasi statis langsung jalan. Untuk produksi ketat: aktifkan **Supabase Auth**, ubah policy tulis menjadi `to authenticated`, dan batasi policy select `peserta_ukom`.
 - Ganti password admin default segera.
+
+## 👥 Multi-User 5 Role (v3.0.0)
+
+Sejak v3, platform mendukung **5 role pengguna** dengan login satu pintu
+(Panel Admin → "Login Platform"). Menu sidebar, halaman default, dan hak akses
+otomatis menyesuaikan role. Definisi role ada di `assets/js/roles.js`.
+
+### Matriks Menu per Role
+
+| Menu / Fitur | Superadmin | Operator | Pimpinan Faskes | Observer | Pejabat Fungsional | Pengunjung |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Dashboard (global) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Dashboard Saya (pribadi) | — | — | — | — | ✅ | — |
+| Dashboard Faskes (unit kerja sendiri) | — | — | ✅ | — | — | — |
+| Petunjuk / Pengumuman / Bezetting / Data Peserta (baca) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Daftar UKOM (formulir) | ✅ | ✅ | — | — | ✅ | ✅ |
+| Cek Status | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Try Out CAT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Panel Admin (manajemen data) | ✅ CRUD semua | ✅ CRUD Peserta saja | ❌ | ❌ | ❌ | ❌ |
+| Manajemen Akun (semua role) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Akun Saya (profil, username, password, foto) | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+### Deskripsi Role
+
+| Role | Tugas Utama | Halaman Default Setelah Login |
+|---|---|---|
+| **Superadmin** | Kendali penuh: CRUD semua data + kelola akun 5 role (termasuk mengisi Unit Kerja pimpinan & NIK pejabat) | Panel Admin |
+| **Operator** | Input/kelola data Peserta UKOM + Import CSV; data lain lihat saja | Panel Admin |
+| **Pimpinan Faskes** | Monitoring peserta UKOM dari faskes/unit kerjanya: statistik, donut status, distribusi jenis UKOM, tabel peserta (read-only) | Dashboard Faskes |
+| **Observer** | Memantau seluruh statistik & data platform tanpa hak ubah | Dashboard |
+| **Pejabat Fungsional** | Mendaftar UKOM, memantau riwayat & status pendaftaran pribadi, unduh sertifikat | Dashboard Saya |
+
+### Cara Kerja Penautan Data
+
+- **Pimpinan Faskes** → data difilter otomatis berdasarkan kolom `unit_kerja` akun
+  (diisi Superadmin di **Manajemen Akun**). Pencocokan longgar: nama unit kerja peserta
+  yang memuat unit kerja akun ikut dihitung.
+- **Pejabat Fungsional** → pendaftaran tertaut lewat kolom `account_username`
+  (terisi otomatis saat pejabat mengisi formulir dalam keadaan login) **atau** NIK
+  yang tercatat pada akunnya. Saat formulir dibuka dalam keadaan login, NIK akun
+  otomatis ter-pra-isi.
+- Keamanan tingkat RPC tetap berlaku: hanya `superadmin` (atau legacy `admin`) yang
+  dapat memanggil RPC manajemen akun; proteksi superadmin terakhir tetap aktif.
 
 ## 🛡️ Keamanan Akun (v2.1) — Admin & Operator
 
