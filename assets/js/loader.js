@@ -5,6 +5,12 @@
 
 const SectionInit = {};
 
+/* v3.2: Registry init PER-KUNJUNGAN section — dipanggil dari showSection()
+   setiap kali section dibuka (berbeda dengan SectionInit yang hanya sekali
+   saat partial pertama dimuat). Dipakai gate akses UKOM, sinkronisasi
+   tampilan per sesi, dsb. */
+const SectionVisit = {};
+
 const Loader = {
   cache: {},
 

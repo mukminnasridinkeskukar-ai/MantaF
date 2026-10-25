@@ -48,6 +48,12 @@ async function showSection(id, el){
   if(!partial) return;
   await Loader.mount(SECTION_IDS[id] || ('sec' + id), partial);
 
+  /* v3.2: hook per-kunjungan section — dipanggil SETIAP kali section dibuka
+     (SectionInit hanya sekali saat mount pertama; dipakai gate UKOM dsb.) */
+  if(typeof SectionVisit !== 'undefined' && typeof SectionVisit[partial] === 'function'){
+    try{ SectionVisit[partial](); }catch(e){ console.warn('[SectionVisit:' + partial + ']', e); }
+  }
+
   /* sembunyikan lainnya, tampilkan ini */
   document.querySelectorAll('#sectionsMount > .section').forEach(function(sec){
     sec.classList.remove('active');
@@ -209,9 +215,34 @@ function goAdminFromTopbar(){
     showSection(defaultSectionForRole());
     return;
   }
-  const menuBtn = document.querySelector('.menu button[data-section="admin"]');
-  if(menuBtn) showSection('admin', menuBtn);
-  else showSection('admin');
+  openPlatformLogin();
+}
+
+/* ---------- v3.2: NAVIGASI LOGIN / DAFTAR AKUN ----------
+   Dipakai bersama oleh: tombol "Daftar Akun" di landing page dan
+   gerbang akses di menu Daftar UKOM. Membuka halaman login platform
+   (section admin) lalu memastikan formulir yang tepat tampil. */
+function _afterAdminSectionMounted(cb){
+  const p = showSection('admin');
+  if(p && typeof p.then === 'function') p.then(function(){ setTimeout(cb, 120); });
+  else setTimeout(cb, 120);
+}
+
+function openPlatformLogin(){
+  _afterAdminSectionMounted(function(){
+    if(typeof showLoginForm === 'function') showLoginForm();
+  });
+}
+
+function openPlatformRegister(){
+  /* Sudah memiliki sesi akun aktif? Tidak perlu daftar — masuk saja ke dashboard-nya */
+  if(typeof getAdminSession === 'function' && getAdminSession()){
+    showSection(defaultSectionForRole());
+    return;
+  }
+  _afterAdminSectionMounted(function(){
+    if(typeof showRegisterForm === 'function') showRegisterForm();
+  });
 }
 
 /* ---------- BOOT ---------- */

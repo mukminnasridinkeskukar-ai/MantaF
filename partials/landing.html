@@ -12,6 +12,7 @@
     <li><a href="#" onclick="scrollToSection('lpFeatures');return false;">Fitur</a></li>
     <li><a href="#" onclick="scrollToSection('lpRoadmap');return false;">Roadmap</a></li>
     <li><a href="#" onclick="scrollToSection('lpContact');return false;">Kontak</a></li>
+    <li><a href="#" class="lp-nav-btn lp-nav-btn-outline" onclick="enterPlatformRegister();return false;"><i class="fas fa-user-plus"></i> Daftar</a></li>
     <li><a href="#" class="lp-nav-btn" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Login</a></li>
   </ul>
   <button class="lp-nav-toggle" id="lpNavToggle" onclick="toggleMobileMenu()" aria-label="Menu">
@@ -25,7 +26,8 @@
   <a href="#" onclick="scrollToSection('lpFeatures');closeMobileMenu();return false;">Fitur</a>
   <a href="#" onclick="scrollToSection('lpRoadmap');closeMobileMenu();return false;">Roadmap</a>
   <a href="#" onclick="scrollToSection('lpContact');closeMobileMenu();return false;">Kontak</a>
-  <a href="#" onclick="enterPlatform();closeMobileMenu();return false;" style="color:var(--lp-emerald);font-weight:600">Login</a>
+  <a href="#" onclick="enterPlatformRegister();closeMobileMenu();return false;" style="color:var(--lp-emerald-light);font-weight:600"><i class="fas fa-user-plus"></i> Daftar Akun</a>
+  <a href="#" onclick="enterPlatform();closeMobileMenu();return false;" style="color:var(--lp-emerald);font-weight:600"><i class="fas fa-arrow-right-to-bracket"></i> Login</a>
 </div>
 
 <!-- HERO -->
@@ -36,9 +38,14 @@
     <p class="lp-hero-sub">Manajemen Tata Kelola Jabatan Fungsional Kesehatan</p>
     <p class="lp-hero-desc">Mewujudkan tata kelola jabatan fungsional kesehatan yang profesional, transparan, terintegrasi, dan berbasis digital untuk seluruh tenaga kesehatan di Kabupaten Kutai Kartanegara.</p>
     <div class="lp-hero-buttons">
-      <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
-      <a href="#" class="lp-btn-secondary" onclick="scrollToSection('lpFeatures');return false;"><i class="fas fa-book-open"></i> Pelajari Selengkapnya</a>
+      <a href="#" class="lp-btn-primary" onclick="enterPlatformRegister();return false;"><i class="fas fa-user-plus"></i> Daftar Akun</a>
+      <a href="#" class="lp-btn-secondary" onclick="enterPlatform();return false;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
     </div>
+    <div class="lp-hero-account-note">
+      <i class="fas fa-circle-info"></i>
+      <span><b>Perlu akun untuk mengakses platform.</b> Anda harus membuat akun terlebih dahulu sebelum dapat masuk dan menggunakan seluruh layanan MantaF. <a href="#" class="lp-note-link" onclick="enterPlatformRegister();return false;">Daftar sekarang <i class="fas fa-arrow-right"></i></a></span>
+    </div>
+    <a href="#" class="lp-hero-learn-link" onclick="scrollToSection('lpFeatures');return false;">Pelajari Selengkapnya <i class="fas fa-chevron-down"></i></a>
   </div>
 </section>
 
@@ -149,7 +156,14 @@
     </div>
   </div>
   <div style="text-align:center" class="lp-reveal">
-    <a href="#" class="lp-btn-primary" onclick="enterPlatform();return false;" style="font-size:16px;padding:16px 44px;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+    <div class="lp-cta-account-note">
+      <i class="fas fa-circle-info"></i>
+      <span>Akses ke platform MantaF <b>memerlukan akun terdaftar</b> — silakan buat akun terlebih dahulu bila Anda belum memilikinya.</span>
+    </div>
+    <div class="lp-hero-buttons" style="margin-top:20px">
+      <a href="#" class="lp-btn-primary" onclick="enterPlatformRegister();return false;" style="font-size:16px;padding:16px 44px;"><i class="fas fa-user-plus"></i> Daftar Akun</a>
+      <a href="#" class="lp-btn-secondary" onclick="enterPlatform();return false;" style="font-size:16px;padding:16px 44px;"><i class="fas fa-arrow-right-to-bracket"></i> Masuk ke Platform</a>
+    </div>
   </div>
 </section>
 

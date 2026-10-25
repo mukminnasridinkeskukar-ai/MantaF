@@ -19,6 +19,30 @@ function enterPlatform(){
   showSection('dashboard', document.querySelector('.menu button[data-section="dashboard"]'));
 }
 
+/* ---------- ENTER PLATFORM → FORMULIR DAFTAR AKUN (v3.2) ----------
+   Dipakai semua tombol "Daftar Akun" di landing page (nav, hero, kontak).
+   Alur: pengunjung baru diarahkan ke formulir pendaftaran akun di dalam
+   platform — sesuai pesan bahwa akses platform memerlukan akun. Bila
+   ternyata sudah ada sesi login aktif, langsung masuk platform saja. */
+function enterPlatformRegister(){
+  if(typeof getAdminSession === 'function' && getAdminSession()){
+    enterPlatform();
+    return;
+  }
+  const landing = document.getElementById('landingPage');
+  const app = document.getElementById('appWrapper');
+  if(landing) landing.classList.add('hidden-landing');
+  if(app){
+    app.style.display = 'block';
+    setTimeout(function(){ app.classList.add('show-app'); }, 50);
+  }
+  document.body.style.overflow = '';
+  window.scrollTo(0, 0);
+  setTimeout(stopParticles, 800);
+  /* buka halaman login platform lalu alihkan ke formulir pendaftaran akun */
+  openPlatformRegister();
+}
+
 /* ---------- SCROLL TO SECTION ---------- */
 function scrollToSection(id){
   const el = document.getElementById(id);

@@ -33,8 +33,35 @@ const UKOM_FILE_MAP = {
 
 let ukomInited = false;
 
+/* ============================================================
+   v3.2: GERBANG AKSES — FORMULIR HANYA VIA AKUN
+   Formulir pendaftaran UKOM hanya dapat diisi melalui akun yang
+   digunakan (sesi login aktif). Pengunjung tanpa sesi melihat
+   gerbang dengan tombol Masuk / Daftar Akun.
+   ============================================================ */
+function ukomHasAccount(){
+  return (typeof getAdminSession === 'function') && !!getAdminSession();
+}
+
+function applyUkomAccessGate(){
+  const gate  = document.getElementById('ukomLoginGate');
+  const panel = document.getElementById('ukomFormPanel');
+  if(!gate || !panel) return;
+  const logged = ukomHasAccount();
+  gate.style.display  = logged ? 'none' : 'block';
+  panel.style.display = logged ? '' : 'none';
+}
+
+/* Dipanggil SETIAP kali menu Daftar UKOM dibuka (via showSection) —
+   sehingga gerbang langsung menyesuaikan begitu pengguna login/logout. */
+SectionVisit['ukom'] = function(){
+  applyUkomAccessGate();
+  applyUkomAccountPreset();
+};
+
 SectionInit['ukom'] = function(){
-  if(ukomInited){ regClockTick(); return; }
+  applyUkomAccessGate();
+  if(ukomInited){ regClockTick(); applyUkomAccountPreset(); return; }
   ukomInited = true;
 
   fillSelect('selUnitKerja', OPT_UNIT_KERJA);
@@ -48,18 +75,43 @@ SectionInit['ukom'] = function(){
 
   document.getElementById('ukomForm').addEventListener('submit', submitUkomForm);
 
-  /* v3: pra-isi NIK & nama untuk akun Pejabat Fungsional yang terkait NIK,
-     agar pendaftaran langsung tertaut dengan akunnya. */
-  try{
-    const s0 = getAdminSession();
-    if(s0 && s0.role === 'pejabat_fungsional'){
-      const nikEl = document.getElementById('ukomNik');
-      if(nikEl && !nikEl.value && s0.nik) nikEl.value = s0.nik;
-    }
-  }catch(e){ /* abaikan */ }
+  applyUkomAccountPreset();
 
   newRegistrasiIdentity();
 };
+
+/* ============================================================
+   v3.2: PRESET IDENTITAS DARI AKUN YANG DIGUNAKAN
+   Dipanggil di setiap kunjungan menu (SectionVisit) & setelah
+   form.reset() agar NIK/nama selalu tersedia dari akun. Aman
+   dipanggil berulang: hanya mengisi bila masih kosong.
+   ============================================================ */
+function applyUkomAccountPreset(){
+  try{
+    const s0 = getAdminSession();
+    if(!s0) return;
+    const nikEl = document.getElementById('ukomNik');
+    if(nikEl && s0.nik){
+      nikEl.value = s0.nik;
+      nikEl.readOnly = true;
+      nikEl.classList.add('input-locked');
+      const lockNote = document.getElementById('ukomNikLockNote');
+      if(lockNote) lockNote.style.display = 'block';
+    }
+    const namaEl = document.getElementById('ukomNama');
+    if(namaEl && !namaEl.value && s0.nama){
+      namaEl.value = s0.nama;
+      const autoNote = document.getElementById('ukomNamaAutoNote');
+      if(autoNote) autoNote.style.display = 'block';
+    }
+    const selU = document.getElementById('selUnitKerja');
+    if(selU && s0.unit_kerja && !selU.value){
+      for(let i = 0; i < selU.options.length; i++){
+        if(selU.options[i].value === s0.unit_kerja){ selU.value = s0.unit_kerja; break; }
+      }
+    }
+  }catch(e){ /* abaikan */ }
+}
 
 function fillSelect(id, options){
   const sel = document.getElementById(id);
@@ -110,6 +162,13 @@ let _ukomPending = null;
 async function submitUkomForm(e){
   e.preventDefault();
   if(!db){ showToast('Konfigurasi Supabase belum diisi (config.js)', 'error'); return; }
+
+  /* v3.2: WAJIB AKUN — pendaftaran hanya dapat dikirim melalui akun yang digunakan */
+  if(!ukomHasAccount()){
+    showToast('Pendaftaran UKOM hanya dapat diisi melalui akun. Silakan masuk terlebih dahulu.', 'error');
+    applyUkomAccessGate();
+    return;
+  }
 
   const form = e.target;
   const nik = sanitizeInput(form.querySelector('[name="nik"]').value, 16);
@@ -207,6 +266,13 @@ async function doSubmitUkom(){
   const d = _ukomPending;
   if(!d) return;
 
+  /* v3.2: lapisan kedua — blokir pengiriman tanpa sesi akun */
+  if(!ukomHasAccount()){
+    showToast('Sesi akun tidak ditemukan. Silakan masuk terlebih dahulu.', 'error');
+    applyUkomAccessGate();
+    return;
+  }
+
   const form = d.form;
   const btn = document.getElementById('ukomSubmitBtn');
   const fileInputs = form.querySelectorAll('input[type="file"]');
@@ -298,6 +364,7 @@ async function doSubmitUkom(){
 
     /* 5) Formulir segar untuk pendaftar berikutnya */
     form.reset();
+    applyUkomAccountPreset(); /* v3.2: isi ulang NIK/nama milik akun setelah reset */
     newRegistrasiIdentity();
   }catch(err){
     console.error(err);

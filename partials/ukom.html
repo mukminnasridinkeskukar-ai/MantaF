@@ -3,7 +3,28 @@
   <h2><i class="fas fa-file-pen"></i> Formulir Pendaftaran UKOM</h2>
 </div>
 
-<div class="panel">
+<!-- v3.2: GERBANG AKSES — tampil bila belum login.
+     Formulir pendaftaran UKOM hanya dapat diisi melalui akun yang digunakan. -->
+<div id="ukomLoginGate" style="display:none">
+  <div class="panel ukom-gate">
+    <div class="ukom-gate-icon"><i class="fas fa-lock"></i></div>
+    <h3>Formulir Hanya Dapat Diisi Melalui Akun</h3>
+    <p>Menu <b>Daftar UKOM</b> ini hanya dapat diisi melalui akun yang Anda gunakan.
+       Silakan <b>masuk</b> dengan akun Anda terlebih dahulu, atau <b>daftarkan akun baru</b>
+       bila belum memilikinya — pendaftaran akun memerlukan persetujuan Superadmin.</p>
+    <div class="ukom-gate-actions">
+      <button class="btn" onclick="openPlatformLogin()"><i class="fas fa-right-to-bracket"></i> Masuk ke Akun</button>
+      <button class="btn btn-outline" onclick="openPlatformRegister()"><i class="fas fa-user-plus"></i> Daftar Akun Baru</button>
+    </div>
+    <div class="ukom-gate-note">
+      <i class="fas fa-shield-halved"></i>
+      <span>Pendaftaran yang dikirim dari formulir akan otomatis <b>tertaut dengan akun Anda</b>
+      sehingga riwayat &amp; statusnya dapat dipantau di <b>Dashboard Saya</b> dan menu <b>Cek Status</b>.</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="ukomFormPanel">
   <div class="announcement">
     <b>Template Dokumen:</b><br>
     <a href="https://docs.google.com/document/d/1Ts3Reus9QifFwmBL444snBA3LE5Q1eMB/edit?usp=sharing&ouid=113049310293805241737&rtpof=true&sd=true" target="_blank" rel="noopener">Download Template Daftar Riwayat Hidup</a> |
@@ -31,6 +52,7 @@
       <div class="form-group">
         <label>NIK <span style="color:#dc2626">*</span></label>
         <input type="text" name="nik" id="ukomNik" maxlength="16" required placeholder="16 digit NIK">
+        <small id="ukomNikLockNote" style="display:none;color:#0f766e"><i class="fas fa-lock"></i> NIK terkunci sesuai akun yang Anda gunakan.</small>
       </div>
       <div class="form-group">
         <label>NIP <span style="color:#dc2626">*</span></label>
@@ -38,7 +60,8 @@
       </div>
       <div class="form-group">
         <label>Nama Tanpa Gelar <span style="color:#dc2626">*</span></label>
-        <input type="text" name="nama_tanpa_gelar" required>
+        <input type="text" name="nama_tanpa_gelar" id="ukomNama" required>
+        <small id="ukomNamaAutoNote" style="display:none;color:#0f766e"><i class="fas fa-wand-magic-sparkles"></i> Terisi otomatis dari akun Anda.</small>
       </div>
       <div class="form-group">
         <label>Nama Unit Kerja <span style="color:#dc2626">*</span></label>
