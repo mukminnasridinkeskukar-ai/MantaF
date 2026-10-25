@@ -189,6 +189,71 @@ border-radius:0 4px 4px 0;
 
 .menu-admin.active{border-color:transparent !important}
 
+/* ---------- v3.2: GEMBOK MENU WAJIB LOGIN ----------
+   Ikon kecil di ujung kanan item menu yang terkunci untuk guest
+   (grup Data & Informasi + Layanan). */
+.menu button .menu-lock{
+margin-left:auto;
+font-size:10.5px;
+color:rgba(255,255,255,.45);
+background:rgba(255,255,255,.07);
+border:1px solid rgba(255,255,255,.12);
+padding:3px 5px;
+border-radius:6px;
+width:auto;
+flex-shrink:0;
+}
+
+.menu button:hover .menu-lock{color:#fbbf24;border-color:rgba(251,191,36,.4)}
+
+.sidebar.collapsed .menu button .menu-lock{display:none}
+
+/* ================= v3.2: GERBANG AKSES UKOM (WAJIB AKUN) ================= */
+.ukom-gate{
+max-width:640px;
+margin:0 auto;
+text-align:center;
+padding:40px 30px;
+}
+
+.ukom-gate-icon{
+width:64px;height:64px;
+margin:0 auto 16px;
+border-radius:50%;
+background:rgba(245,158,11,.12);
+border:1px solid rgba(245,158,11,.4);
+color:#d97706;
+font-size:24px;
+display:flex;align-items:center;justify-content:center;
+}
+
+.ukom-gate h3{font-size:17px;color:#0f172a;margin-bottom:10px;font-weight:700}
+
+.ukom-gate p{font-size:13.5px;color:#475569;line-height:1.85;max-width:520px;margin:0 auto}
+
+.ukom-gate-actions{
+display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+margin-top:24px;
+}
+
+.ukom-gate-note{
+display:flex;gap:10px;align-items:flex-start;text-align:left;
+margin-top:24px;padding:13px 16px;
+border-radius:12px;
+background:#f0fdf4;
+border:1px solid #bbf7d0;
+color:#166534;
+font-size:12.5px;line-height:1.75;
+}
+
+.ukom-gate-note i{margin-top:2px;color:#16a34a}
+
+/* Input terkunci (NIK milik akun) */
+.input-locked{
+background:#f1f5f9 !important;
+cursor:not-allowed;
+}
+
 .sidebar.collapsed .menu button span{opacity:0;width:0;overflow:hidden}
 
 /* ---------- SIDEBAR FOOTER ---------- */
@@ -614,50 +679,4 @@ table{min-width:1500px}
 .title{font-size:17px}
 .topbar-clock{display:none}
 .menu button{padding:12px}
-}
-
-/* ================= v3.2: GERBANG AKSES UKOM (WAJIB AKUN) ================= */
-.ukom-gate{
-max-width:640px;
-margin:0 auto;
-text-align:center;
-padding:40px 30px;
-}
-
-.ukom-gate-icon{
-width:64px;height:64px;
-margin:0 auto 16px;
-border-radius:50%;
-background:rgba(245,158,11,.12);
-border:1px solid rgba(245,158,11,.4);
-color:#d97706;
-font-size:24px;
-display:flex;align-items:center;justify-content:center;
-}
-
-.ukom-gate h3{font-size:17px;color:#0f172a;margin-bottom:10px;font-weight:700}
-
-.ukom-gate p{font-size:13.5px;color:#475569;line-height:1.85;max-width:520px;margin:0 auto}
-
-.ukom-gate-actions{
-display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
-margin-top:24px;
-}
-
-.ukom-gate-note{
-display:flex;gap:10px;align-items:flex-start;text-align:left;
-margin-top:24px;padding:13px 16px;
-border-radius:12px;
-background:#f0fdf4;
-border:1px solid #bbf7d0;
-color:#166534;
-font-size:12.5px;line-height:1.75;
-}
-
-.ukom-gate-note i{margin-top:2px;color:#16a34a}
-
-/* Input terkunci (NIK milik akun) */
-.input-locked{
-background:#f1f5f9 !important;
-cursor:not-allowed;
 }

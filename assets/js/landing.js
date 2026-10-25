@@ -3,8 +3,10 @@
    Landing page: scroll, reveal, counter, partikel, enter app
    ============================================================ */
 
-/* ---------- ENTER PLATFORM ---------- */
-function enterPlatform(){
+/* ---------- ENTER PLATFORM (shell bersama) ----------
+   Menyembunyikan landing page & menampilkan aplikasi.
+   Dipakai enterPlatform() dan enterPlatformToRegister(). */
+function enterPlatformShell(){
   const landing = document.getElementById('landingPage');
   const app = document.getElementById('appWrapper');
   if(landing) landing.classList.add('hidden-landing');
@@ -15,32 +17,34 @@ function enterPlatform(){
   document.body.style.overflow = '';
   window.scrollTo(0, 0);
   setTimeout(stopParticles, 800);
+}
+
+/* ---------- ENTER PLATFORM ---------- */
+function enterPlatform(){
+  enterPlatformShell();
   /* buka dashboard */
   showSection('dashboard', document.querySelector('.menu button[data-section="dashboard"]'));
 }
 
-/* ---------- ENTER PLATFORM → FORMULIR DAFTAR AKUN (v3.2) ----------
-   Dipakai semua tombol "Daftar Akun" di landing page (nav, hero, kontak).
-   Alur: pengunjung baru diarahkan ke formulir pendaftaran akun di dalam
-   platform — sesuai pesan bahwa akses platform memerlukan akun. Bila
-   ternyata sudah ada sesi login aktif, langsung masuk platform saja. */
-function enterPlatformRegister(){
+/* ---------- v3.2: MASUK KE FORM PENDAFTARAN AKUN ----------
+   Dipakai tombol/link "Daftar Akun" di landing page (hero, navigasi,
+   menu mobile & bagian kontak). Membuka halaman login platform lalu
+   langsung menampilkan formulir pendaftaran akun baru.
+   Bila pengguna ternyata sudah login → langsung masuk platform. */
+function enterPlatformToRegister(){
   if(typeof getAdminSession === 'function' && getAdminSession()){
+    showToast('Anda sudah login dengan akun aktif.', 'info');
     enterPlatform();
     return;
   }
-  const landing = document.getElementById('landingPage');
-  const app = document.getElementById('appWrapper');
-  if(landing) landing.classList.add('hidden-landing');
-  if(app){
-    app.style.display = 'block';
-    setTimeout(function(){ app.classList.add('show-app'); }, 50);
-  }
-  document.body.style.overflow = '';
-  window.scrollTo(0, 0);
-  setTimeout(stopParticles, 800);
-  /* buka halaman login platform lalu alihkan ke formulir pendaftaran akun */
-  openPlatformRegister();
+  enterPlatformShell();
+  /* buka section login ('admin' terbuka untuk guest) lalu tampilkan form daftar */
+  (async function(){
+    await showSection('admin');
+    if(typeof showRegisterForm === 'function'){
+      try{ showRegisterForm(); }catch(e){ /* partial belum siap — abaikan */ }
+    }
+  })();
 }
 
 /* ---------- SCROLL TO SECTION ---------- */

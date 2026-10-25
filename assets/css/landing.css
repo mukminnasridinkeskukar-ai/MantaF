@@ -176,16 +176,6 @@ position:relative;
 
 .lp-nav-links a.lp-nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(16,185,129,.45)}
 
-/* v3.2: tombol Daftar (outline) di nav — pasangan tombol Login */
-.lp-nav-links a.lp-nav-btn-outline{
-background:transparent;
-border:1px solid rgba(16,185,129,.55);
-color:var(--lp-emerald-light);
-box-shadow:none;
-}
-
-.lp-nav-links a.lp-nav-btn-outline:hover{background:rgba(16,185,129,.12);transform:translateY(-2px);box-shadow:none}
-
 .lp-nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px}
 .lp-nav-toggle span{width:24px;height:2.5px;background:#fff;border-radius:3px;transition:.3s}
 
@@ -308,64 +298,37 @@ color:#fff;
 
 .lp-btn-secondary:hover{background:rgba(255,255,255,.14);transform:translateY(-3px)}
 
-/* ================= v3.2: INFO WAJIB AKUN (HERO & CTA) ================= */
-.lp-hero-account-note{
-display:flex;
-align-items:flex-start;
-gap:10px;
-max-width:620px;
-margin:24px auto 0;
-background:rgba(16,185,129,.08);
-border:1px solid rgba(16,185,129,.35);
-border-radius:14px;
-padding:13px 20px;
-color:rgba(255,255,255,.82);
-font-size:13px;
-line-height:1.75;
-text-align:left;
+/* ---------- v3.2: TOMBOL DAFTAR AKUN + CATATAN WAJIB AKUN ---------- */
+.lp-btn-register{
+border-color:rgba(110,231,183,.45);
+color:#6ee7b7;
 }
 
-.lp-hero-account-note i{color:var(--lp-emerald-light);font-size:15px;margin-top:3px}
-.lp-hero-account-note b{color:#fff}
-
-.lp-note-link{
-color:var(--lp-emerald-light);
-font-weight:600;
-text-decoration:none !important;
-white-space:nowrap;
+.lp-btn-register:hover{
+background:rgba(16,185,129,.18);
+border-color:rgba(110,231,183,.75);
+box-shadow:0 10px 30px rgba(16,185,129,.25);
 }
-.lp-note-link:hover{text-decoration:underline !important}
 
-.lp-hero-learn-link{
+.lp-hero-note{
 display:inline-flex;
 align-items:center;
-gap:7px;
-margin-top:20px;
-color:rgba(255,255,255,.55);
-font-size:13px;
-font-weight:500;
-text-decoration:none !important;
-transition:color .25s;
-}
-.lp-hero-learn-link:hover{color:var(--lp-emerald-light)}
-
-.lp-cta-account-note{
-display:inline-flex;
-align-items:flex-start;
-justify-content:center;
 gap:10px;
-max-width:640px;
-background:rgba(16,185,129,.08);
-border:1px solid rgba(16,185,129,.35);
-border-radius:14px;
-padding:13px 22px;
-color:rgba(255,255,255,.82);
-font-size:13px;
-line-height:1.75;
+margin-top:22px;
+max-width:680px;
 text-align:left;
+font-size:13px;
+line-height:1.65;
+color:rgba(255,255,255,.78);
+background:rgba(255,255,255,.07);
+border:1px solid rgba(255,255,255,.14);
+border-radius:14px;
+padding:12px 18px;
+backdrop-filter:blur(8px);
 }
-.lp-cta-account-note i{color:var(--lp-emerald-light);font-size:15px;margin-top:3px}
-.lp-cta-account-note b{color:#fff}
+
+.lp-hero-note i{color:#6ee7b7;font-size:15px;flex-shrink:0}
+.lp-hero-note b{color:#fff}
 
 .ripple{
 position:absolute;

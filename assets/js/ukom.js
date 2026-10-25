@@ -38,6 +38,10 @@ let ukomInited = false;
    Formulir pendaftaran UKOM hanya dapat diisi melalui akun yang
    digunakan (sesi login aktif). Pengunjung tanpa sesi melihat
    gerbang dengan tombol Masuk / Daftar Akun.
+   Catatan: sejak gerbang login v3.2 di app.js, menu Daftar UKOM
+   sudah diarahkan ke halaman login sebelum section ini terbuka;
+   gerbang ini menjadi LAPISAN KEDUA (mis. akses langsung) dan
+   penjaga saat sesi berakhir selagi halaman terbuka.
    ============================================================ */
 function ukomHasAccount(){
   return (typeof getAdminSession === 'function') && !!getAdminSession();
@@ -364,7 +368,6 @@ async function doSubmitUkom(){
 
     /* 5) Formulir segar untuk pendaftar berikutnya */
     form.reset();
-    applyUkomAccountPreset(); /* v3.2: isi ulang NIK/nama milik akun setelah reset */
     newRegistrasiIdentity();
   }catch(err){
     console.error(err);

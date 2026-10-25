@@ -15,6 +15,54 @@ body{font-family:Inter,system-ui,sans-serif}
 </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen">
+
+<!-- ============ v3.2 GERBANG LOGIN — menu Try Out (Layanan) wajib akun ============ -->
+<div id="tryoutLoginGate" style="display:none;position:fixed;inset:0;z-index:999999;background:linear-gradient(160deg,#0f172a 0%,#134e4a 100%);color:#fff;align-items:center;justify-content:center;padding:24px;font-family:'Inter',system-ui,sans-serif;">
+  <div style="max-width:460px;width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:36px 32px;text-align:center;backdrop-filter:blur(10px);box-shadow:0 30px 80px rgba(0,0,0,.45)">
+    <div style="width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:linear-gradient(135deg,#0d9488,#10b981);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(16,185,129,.4)">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2 style="font-size:20px;font-weight:800;margin:0 0 8px">Akses Terbatas — Login Diperlukan</h2>
+    <p style="font-size:14px;line-height:1.7;color:rgba(255,255,255,.75);margin:0 0 6px">
+      Menu <b style="color:#fff">Try Out</b> termasuk bagian <b style="color:#fff">Layanan</b> platform MantaF yang
+      hanya dapat diakses oleh pengguna yang sudah memiliki akun dan sedang login.
+    </p>
+    <p style="font-size:13px;line-height:1.7;color:rgba(255,255,255,.6);margin:0 0 24px">
+      Silakan masuk dengan akun Anda — atau daftar akun baru terlebih dahulu bila belum memilikinya.
+    </p>
+    <a href="index.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#0d9488,#10b981);color:#fff;font-weight:700;font-size:14.5px;padding:14px 34px;border-radius:32px;text-decoration:none;box-shadow:0 8px 28px rgba(16,185,129,.4)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Masuk / Daftar Akun
+    </a>
+    <p style="font-size:11.5px;color:rgba(255,255,255,.45);margin:18px 0 0">&copy; 2026 Dinas Kesehatan Kab. Kutai Kartanegara &middot; MantaF</p>
+  </div>
+</div>
+<script>
+/* v3.2: blokir akses Try Out tanpa sesi login yang valid (60 menit) */
+(function(){
+  var ok = false;
+  try{
+    var s = JSON.parse(sessionStorage.getItem('mantafSession') || 'null');
+    if(s && s.loginTime && (Date.now() - s.loginTime <= 60 * 60 * 1000)) ok = true;
+  }catch(e){ ok = false; }
+  if(!ok){
+    var gate = document.getElementById('tryoutLoginGate');
+    if(gate){
+      gate.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      /* sembunyikan seluruh konten halaman di belakang gerbang */
+      var nodes = document.body.childNodes;
+      for(var i = 0; i < nodes.length; i++){
+        var n = nodes[i];
+        if(n.nodeType === 1 && n.id !== 'tryoutLoginGate' && n.tagName !== 'SCRIPT'){
+          n.style.setProperty('display', 'none', 'important');
+        }
+      }
+    }
+  }
+})();
+</script>
+
 <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
 <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
 <div class="flex items-center gap-3">

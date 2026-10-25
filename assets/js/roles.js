@@ -134,7 +134,15 @@ function defaultSectionForRole(){
 
 /* ---------- MENU SIDEBAR DINAMIS PER ROLE ----------
    Struktur menu dideklarasikan di satu tempat; index.html dirender ulang
-   oleh renderSidebarMenu() saat boot & setelah login/logout. */
+   oleh renderSidebarMenu() saat boot & setelah login/logout.
+
+   v3.2 — WAJIB LOGIN:
+   Seluruh menu pada grup "Data & Informasi" dan "Layanan" hanya dapat
+   DIAKSES oleh pengguna yang sudah login. Untuk guest (belum login) menu
+   tetap ditampilkan agar fitur mudah ditemukan, namun diberi IKON GEMBOK
+   dan saat diklik akan diarahkan ke halaman login oleh gerbang di
+   app.js → showSection() (isSectionLockedForGuest).
+   Section yang tetap terbuka untuk guest: dashboard, petunjuk, admin(login). */
 const MANTAF_MENU = [
   {
     group: 'Menu Utama', icon: 'fa-house-flag',
@@ -181,13 +189,22 @@ function renderSidebarMenu(){
       '<nav class="menu">';
     items.forEach(function(it){
       const active = (typeof _currentSection !== 'undefined' && _currentSection === it.id) ? ' active' : '';
-      if(it.href){
-        html += '<button' + active + ' onclick="location.href=\'' + it.href + '\'" title="' + escapeHtml(it.label) + '">' +
-                '<i class="fas ' + it.icon + '"></i><span>' + escapeHtml(it.label) + '</span></button>';
+      /* v3.2: menu terkunci untuk guest → gembok + tooltip "wajib login",
+         dan klik selalu dilewatkan ke showSection() agar tertahan gerbang
+         login (termasuk menu Try Out yang berupa tautan eksternal). */
+      const locked = (roleKey === 'guest') &&
+                     (typeof isSectionLockedForGuest === 'function') &&
+                     isSectionLockedForGuest(it.id);
+      const lockIcon = locked ? '<i class="fas fa-lock menu-lock" aria-hidden="true"></i>' : '';
+      const tip = locked ? (escapeHtml(it.label) + ' — wajib login') : escapeHtml(it.label);
+      let act;
+      if(it.href && !locked){
+        act = 'location.href=\'' + it.href + '\'';
       }else{
-        html += '<button' + active + ' data-section="' + it.id + '" onclick="showSection(\'' + it.id + '\',this)" title="' + escapeHtml(it.label) + '">' +
-                '<i class="fas ' + it.icon + '"></i><span>' + escapeHtml(it.label) + '</span></button>';
+        act = 'showSection(\'' + it.id + '\',this)';
       }
+      html += '<button' + active + ' data-section="' + it.id + '" onclick="' + act + '" title="' + tip + '">' +
+              '<i class="fas ' + it.icon + '"></i><span>' + escapeHtml(it.label) + '</span>' + lockIcon + '</button>';
     });
     html += '</nav></div>';
   });

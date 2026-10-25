@@ -31,8 +31,90 @@ const SECTION_IDS = {
 
 let _currentSection = null;
 
+/* ============================================================
+   v3.2 — GERBANG LOGIN (WAJIB AKUN)
+   Semua menu pada grup sidebar "Data & Informasi" dan "Layanan"
+   hanya dapat diakses oleh pengguna yang SUDAH LOGIN.
+   Section yang tetap terbuka untuk pengunjung (guest):
+     - dashboard  (Menu Utama)
+     - petunjuk   (Menu Utama — Petunjuk Penggunaan)
+     - admin      (halaman Login / Daftar Akun platform)
+   Selain daftar di atas → diblokir & diarahkan ke halaman login.
+   ============================================================ */
+const GUEST_ALLOWED_SECTIONS = ['dashboard', 'petunjuk', 'admin'];
+
+/* Cek: apakah section masih terkunci untuk pengunjung yang belum login?
+   Dipakai showSection() (guard utama) & renderSidebarMenu() (ikon gembok). */
+function isSectionLockedForGuest(id){
+  if(typeof getAdminSession === 'function' && getAdminSession()) return false;
+  return GUEST_ALLOWED_SECTIONS.indexOf(id) === -1;
+}
+
+/* Label ramah untuk toast — fallback ke MANTAF_MENU bila section berupa
+   tautan eksternal (mis. Try Out) yang tidak ada di SECTION_META. */
+function sectionDisplayName(id){
+  if(typeof SECTION_META !== 'undefined' && SECTION_META[id]) return SECTION_META[id].title;
+  try{
+    for(var g = 0; g < MANTAF_MENU.length; g++){
+      var items = MANTAF_MENU[g].items;
+      for(var i = 0; i < items.length; i++){
+        if(items[i].id === id) return items[i].label;
+      }
+    }
+  }catch(e){ /* abaikan */ }
+  return id;
+}
+
+/* Buka halaman Login platform (section admin) + pastikan FORM LOGIN yang
+   tampil (bukan form pendaftaran). Dipanggil gerbang login & tombol topbar. */
+async function openLoginPageForGuest(pesan){
+  if(pesan) showToast(pesan, 'info');
+  await showSection('admin');           /* 'admin' selalu terbuka untuk guest */
+  if(typeof showLoginForm === 'function'){
+    try{ showLoginForm(); }catch(e){ /* partial belum siap — abaikan */ }
+  }
+}
+
+/* ---------- v3.2: NAVIGASI LOGIN / DAFTAR AKUN ----------
+   Dipakai bersama oleh: tombol "Daftar Akun" di landing page,
+   tombol "Masuk" di topbar, dan gerbang akses di menu Daftar UKOM.
+   Membuka halaman login platform (section admin) lalu memastikan
+   formulir yang tepat tampil. */
+function _afterAdminSectionMounted(cb){
+  const p = showSection('admin');
+  if(p && typeof p.then === 'function') p.then(function(){ setTimeout(cb, 120); });
+  else setTimeout(cb, 120);
+}
+
+function openPlatformLogin(){
+  _afterAdminSectionMounted(function(){
+    if(typeof showLoginForm === 'function') showLoginForm();
+  });
+}
+
+function openPlatformRegister(){
+  /* Sudah memiliki sesi akun aktif? Tidak perlu daftar — masuk saja ke dashboard-nya */
+  if(typeof getAdminSession === 'function' && getAdminSession()){
+    showSection(defaultSectionForRole());
+    return;
+  }
+  _afterAdminSectionMounted(function(){
+    if(typeof showRegisterForm === 'function') showRegisterForm();
+  });
+}
+
 /* ---------- PINDAH SECTION ---------- */
 async function showSection(id, el){
+  /* v3.2: GERBANG LOGIN — menu "Data & Informasi" & "Layanan" wajib login.
+     Pengunjung yang belum login diarahkan ke halaman login dengan pesan. */
+  if(isSectionLockedForGuest(id)){
+    openLoginPageForGuest(
+      'Menu "' + sectionDisplayName(id) + '" hanya dapat diakses setelah login. ' +
+      'Silakan masuk — atau daftar akun terlebih dahulu bila belum memilikinya.'
+    );
+    return;
+  }
+
   const sidebar = document.getElementById('sidebar');
 
   /* aktifkan tombol menu */
@@ -216,33 +298,6 @@ function goAdminFromTopbar(){
     return;
   }
   openPlatformLogin();
-}
-
-/* ---------- v3.2: NAVIGASI LOGIN / DAFTAR AKUN ----------
-   Dipakai bersama oleh: tombol "Daftar Akun" di landing page dan
-   gerbang akses di menu Daftar UKOM. Membuka halaman login platform
-   (section admin) lalu memastikan formulir yang tepat tampil. */
-function _afterAdminSectionMounted(cb){
-  const p = showSection('admin');
-  if(p && typeof p.then === 'function') p.then(function(){ setTimeout(cb, 120); });
-  else setTimeout(cb, 120);
-}
-
-function openPlatformLogin(){
-  _afterAdminSectionMounted(function(){
-    if(typeof showLoginForm === 'function') showLoginForm();
-  });
-}
-
-function openPlatformRegister(){
-  /* Sudah memiliki sesi akun aktif? Tidak perlu daftar — masuk saja ke dashboard-nya */
-  if(typeof getAdminSession === 'function' && getAdminSession()){
-    showSection(defaultSectionForRole());
-    return;
-  }
-  _afterAdminSectionMounted(function(){
-    if(typeof showRegisterForm === 'function') showRegisterForm();
-  });
 }
 
 /* ---------- BOOT ---------- */
